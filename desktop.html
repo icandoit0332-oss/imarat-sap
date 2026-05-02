@@ -52,7 +52,7 @@ body::before {
 .fld { display:flex; flex-direction:column; gap:7px; }
 .lbl { font-size:12px; font-weight:600; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.6px; }
 .lbl .r { color:var(--red); margin-left:2px; }
-input[type=text], textarea, select {
+input[type=text], input[type=email], textarea, select {
   width:100%; background:var(--surface2); border:1px solid var(--border);
   border-radius:9px; padding:12px 14px; color:var(--text); font-size:14px;
   font-family:'Inter',sans-serif; outline:none;
@@ -176,6 +176,10 @@ select option { background:#161b26; }
           <label class="lbl">Additional Notes</label>
           <textarea id="notes" placeholder="Any extra context or references..." style="min-height:80px"></textarea>
         </div>
+        <div class="fld full">
+          <label class="lbl">Your Email <span style="font-weight:400;color:var(--text-dim);font-size:11px;text-transform:none;letter-spacing:0">(optional — receive status updates)</span></label>
+          <input type="email" id="reqEmail" placeholder="your.email@company.com">
+        </div>
       </div>
 
       <button class="sub-btn" id="subBtn" onclick="submitReq()">✦ Submit Requirement</button>
@@ -228,6 +232,7 @@ function submitReq() {
   btn.disabled = true; btn.textContent = '⏳ Submitting...';
 
   var id = 'REQ-' + String(Date.now()).slice(-6);
+  var reqEmail = document.getElementById('reqEmail').value.trim();
   var params = 'action=submit'
     + '&module='      + encodeURIComponent(module)
     + '&title='       + encodeURIComponent(title)
@@ -238,7 +243,8 @@ function submitReq() {
     + '&consultant='  + encodeURIComponent(consultant)
     + '&abapDev='     + encodeURIComponent('')
     + '&targetDate='  + encodeURIComponent('')
-    + '&notes='       + encodeURIComponent(notes);
+    + '&notes='       + encodeURIComponent(notes)
+    + '&requesterEmail=' + encodeURIComponent(reqEmail);
 
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SCRIPT_URL + '?' + params, true);
