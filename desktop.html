@@ -7,288 +7,103 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #08090d;
-  --surface: #0f1117;
-  --surface2: #161b26;
-  --border: #1f2535;
-  --green: #00d68f;
-  --green-dim: rgba(0,214,143,0.1);
-  --green-glow: rgba(0,214,143,0.2);
-  --amber: #ffb547;
-  --red: #ff5c6c;
-  --blue: #4d9fff;
-  --text: #edf0f7;
-  --text-mid: #8b96a8;
-  --text-dim: #3d4a5c;
+  --bg:#08090d; --surface:#0f1117; --surface2:#161b26;
+  --border:#1f2535; --green:#00d68f; --green-dim:rgba(0,214,143,0.1);
+  --red:#ff5c6c; --text:#edf0f7; --text-mid:#8b96a8; --text-dim:#3d4a5c;
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
+  background:var(--bg); color:var(--text);
+  font-family:'Inter',sans-serif; min-height:100vh;
 }
-
-/* subtle grid */
 body::before {
-  content:'';
-  position:fixed; inset:0;
-  background-image:
-    linear-gradient(rgba(0,214,143,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,214,143,0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events:none;
+  content:''; position:fixed; inset:0;
+  background-image: linear-gradient(rgba(0,214,143,0.015) 1px,transparent 1px), linear-gradient(90deg,rgba(0,214,143,0.015) 1px,transparent 1px);
+  background-size:40px 40px; pointer-events:none;
 }
-
-/* HEADER */
 .hdr {
-  background: rgba(15,17,23,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 40px;
-  height: 62px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  position: sticky; top:0; z-index:99;
+  background:rgba(15,17,23,0.95); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border); padding:0 40px; height:62px;
+  display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:99;
 }
-
 .logo {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, #00d68f, #00a86b);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif;
-  font-weight: 800; font-size: 13px; color: #000;
-  box-shadow: 0 0 16px rgba(0,214,143,0.25);
+  width:36px; height:36px; background:linear-gradient(135deg,#00d68f,#00a86b);
+  border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-weight:800; font-size:13px; color:#000;
+  box-shadow:0 0 16px rgba(0,214,143,0.25);
 }
-
-.hdr-name {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700; font-size: 16px;
-}
-
-.hdr-tag {
-  font-size: 12px; color: var(--text-dim);
-  margin-top: 1px;
-}
-
+.hdr-name { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; }
+.hdr-tag  { font-size:12px; color:var(--text-dim); margin-top:1px; }
 .hdr-badge {
-  margin-left: auto;
-  background: var(--green-dim);
-  border: 1px solid rgba(0,214,143,0.2);
-  color: var(--green);
-  font-size: 11px; padding: 4px 12px;
-  border-radius: 20px;
+  margin-left:auto; background:var(--green-dim);
+  border:1px solid rgba(0,214,143,0.2); color:var(--green);
+  font-size:11px; padding:4px 12px; border-radius:20px;
 }
-
-/* LAYOUT */
-.page {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 48px 32px;
-  position: relative; z-index: 1;
+.page { max-width:900px; margin:0 auto; padding:48px 32px; position:relative; z-index:1; }
+.page-title { font-family:'Syne',sans-serif; font-weight:800; font-size:32px; margin-bottom:6px; }
+.page-desc  { color:var(--text-dim); font-size:14px; margin-bottom:40px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:36px; }
+.sec { display:flex; align-items:center; gap:12px; margin:32px 0 20px; }
+.sec:first-child { margin-top:0; }
+.sec-label { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--green); white-space:nowrap; }
+.sec-line  { flex:1; height:1px; background:var(--border); }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.full { grid-column:1/-1; }
+.fld { display:flex; flex-direction:column; gap:7px; }
+.lbl { font-size:12px; font-weight:600; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.6px; }
+.lbl .r { color:var(--red); margin-left:2px; }
+input[type=text], textarea, select {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:9px; padding:12px 14px; color:var(--text); font-size:14px;
+  font-family:'Inter',sans-serif; outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance:none; appearance:none;
 }
-
-.page-title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800; font-size: 32px;
-  margin-bottom: 6px;
-}
-
-.page-desc {
-  color: var(--text-dim); font-size: 14px;
-  margin-bottom: 40px;
-}
-
-/* FORM CARD */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 36px;
-}
-
-/* SECTION */
-.sec {
-  display: flex; align-items: center; gap: 12px;
-  margin: 32px 0 20px;
-}
-.sec:first-child { margin-top: 0; }
-.sec-label {
-  font-family: 'Syne', sans-serif;
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px;
-  color: var(--green); white-space: nowrap;
-}
-.sec-line { flex:1; height:1px; background: var(--border); }
-
-/* GRID */
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.full { grid-column: 1 / -1; }
-
-/* FIELD */
-.fld { display: flex; flex-direction: column; gap: 7px; }
-
-.lbl {
-  font-size: 12px; font-weight: 600;
-  color: var(--text-mid);
-  text-transform: uppercase; letter-spacing: 0.6px;
-}
-.lbl .r { color: var(--red); margin-left: 2px; }
-
-input[type=text],
-input[type=date],
-textarea,
-select {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 12px 14px;
-  color: var(--text);
-  font-size: 14px;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
 input:focus, textarea:focus, select:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px var(--green-dim);
+  border-color:var(--green); box-shadow:0 0 0 3px var(--green-dim);
 }
-
-input::placeholder, textarea::placeholder { color: var(--text-dim); }
-
-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
-
+input::placeholder, textarea::placeholder { color:var(--text-dim); }
+textarea { resize:vertical; min-height:120px; line-height:1.6; }
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d4a5c'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 20px;
-  padding-right: 36px;
-  cursor: pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d4a5c'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center;
+  background-size:20px; padding-right:36px; cursor:pointer;
 }
-
-select option { background: #161b26; }
-
-/* AUTO NOTE */
-.auto-note {
-  font-size: 12px; color: var(--green);
-  display: none; margin-top: 4px;
-}
-.auto-note.show { display: block; }
-
-/* ABAP ROW */
-.abap-toggle {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 13px 14px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  user-select: none;
-}
-.abap-toggle:hover { border-color: var(--border); }
-.abap-toggle.on { border-color: rgba(0,214,143,0.4); }
-
-.chk {
-  width: 20px; height: 20px;
-  border: 2px solid var(--text-dim);
-  border-radius: 5px;
-  background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: transparent;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.chk.on { background: var(--green); border-color: var(--green); color: #000; }
-
-.chk-lbl { font-size: 14px; color: var(--text-mid); }
-
-#abapSel { display: none; margin-top: 10px; }
-#abapSel.show { display: block; }
-
-/* SUBMIT */
+select option { background:#161b26; }
 .sub-btn {
-  background: linear-gradient(135deg, #00d68f, #00b377);
-  color: #000; border: none;
-  padding: 14px 40px;
-  border-radius: 10px;
-  font-size: 15px; font-weight: 700;
-  font-family: 'Syne', sans-serif;
-  cursor: pointer;
-  margin-top: 32px;
-  display: inline-flex; align-items: center; gap: 8px;
-  box-shadow: 0 4px 20px rgba(0,214,143,0.25);
-  transition: all 0.2s;
+  background:linear-gradient(135deg,#00d68f,#00b377); color:#000; border:none;
+  padding:14px 40px; border-radius:10px; font-size:15px; font-weight:700;
+  font-family:'Syne',sans-serif; cursor:pointer; margin-top:32px;
+  display:inline-flex; align-items:center; gap:8px;
+  box-shadow:0 4px 20px rgba(0,214,143,0.25); transition:all 0.2s;
 }
-.sub-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,214,143,0.35); }
-.sub-btn:active { transform: translateY(0); }
-.sub-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-/* SUCCESS */
-.success {
-  display: none;
-  text-align: center;
-  padding: 80px 40px;
-}
-.success.show { display: block; }
-
+.sub-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,214,143,0.35); }
+.sub-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.success { display:none; text-align:center; padding:80px 40px; }
+.success.show { display:block; }
 .s-icon {
-  width: 90px; height: 90px;
-  background: var(--green-dim);
-  border: 2px solid rgba(0,214,143,0.3);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 42px;
-  margin: 0 auto 24px;
-  box-shadow: 0 0 40px rgba(0,214,143,0.15);
+  width:90px; height:90px; background:var(--green-dim);
+  border:2px solid rgba(0,214,143,0.3); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:42px; margin:0 auto 24px; box-shadow:0 0 40px rgba(0,214,143,0.15);
 }
-
-.s-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 28px; font-weight: 800;
-  margin-bottom: 8px;
-}
-
+.s-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:8px; }
 .s-id {
-  display: inline-block;
-  background: var(--green-dim);
-  color: var(--green);
-  font-family: monospace; font-size: 14px;
-  padding: 7px 18px; border-radius: 20px;
-  margin: 10px 0 18px;
-  border: 1px solid rgba(0,214,143,0.2);
+  display:inline-block; background:var(--green-dim); color:var(--green);
+  font-family:monospace; font-size:14px; padding:7px 18px; border-radius:20px;
+  margin:10px 0 18px; border:1px solid rgba(0,214,143,0.2);
 }
-
-.s-desc { font-size: 15px; color: var(--text-mid); line-height: 1.7; max-width: 480px; margin: 0 auto; }
-
+.s-desc { font-size:15px; color:var(--text-mid); line-height:1.7; max-width:480px; margin:0 auto; }
 .new-btn {
-  margin-top: 32px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text-mid);
-  padding: 12px 28px;
-  border-radius: 9px;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-top:32px; background:var(--surface2); border:1px solid var(--border);
+  color:var(--text-mid); padding:12px 28px; border-radius:9px;
+  font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;
 }
-.new-btn:hover { border-color: var(--green); color: var(--green); }
-
-.form-wrap.hide { display: none; }
+.new-btn:hover { border-color:var(--green); color:var(--green); }
+.form-wrap.hide { display:none; }
 </style>
 </head>
 <body>
-
-<!-- HEADER -->
 <div class="hdr">
   <div class="logo">IM</div>
   <div>
@@ -297,16 +112,12 @@ select option { background: #161b26; }
   </div>
   <div class="hdr-badge">🟢 Live System</div>
 </div>
-
-<!-- PAGE -->
 <div class="page">
   <div class="page-title">Submit a Requirement</div>
-  <div class="page-desc">Fill in the form below. Your requirement will be assigned to the relevant SAP consultant automatically.</div>
-
+  <div class="page-desc">Fill in the form below. The SAP team will review, assign, and set a target date after assessing the requirement.</div>
   <div class="card">
     <div class="form-wrap" id="formWrap">
 
-      <!-- WHO ARE YOU -->
       <div class="sec"><div class="sec-label">Who Are You?</div><div class="sec-line"></div></div>
       <div class="grid">
         <div class="fld">
@@ -319,7 +130,6 @@ select option { background: #161b26; }
             <option value="Other">Other</option>
           </select>
         </div>
-
         <div class="fld" id="nameFinWrap" style="display:none">
           <label class="lbl">Your Name <span class="r">*</span></label>
           <select id="nameSel">
@@ -328,26 +138,23 @@ select option { background: #161b26; }
             <option value="Momin">Momin</option>
           </select>
         </div>
-
         <div class="fld" id="nameOtherWrap" style="display:none">
           <label class="lbl">Your Name <span class="r">*</span></label>
           <input type="text" id="nameTxt" placeholder="Enter your full name">
         </div>
       </div>
 
-      <!-- REQUIREMENT DETAILS -->
       <div class="sec"><div class="sec-label">Requirement Details</div><div class="sec-line"></div></div>
       <div class="grid">
         <div class="fld">
           <label class="lbl">SAP Module <span class="r">*</span></label>
-          <select id="module" onchange="onModule()">
+          <select id="module">
             <option value="">— Select Module —</option>
             <option value="FICO">FICO — Finance & Controlling</option>
             <option value="MM">MM — Materials Management</option>
             <option value="HCM">HCM — Human Capital Management</option>
           </select>
         </div>
-
         <div class="fld">
           <label class="lbl">Priority <span class="r">*</span></label>
           <select id="priority">
@@ -357,130 +164,41 @@ select option { background: #161b26; }
             <option value="Low">🟢 Low — Nice to Have</option>
           </select>
         </div>
-
         <div class="fld full">
           <label class="lbl">Requirement Title <span class="r">*</span></label>
-          <input type="text" id="title" placeholder="Brief title of what you need (e.g. Vendor master data correction)">
+          <input type="text" id="title" placeholder="Brief title of what you need">
         </div>
-
         <div class="fld full">
           <label class="lbl">Description <span class="r">*</span></label>
-          <textarea id="desc" placeholder="Describe what you need in detail — what is the current issue, what outcome do you expect, and any relevant SAP screens or transaction codes if you know them."></textarea>
+          <textarea id="desc" placeholder="Describe what you need in detail — what is the current issue, what outcome do you expect?"></textarea>
         </div>
-      </div>
-
-      <!-- ASSIGNMENT -->
-      <div class="sec"><div class="sec-label">Assignment</div><div class="sec-line"></div></div>
-      <div class="grid">
-        <div class="fld">
-          <label class="lbl">Functional Consultant <span class="r">*</span></label>
-          <select id="consultant">
-            <option value="">Select a module first</option>
-          </select>
-          <div class="auto-note" id="autoNote">⚡ Auto-assigned based on module</div>
-        </div>
-
-        <div class="fld">
-          <label class="lbl">Target Date</label>
-          <input type="date" id="target">
-        </div>
-
-        <div class="fld full">
-          <label class="lbl">ABAP Development Required?</label>
-          <div class="abap-toggle" id="abapRow" onclick="toggleAbap()">
-            <div class="chk" id="abapChk">✓</div>
-            <span class="chk-lbl">Yes — this requirement needs ABAP development</span>
-          </div>
-          <select id="abapSel">
-            <option value="">— Select ABAP Developer —</option>
-            <option value="Saad">Saad</option>
-            <option value="Zeeshan">Zeeshan</option>
-          </select>
-        </div>
-
         <div class="fld full">
           <label class="lbl">Additional Notes</label>
-          <textarea id="notes" placeholder="Any extra context, references, or attachments to mention..." style="min-height:80px"></textarea>
+          <textarea id="notes" placeholder="Any extra context or references..." style="min-height:80px"></textarea>
         </div>
       </div>
 
       <button class="sub-btn" id="subBtn" onclick="submitReq()">✦ Submit Requirement</button>
+    </div>
 
-    </div><!-- /form-wrap -->
-
-    <!-- SUCCESS -->
     <div class="success" id="successScreen">
       <div class="s-icon">✓</div>
       <div class="s-title">Requirement Submitted!</div>
       <div class="s-id" id="successId"></div>
-      <div class="s-desc">Your requirement has been received and assigned to the SAP team. You will be updated on progress.</div>
+      <div class="s-desc">Your requirement has been received. The SAP team will review, assign, and set a target date shortly.</div>
       <button class="new-btn" onclick="resetForm()">+ Submit Another Requirement</button>
     </div>
-
-  </div><!-- /card -->
-</div><!-- /page -->
+  </div>
+</div>
 
 <script>
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
-
-var CONSULTANTS = {
-  FICO: ['Abdul Wasay', 'Ayaz'],
-  MM:   ['Hassan'],
-  HCM:  ['Rao Imran']
-};
-
-var abapOn = false;
-
-window.onload = function() {
-  var d = new Date();
-  d.setDate(d.getDate() + 7);
-  document.getElementById('target').value = d.toISOString().split('T')[0];
-};
+var CONSULTANTS = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Rao Imran' };
 
 function onDept() {
   var v = document.getElementById('dept').value;
   document.getElementById('nameFinWrap').style.display   = v === 'Finance' ? 'block' : 'none';
   document.getElementById('nameOtherWrap').style.display = (v && v !== 'Finance') ? 'block' : 'none';
-}
-
-function onModule() {
-  var mod = document.getElementById('module').value;
-  var sel = document.getElementById('consultant');
-  var note = document.getElementById('autoNote');
-  sel.innerHTML = '<option value="">— Select Consultant —</option>';
-  if (mod && CONSULTANTS[mod]) {
-    for (var i = 0; i < CONSULTANTS[mod].length; i++) {
-      var opt = document.createElement('option');
-      opt.value = CONSULTANTS[mod][i];
-      opt.textContent = CONSULTANTS[mod][i];
-      sel.appendChild(opt);
-    }
-    if (CONSULTANTS[mod].length === 1) {
-      sel.value = CONSULTANTS[mod][0];
-      note.classList.add('show');
-    } else {
-      note.classList.remove('show');
-    }
-  } else {
-    note.classList.remove('show');
-  }
-}
-
-function toggleAbap() {
-  abapOn = !abapOn;
-  var chk = document.getElementById('abapChk');
-  var row = document.getElementById('abapRow');
-  var sel = document.getElementById('abapSel');
-  if (abapOn) {
-    chk.classList.add('on');
-    row.classList.add('on');
-    sel.classList.add('show');
-  } else {
-    chk.classList.remove('on');
-    row.classList.remove('on');
-    sel.classList.remove('show');
-    sel.value = '';
-  }
 }
 
 function getName() {
@@ -490,32 +208,26 @@ function getName() {
 }
 
 function submitReq() {
-  var dept       = document.getElementById('dept').value;
-  var name       = getName();
-  var module     = document.getElementById('module').value;
-  var priority   = document.getElementById('priority').value;
-  var title      = document.getElementById('title').value.trim();
-  var desc       = document.getElementById('desc').value.trim();
-  var consultant = document.getElementById('consultant').value;
-  var abapDev    = abapOn ? document.getElementById('abapSel').value : '';
-  var target     = document.getElementById('target').value;
-  var notes      = document.getElementById('notes').value.trim();
+  var dept     = document.getElementById('dept').value;
+  var name     = getName();
+  var module   = document.getElementById('module').value;
+  var priority = document.getElementById('priority').value;
+  var title    = document.getElementById('title').value.trim();
+  var desc     = document.getElementById('desc').value.trim();
+  var notes    = document.getElementById('notes').value.trim();
+  var consultant = module ? (CONSULTANTS[module] || '') : '';
 
-  if (!dept)       { alert('Please select your department.'); return; }
-  if (!name)       { alert('Please enter your name.'); return; }
-  if (!module)     { alert('Please select a SAP module.'); return; }
-  if (!priority)   { alert('Please select a priority.'); return; }
-  if (!title)      { alert('Please enter a requirement title.'); return; }
-  if (!desc)       { alert('Please describe the requirement.'); return; }
-  if (!consultant) { alert('Please select a consultant.'); return; }
-  if (abapOn && !abapDev) { alert('Please select an ABAP developer.'); return; }
+  if (!dept)     { alert('Please select your department.'); return; }
+  if (!name)     { alert('Please enter your name.'); return; }
+  if (!module)   { alert('Please select a SAP module.'); return; }
+  if (!priority) { alert('Please select a priority.'); return; }
+  if (!title)    { alert('Please enter a requirement title.'); return; }
+  if (!desc)     { alert('Please describe the requirement.'); return; }
 
   var btn = document.getElementById('subBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Submitting...';
+  btn.disabled = true; btn.textContent = '⏳ Submitting...';
 
   var id = 'REQ-' + String(Date.now()).slice(-6);
-
   var params = 'action=submit'
     + '&module='      + encodeURIComponent(module)
     + '&title='       + encodeURIComponent(title)
@@ -524,25 +236,20 @@ function submitReq() {
     + '&department='  + encodeURIComponent(dept)
     + '&priority='    + encodeURIComponent(priority)
     + '&consultant='  + encodeURIComponent(consultant)
-    + '&abapDev='     + encodeURIComponent(abapDev)
-    + '&targetDate='  + encodeURIComponent(target)
+    + '&abapDev='     + encodeURIComponent('')
+    + '&targetDate='  + encodeURIComponent('')
     + '&notes='       + encodeURIComponent(notes);
 
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SCRIPT_URL + '?' + params, true);
   xhr.timeout = 15000;
   xhr.onload = function() {
-    try {
-      var json = JSON.parse(xhr.responseText);
-      if (json.success) id = json.id;
-    } catch(e) {}
-    btn.disabled = false;
-    btn.textContent = '✦ Submit Requirement';
+    try { var j = JSON.parse(xhr.responseText); if (j.success) id = j.id; } catch(e) {}
+    btn.disabled = false; btn.textContent = '✦ Submit Requirement';
     showSuccess(id);
   };
   xhr.onerror = xhr.ontimeout = function() {
-    btn.disabled = false;
-    btn.textContent = '✦ Submit Requirement';
+    btn.disabled = false; btn.textContent = '✦ Submit Requirement';
     showSuccess(id);
   };
   xhr.send();
@@ -552,11 +259,11 @@ function showSuccess(id) {
   document.getElementById('successId').textContent = id;
   document.getElementById('formWrap').classList.add('hide');
   document.getElementById('successScreen').classList.add('show');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
 
 function resetForm() {
-  ['dept','module','priority','consultant','abapSel','nameSel'].forEach(function(id) {
+  ['dept','module','priority','nameSel'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
   ['title','desc','notes','nameTxt'].forEach(function(id) {
@@ -564,17 +271,9 @@ function resetForm() {
   });
   document.getElementById('nameFinWrap').style.display   = 'none';
   document.getElementById('nameOtherWrap').style.display = 'none';
-  document.getElementById('autoNote').classList.remove('show');
-  abapOn = false;
-  document.getElementById('abapChk').classList.remove('on');
-  document.getElementById('abapRow').classList.remove('on');
-  document.getElementById('abapSel').classList.remove('show');
-  document.getElementById('abapSel').value = '';
-  var d = new Date(); d.setDate(d.getDate() + 7);
-  document.getElementById('target').value = d.toISOString().split('T')[0];
   document.getElementById('formWrap').classList.remove('hide');
   document.getElementById('successScreen').classList.remove('show');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
 </script>
 </body>
