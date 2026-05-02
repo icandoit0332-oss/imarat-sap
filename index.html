@@ -7,263 +7,90 @@
 <title>IMARAT — Submit Requirement</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
-  background: #0a0e14;
-  color: #edf0f7;
+  background: #0a0e14; color: #edf0f7;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding-bottom: 60px;
-  font-size: 16px;
+  padding-bottom: 60px; font-size: 16px;
 }
-
 .hdr {
-  background: #111720;
-  border-bottom: 1px solid #1e2d3d;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: sticky;
-  top: 0;
-  z-index: 99;
+  background: #111720; border-bottom: 1px solid #1e2d3d;
+  padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 99;
 }
-
 .logo {
-  width: 36px; height: 36px;
-  background: #00d68f;
-  border-radius: 9px;
+  width: 36px; height: 36px; background: #00d68f; border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 13px; color: #000;
-  flex-shrink: 0;
+  font-weight: 800; font-size: 13px; color: #000; flex-shrink: 0;
 }
-
 .hdr-txt h1 { font-size: 15px; font-weight: 700; }
 .hdr-txt p  { font-size: 11px; color: #4a5568; margin-top: 1px; }
-
-.gear {
-  margin-left: auto;
-  background: none; border: none;
-  color: #4a5568; font-size: 22px;
-  cursor: pointer; padding: 6px;
-  line-height: 1;
-}
-
-.setup {
-  background: #1a1500;
-  border: 1px solid rgba(255,181,71,0.3);
-  border-radius: 10px;
-  padding: 14px;
-  margin: 16px;
-  display: none;
-}
-.setup.show { display: block; }
-.setup p { font-size: 13px; color: #ffb547; margin-bottom: 10px; }
-.setup input {
-  width: 100%;
-  background: #0a0e14;
-  border: 1px solid rgba(255,181,71,0.3);
-  border-radius: 8px;
-  padding: 12px;
-  color: #edf0f7;
-  font-size: 14px;
-  outline: none;
-  margin-bottom: 8px;
-}
-.setup button {
-  width: 100%;
-  background: #ffb547;
-  color: #000;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .wrap { padding: 0 16px; }
-
 .sec {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #00d68f;
-  font-weight: 700;
-  padding: 20px 0 10px;
-  border-bottom: 1px solid #1e2d3d;
-  margin-bottom: 14px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: #00d68f; font-weight: 700; padding: 20px 0 10px;
+  border-bottom: 1px solid #1e2d3d; margin-bottom: 14px;
 }
-
 .fld { margin-bottom: 16px; }
-
-.lbl {
-  display: block;
-  font-size: 13px;
-  color: #8b96a8;
-  margin-bottom: 7px;
-  font-weight: 500;
-}
-
+.lbl { display: block; font-size: 13px; color: #8b96a8; margin-bottom: 7px; font-weight: 500; }
 .lbl .r { color: #ff5c6c; }
-
-input[type=text],
-input[type=date],
-textarea,
-select {
-  width: 100%;
-  background: #1a2130;
-  border: 2px solid #1e2d3d;
-  border-radius: 10px;
-  padding: 14px;
-  color: #edf0f7;
-  font-size: 16px;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  display: block;
+input[type=text], textarea, select {
+  width: 100%; background: #1a2130; border: 2px solid #1e2d3d;
+  border-radius: 10px; padding: 14px; color: #edf0f7; font-size: 16px;
+  outline: none; -webkit-appearance: none; appearance: none;
+  font-family: inherit; transition: border-color 0.2s; display: block;
 }
-
-input[type=text]:focus,
-input[type=date]:focus,
-textarea:focus,
-select:focus { border-color: #00d68f; }
-
+input[type=text]:focus, textarea:focus, select:focus { border-color: #00d68f; }
 input::placeholder, textarea::placeholder { color: #2d3748; }
-
-textarea { resize: none; height: 110px; line-height: 1.6; }
-
+textarea { resize: none; height: 120px; line-height: 1.6; }
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a5568'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 20px;
-  padding-right: 40px;
-  cursor: pointer;
+  background-repeat: no-repeat; background-position: right 12px center;
+  background-size: 20px; padding-right: 40px; cursor: pointer;
 }
-
 select option { background: #1a2130; color: #edf0f7; }
-
-.note {
-  font-size: 12px; color: #00d68f;
-  margin-top: 6px; display: none;
-}
-.note.show { display: block; }
-
-.check-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #1a2130;
-  border: 2px solid #1e2d3d;
-  border-radius: 10px;
-  padding: 14px;
-  cursor: pointer;
-  margin-bottom: 10px;
-  transition: border-color 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.check-row.active { border-color: #00d68f; }
-
-.chk {
-  width: 26px; height: 26px;
-  border: 2px solid #2d3748;
-  border-radius: 6px;
-  background: #0a0e14;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-size: 15px;
-  transition: all 0.15s;
-  color: transparent;
-}
-.chk.on { background: #00d68f; border-color: #00d68f; color: #000; }
-
-.check-lbl { font-size: 15px; color: #8b96a8; }
-
-#abapSel { display: none; }
-#abapSel.show { display: block; }
-
 .sub-btn {
-  width: 100%;
-  background: #00d68f;
-  color: #000;
-  border: none;
-  padding: 18px;
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 28px;
-  -webkit-tap-highlight-color: transparent;
+  width: 100%; background: #00d68f; color: #000; border: none;
+  padding: 18px; border-radius: 12px; font-size: 17px; font-weight: 800;
+  cursor: pointer; margin-top: 28px; -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s;
 }
 .sub-btn:active { opacity: 0.8; }
 .sub-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .success { display: none; padding: 60px 24px; text-align: center; }
 .success.show { display: block; }
-
 .s-icon {
-  width: 80px; height: 80px;
-  background: rgba(0,214,143,0.1);
-  border: 2px solid rgba(0,214,143,0.3);
-  border-radius: 50%;
+  width: 80px; height: 80px; background: rgba(0,214,143,0.1);
+  border: 2px solid rgba(0,214,143,0.3); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 38px;
-  margin: 0 auto 20px;
+  font-size: 38px; margin: 0 auto 20px;
 }
 .s-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .s-id {
-  display: inline-block;
-  background: rgba(0,214,143,0.1);
-  color: #00d68f;
-  font-family: monospace;
-  font-size: 13px;
-  padding: 6px 16px;
-  border-radius: 20px;
-  margin: 8px 0 16px;
+  display: inline-block; background: rgba(0,214,143,0.1); color: #00d68f;
+  font-family: monospace; font-size: 13px; padding: 6px 16px;
+  border-radius: 20px; margin: 8px 0 16px;
 }
 .s-desc { font-size: 14px; color: #4a5568; line-height: 1.7; }
-
 .new-btn {
-  margin-top: 28px;
-  background: #1a2130;
-  border: 2px solid #1e2d3d;
-  color: #8b96a8;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
+  margin-top: 28px; background: #1a2130; border: 2px solid #1e2d3d;
+  color: #8b96a8; padding: 14px 28px; border-radius: 10px;
+  font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
 }
-
 .form-wrap.hide { display: none; }
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="logo">IM</div>
   <div class="hdr-txt">
     <h1>IMARAT SAP</h1>
     <p>Requirement Submission</p>
   </div>
-  <!-- gear hidden -->
 </div>
-
-<div class="setup" id="setupBar" style="display:none!important">
-  <p>⚙️ Paste your Script URL to connect to the shared system:</p>
-  <input type="text" id="scriptInput" placeholder="https://script.google.com/macros/s/...">
-  <button onclick="saveUrl()">Save &amp; Connect</button>
-</div>
-
 <div class="wrap">
   <div class="form-wrap" id="formWrap">
 
     <div class="sec">Who Are You?</div>
-
     <div class="fld">
       <label class="lbl">Department <span class="r">*</span></label>
       <select id="dept" onchange="onDept()">
@@ -274,7 +101,6 @@ select option { background: #1a2130; color: #edf0f7; }
         <option value="Other">Other</option>
       </select>
     </div>
-
     <div class="fld" id="nameFinWrap" style="display:none">
       <label class="lbl">Your Name <span class="r">*</span></label>
       <select id="nameSel">
@@ -283,24 +109,21 @@ select option { background: #1a2130; color: #edf0f7; }
         <option value="Momin">Momin</option>
       </select>
     </div>
-
     <div class="fld" id="nameOtherWrap" style="display:none">
       <label class="lbl">Your Name <span class="r">*</span></label>
       <input type="text" id="nameTxt" placeholder="Type your full name">
     </div>
 
     <div class="sec">Requirement Details</div>
-
     <div class="fld">
       <label class="lbl">SAP Module <span class="r">*</span></label>
-      <select id="module" onchange="onModule()">
+      <select id="module">
         <option value="">— Select Module —</option>
-        <option value="FICO">FICO — Finance &amp; Controlling</option>
+        <option value="FICO">FICO — Finance & Controlling</option>
         <option value="MM">MM — Materials Management</option>
         <option value="HCM">HCM — Human Capital Management</option>
       </select>
     </div>
-
     <div class="fld">
       <label class="lbl">Priority <span class="r">*</span></label>
       <select id="priority">
@@ -310,138 +133,41 @@ select option { background: #1a2130; color: #edf0f7; }
         <option value="Low">Low — Nice to Have</option>
       </select>
     </div>
-
     <div class="fld">
       <label class="lbl">Requirement Title <span class="r">*</span></label>
       <input type="text" id="title" placeholder="e.g. Vendor master data update">
     </div>
-
     <div class="fld">
       <label class="lbl">Description <span class="r">*</span></label>
-      <textarea id="desc" placeholder="Describe what you need — what is the issue and what outcome do you expect?"></textarea>
+      <textarea id="desc" placeholder="Describe what you need in detail — what is the issue and what outcome do you expect?"></textarea>
     </div>
-
-    <div class="sec">Assignment</div>
-
-    <div class="fld">
-      <label class="lbl">Functional Consultant <span class="r">*</span></label>
-      <select id="consultant">
-        <option value="">Select a module first</option>
-      </select>
-      <div class="note" id="autoNote">Auto-assigned based on module</div>
-    </div>
-
-    <div class="fld">
-      <label class="lbl">Target Date</label>
-      <input type="date" id="target">
-    </div>
-
-    <div class="fld">
-      <label class="lbl">Needs ABAP Development?</label>
-      <div class="check-row" id="abapRow" onclick="toggleAbap()">
-        <div class="chk" id="abapChk">✓</div>
-        <span class="check-lbl">Yes, this needs ABAP development</span>
-      </div>
-      <select id="abapSel">
-        <option value="">— Select ABAP Developer —</option>
-        <option value="Saad">Saad</option>
-        <option value="Zeeshan">Zeeshan</option>
-      </select>
-    </div>
-
     <div class="fld">
       <label class="lbl">Additional Notes</label>
-      <textarea id="notes" placeholder="Any extra context..." style="height:80px"></textarea>
+      <textarea id="notes" placeholder="Any extra context or references..." style="height:80px"></textarea>
     </div>
 
     <button class="sub-btn" id="subBtn" onclick="submitReq()">Submit Requirement</button>
-
   </div>
 
   <div class="success" id="successScreen">
     <div class="s-icon">✓</div>
     <div class="s-title">Submitted!</div>
     <div class="s-id" id="successId"></div>
-    <div class="s-desc">Your requirement has been received. The SAP team will pick it up shortly.</div>
+    <div class="s-desc">Your requirement has been received. The SAP team will review and assign it shortly.</div>
     <button class="new-btn" onclick="resetForm()">Submit Another Requirement</button>
   </div>
 </div>
 
 <script>
-var CONSULTANTS = { FICO:['Abdul Wasay','Ayaz'], MM:['Hassan'], HCM:['Rao Imran'] };
-var abapOn = false;
-var scriptUrl = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec'; // hardcoded
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
+var CONSULTANTS = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Rao Imran' };
 
-window.onload = function() {
-  // URL hardcoded — no setup needed
-  var d = new Date();
-  d.setDate(d.getDate() + 7);
-  document.getElementById('target').value = d.toISOString().split('T')[0];
-};
-
-function toggleSetup() {
-  var bar = document.getElementById('setupBar');
-  if (bar.classList.contains('show')) {
-    bar.classList.remove('show');
-  } else {
-    bar.classList.add('show');
-    document.getElementById('scriptInput').value = scriptUrl;
-  }
-}
-
-function saveUrl() {
-  var url = document.getElementById('scriptInput').value.trim();
-  if (!url) { alert('Please paste the Script URL.'); return; }
-  scriptUrl = url;
-  localStorage.setItem('imaratScriptUrl', url);
-  document.getElementById('setupBar').classList.remove('show');
-  alert('Connected!');
-}
+window.onload = function() {};
 
 function onDept() {
   var v = document.getElementById('dept').value;
   document.getElementById('nameFinWrap').style.display = v === 'Finance' ? 'block' : 'none';
   document.getElementById('nameOtherWrap').style.display = (v && v !== 'Finance') ? 'block' : 'none';
-}
-
-function onModule() {
-  var mod = document.getElementById('module').value;
-  var sel = document.getElementById('consultant');
-  var note = document.getElementById('autoNote');
-  sel.innerHTML = '<option value="">— Select Consultant —</option>';
-  if (mod && CONSULTANTS[mod]) {
-    for (var i = 0; i < CONSULTANTS[mod].length; i++) {
-      var opt = document.createElement('option');
-      opt.value = CONSULTANTS[mod][i];
-      opt.textContent = CONSULTANTS[mod][i];
-      sel.appendChild(opt);
-    }
-    if (CONSULTANTS[mod].length === 1) {
-      sel.value = CONSULTANTS[mod][0];
-      note.classList.add('show');
-    } else {
-      note.classList.remove('show');
-    }
-  } else {
-    note.classList.remove('show');
-  }
-}
-
-function toggleAbap() {
-  abapOn = !abapOn;
-  var chk = document.getElementById('abapChk');
-  var row = document.getElementById('abapRow');
-  var sel = document.getElementById('abapSel');
-  if (abapOn) {
-    chk.classList.add('on');
-    row.classList.add('active');
-    sel.classList.add('show');
-  } else {
-    chk.classList.remove('on');
-    row.classList.remove('active');
-    sel.classList.remove('show');
-    sel.value = '';
-  }
 }
 
 function getName() {
@@ -451,68 +177,51 @@ function getName() {
 }
 
 function submitReq() {
-  var dept       = document.getElementById('dept').value;
-  var name       = getName();
-  var module     = document.getElementById('module').value;
-  var priority   = document.getElementById('priority').value;
-  var title      = document.getElementById('title').value.trim();
-  var desc       = document.getElementById('desc').value.trim();
-  var consultant = document.getElementById('consultant').value;
-  var abapDev    = abapOn ? document.getElementById('abapSel').value : '';
-  var target     = document.getElementById('target').value;
-  var notes      = document.getElementById('notes').value.trim();
+  var dept     = document.getElementById('dept').value;
+  var name     = getName();
+  var module   = document.getElementById('module').value;
+  var priority = document.getElementById('priority').value;
+  var title    = document.getElementById('title').value.trim();
+  var desc     = document.getElementById('desc').value.trim();
+  var notes    = document.getElementById('notes').value.trim();
+  var consultant = module ? (CONSULTANTS[module] || '') : '';
 
-  if (!dept)       { alert('Please select your department.'); return; }
-  if (!name)       { alert('Please enter your name.'); return; }
-  if (!module)     { alert('Please select a SAP module.'); return; }
-  if (!priority)   { alert('Please select a priority.'); return; }
-  if (!title)      { alert('Please enter a requirement title.'); return; }
-  if (!desc)       { alert('Please describe the requirement.'); return; }
-  if (!consultant) { alert('Please select a consultant.'); return; }
-  if (abapOn && !abapDev) { alert('Please select an ABAP developer.'); return; }
+  if (!dept)     { alert('Please select your department.'); return; }
+  if (!name)     { alert('Please enter your name.'); return; }
+  if (!module)   { alert('Please select a SAP module.'); return; }
+  if (!priority) { alert('Please select a priority.'); return; }
+  if (!title)    { alert('Please enter a requirement title.'); return; }
+  if (!desc)     { alert('Please describe the requirement.'); return; }
 
   var btn = document.getElementById('subBtn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
+  btn.disabled = true; btn.textContent = 'Submitting...';
 
   var id = 'REQ-' + String(Date.now()).slice(-6);
+  var params = 'action=submit'
+    + '&module='      + encodeURIComponent(module)
+    + '&title='       + encodeURIComponent(title)
+    + '&description=' + encodeURIComponent(desc)
+    + '&requester='   + encodeURIComponent(name)
+    + '&department='  + encodeURIComponent(dept)
+    + '&priority='    + encodeURIComponent(priority)
+    + '&consultant='  + encodeURIComponent(consultant)
+    + '&abapDev='     + encodeURIComponent('')
+    + '&targetDate='  + encodeURIComponent('')
+    + '&notes='       + encodeURIComponent(notes);
 
-  if (scriptUrl) {
-    var params = 'action=submit'
-      + '&module='      + encodeURIComponent(module)
-      + '&title='       + encodeURIComponent(title)
-      + '&description=' + encodeURIComponent(desc)
-      + '&requester='   + encodeURIComponent(name)
-      + '&department='  + encodeURIComponent(dept)
-      + '&priority='    + encodeURIComponent(priority)
-      + '&consultant='  + encodeURIComponent(consultant)
-      + '&abapDev='     + encodeURIComponent(abapDev)
-      + '&targetDate='  + encodeURIComponent(target)
-      + '&notes='       + encodeURIComponent(notes);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', scriptUrl + '?' + params, true);
-    xhr.timeout = 15000;
-    xhr.onload = function() {
-      try {
-        var json = JSON.parse(xhr.responseText);
-        if (json.success) id = json.id;
-      } catch(e) {}
-      btn.disabled = false;
-      btn.textContent = 'Submit Requirement';
-      showSuccess(id);
-    };
-    xhr.onerror = xhr.ontimeout = function() {
-      btn.disabled = false;
-      btn.textContent = 'Submit Requirement';
-      showSuccess(id);
-    };
-    xhr.send();
-  } else {
-    btn.disabled = false;
-    btn.textContent = 'Submit Requirement';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SCRIPT_URL + '?' + params, true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try { var j = JSON.parse(xhr.responseText); if (j.success) id = j.id; } catch(e) {}
+    btn.disabled = false; btn.textContent = 'Submit Requirement';
     showSuccess(id);
-  }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    btn.disabled = false; btn.textContent = 'Submit Requirement';
+    showSuccess(id);
+  };
+  xhr.send();
 }
 
 function showSuccess(id) {
@@ -523,26 +232,14 @@ function showSuccess(id) {
 }
 
 function resetForm() {
-  var selects = ['dept','module','priority','consultant','abapSel','nameSel'];
-  for (var i = 0; i < selects.length; i++) {
-    var el = document.getElementById(selects[i]);
-    if (el) el.value = '';
-  }
-  var inputs = ['title','desc','notes','nameTxt'];
-  for (var i = 0; i < inputs.length; i++) {
-    var el = document.getElementById(inputs[i]);
-    if (el) el.value = '';
-  }
+  ['dept','module','priority','nameSel'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['title','desc','notes','nameTxt'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
   document.getElementById('nameFinWrap').style.display = 'none';
   document.getElementById('nameOtherWrap').style.display = 'none';
-  document.getElementById('autoNote').classList.remove('show');
-  abapOn = false;
-  document.getElementById('abapChk').classList.remove('on');
-  document.getElementById('abapRow').classList.remove('active');
-  document.getElementById('abapSel').classList.remove('show');
-  document.getElementById('abapSel').value = '';
-  var d = new Date(); d.setDate(d.getDate() + 7);
-  document.getElementById('target').value = d.toISOString().split('T')[0];
   document.getElementById('formWrap').classList.remove('hide');
   document.getElementById('successScreen').classList.remove('show');
   window.scrollTo(0, 0);
