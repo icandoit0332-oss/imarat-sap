@@ -250,10 +250,10 @@ select option { background: #1a2130; color: #edf0f7; }
     <h1>IMARAT SAP</h1>
     <p>Requirement Submission</p>
   </div>
-  <button class="gear" onclick="toggleSetup()">⚙</button>
+  <!-- gear hidden -->
 </div>
 
-<div class="setup" id="setupBar">
+<div class="setup" id="setupBar" style="display:none!important">
   <p>⚙️ Paste your Script URL to connect to the shared system:</p>
   <input type="text" id="scriptInput" placeholder="https://script.google.com/macros/s/...">
   <button onclick="saveUrl()">Save &amp; Connect</button>
@@ -370,14 +370,10 @@ select option { background: #1a2130; color: #edf0f7; }
 <script>
 var CONSULTANTS = { FICO:['Abdul Wasay','Ayaz'], MM:['Hassan'], HCM:['Rao Imran'] };
 var abapOn = false;
-var scriptUrl = localStorage.getItem('imaratScriptUrl') || '';
+var scriptUrl = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec'; // hardcoded
 
 window.onload = function() {
-  if (!scriptUrl) {
-    document.getElementById('setupBar').classList.add('show');
-  } else {
-    document.getElementById('scriptInput').value = scriptUrl;
-  }
+  // URL hardcoded — no setup needed
   var d = new Date();
   d.setDate(d.getDate() + 7);
   document.getElementById('target').value = d.toISOString().split('T')[0];
