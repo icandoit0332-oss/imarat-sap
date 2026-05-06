@@ -95,9 +95,14 @@ select option{background:#fff;color:#0C2D3E}
       <label class="lbl">Description <span class="r">*</span></label>
       <textarea id="desc" placeholder="Describe what you need in detail — what is the issue and what outcome do you expect?"></textarea>
     </div>
+
     <div class="fld">
-      <label class="lbl">Additional Notes</label>
-      <textarea id="notes" placeholder="Any extra context or references..." style="height:80px"></textarea>
+      <label class="lbl">Attachment <span style="color:#8AABB8;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional — max 50MB)</span></label>
+      <label for="fileInput" id="fileLabel" style="display:flex;align-items:center;gap:10px;background:#fff;border:1.5px dashed #C0D8E8;border-radius:10px;padding:14px;cursor:pointer;transition:border-color 0.2s">
+        <span style="font-size:22px">📎</span>
+        <span id="fileLabelText" style="font-size:14px;color:#8AABB8">Tap to attach a file (image, PDF, Excel, Word)</span>
+      </label>
+      <input type="file" id="fileInput" accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg" style="display:none" onchange="onFileSelected()">
     </div>
     <div class="fld">
       <label class="lbl">Your Email <span style="color:#8AABB8;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional — for status updates)</span></label>
@@ -128,6 +133,42 @@ function getName(){
   var d=document.getElementById('dept').value;
   return d==='Finance'?document.getElementById('nameSel').value:document.getElementById('nameTxt').value.trim();
 }
+function onFileSelected(){
+  var file=document.getElementById('fileInput').files[0];
+  if(file){
+    document.getElementById('fileLabelText').textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
+    document.getElementById('fileLabel').style.borderColor='#0891B2';
+    document.getElementById('fileLabel').style.background='#E0F4FA';
+  }
+}
+
+function uploadFileAndSubmit(params, id, btn){
+  var file=document.getElementById('fileInput').files[0];
+  if(!file){
+    sendReq(params+'&attachmentUrl=', id, btn);
+    return;
+  }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var base64=e.target.result.split(',')[1];
+    var uploadParams='action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&fileData='+encodeURIComponent(base64)+'&reqId='+encodeURIComponent(id);
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET',SCRIPT_URL+'?'+uploadParams,true);
+    xhr.timeout=30000;
+    xhr.onload=function(){
+      try{var j=JSON.parse(xhr.responseText);sendReq(params+'&attachmentUrl='+encodeURIComponent(j.url||''), id, btn);}
+      catch(e){sendReq(params+'&attachmentUrl=', id, btn);}
+    };
+    xhr.onerror=xhr.ontimeout=function(){sendReq(params+'&attachmentUrl=', id, btn);};
+    xhr.send();
+  };
+  reader.readAsDataURL(file);
+}
+
+function sendReq(params, id, btn){
+  uploadFileAndSubmit(params, id, btn);
+}
+
 function submitReq(){
   var dept=document.getElementById('dept').value,name=getName(),module=document.getElementById('module').value,
       priority=document.getElementById('priority').value,title=document.getElementById('title').value.trim(),
@@ -148,16 +189,16 @@ function submitReq(){
     +'&department='+encodeURIComponent(dept)+'&priority='+encodeURIComponent(priority)
     +'&consultant='+encodeURIComponent(consultant)+'&abapDev=&targetDate='
     +'&notes='+encodeURIComponent(notes)+'&requesterEmail='+encodeURIComponent(reqEmail);
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET',SCRIPT_URL+'?'+params,true);xhr.timeout=15000;
-  xhr.onload=function(){try{var j=JSON.parse(xhr.responseText);if(j.success)id=j.id}catch(e){}btn.disabled=false;btn.textContent='Submit Requirement';showSuccess(id)};
-  xhr.onerror=xhr.ontimeout=function(){btn.disabled=false;btn.textContent='Submit Requirement';showSuccess(id)};
-  xhr.send();
+  uploadFileAndSubmit(params, id, btn);
 }
 function showSuccess(id){document.getElementById('successId').textContent=id;document.getElementById('formWrap').classList.add('hide');document.getElementById('successScreen').classList.add('show');window.scrollTo(0,0)}
 function resetForm(){
   ['dept','module','priority','nameSel'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
-  ['title','desc','notes','nameTxt','reqEmail'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
+  ['title','desc','nameTxt','reqEmail'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
+  document.getElementById('fileInput').value='';
+  document.getElementById('fileLabelText').textContent='Tap to attach a file (image, PDF, Excel, Word)';
+  document.getElementById('fileLabel').style.borderColor='#C0D8E8';
+  document.getElementById('fileLabel').style.background='#fff';
   document.getElementById('nameFinWrap').style.display='none';document.getElementById('nameOtherWrap').style.display='none';
   document.getElementById('formWrap').classList.remove('hide');document.getElementById('successScreen').classList.remove('show');window.scrollTo(0,0);
 }
