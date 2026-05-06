@@ -72,14 +72,10 @@ select option{background:#fff}
             <option value="Other">Other</option>
           </select>
         </div>
-        <div class="fld" id="nameFinWrap" style="display:none">
-          <label class="lbl">Your Name <span class="r">*</span></label>
-          <select id="nameSel"><option value="">— Select Name —</option><option value="Adeel">Adeel</option><option value="Momin">Momin</option></select>
-        </div>
-        <div class="fld" id="nameOtherWrap" style="display:none">
-          <label class="lbl">Your Name <span class="r">*</span></label>
-          <input type="text" id="nameTxt" placeholder="Enter your full name">
-        </div>
+    <div class="fld" id="nameWrap" style="display:none">
+      <label class="lbl">Your Name <span class="r">*</span></label>
+      <input type="text" id="nameTxt" placeholder="Enter your full name">
+    </div>
       </div>
 
       <div class="sec"><div class="sec-label">Requirement Details</div><div class="sec-line"></div></div>
@@ -142,7 +138,7 @@ select option{background:#fff}
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
 var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Rao Imran'};
 function onDept(){var v=document.getElementById('dept').value;document.getElementById('nameFinWrap').style.display=v==='Finance'?'block':'none';document.getElementById('nameOtherWrap').style.display=(v&&v!=='Finance')?'block':'none'}
-function getName(){var d=document.getElementById('dept').value;return d==='Finance'?document.getElementById('nameSel').value:document.getElementById('nameTxt').value.trim()}
+function getName(){return document.getElementById('nameTxt').value.trim();}
 function onFileSelected(){
   var file=document.getElementById('fileInput').files[0];
   if(file){
@@ -202,13 +198,13 @@ function submitReq(){
 
 function showSuccess(id){document.getElementById('successId').textContent=id;document.getElementById('formWrap').classList.add('hide');document.getElementById('successScreen').classList.add('show');window.scrollTo(0,0)}
 function resetForm(){
-  ['dept','module','priority','nameSel'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
+  ['dept','module','priority',].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
   ['title','desc','nameTxt','reqEmail'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
   document.getElementById('fileInput').value='';
   document.getElementById('fileLabelText').textContent='Click to attach a file (image, PDF, Excel, Word)';
   document.getElementById('fileLabel').style.borderColor='#C0D8E8';
   document.getElementById('fileLabel').style.background='#fff';
-  document.getElementById('nameFinWrap').style.display='none';document.getElementById('nameOtherWrap').style.display='none';
+  document.getElementById('nameWrap').style.display='none';
   document.getElementById('formWrap').classList.remove('hide');document.getElementById('successScreen').classList.remove('show');window.scrollTo(0,0);
 }
 </script>
