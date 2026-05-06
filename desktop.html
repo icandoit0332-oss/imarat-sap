@@ -159,14 +159,18 @@ function sendInBackground(params){
 
 function uploadInBackground(reqId){
   var file=document.getElementById('fileInput').files[0];
-  if(!file||!SCRIPT_URL||file.size>450000) return;
+  if(!file||!SCRIPT_URL) return;
   var reader=new FileReader();
   reader.onload=function(e){
     try{
       var b64=e.target.result.split(',')[1];
+      // Use POST for all file sizes — avoids URL length limits
       var x=new XMLHttpRequest();
-      x.open('GET',SCRIPT_URL+'?action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&reqId='+encodeURIComponent(reqId)+'&fileData='+encodeURIComponent(b64),true);
-      x.timeout=30000;x.send();
+      x.open('POST', SCRIPT_URL, true);
+      x.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+      x.timeout=60000;
+      var body='action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&reqId='+encodeURIComponent(reqId)+'&fileData='+encodeURIComponent(b64);
+      x.send(body);
     }catch(e){}
   };
   reader.readAsDataURL(file);
