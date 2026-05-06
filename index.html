@@ -142,37 +142,31 @@ function onFileSelected(){
   }
 }
 
-function uploadFileAndSubmit(params, id, btn){
+function sendInBackground(params){
+  if(!SCRIPT_URL) return;
+  try{var x=new XMLHttpRequest();x.open('GET',SCRIPT_URL+'?'+params,true);x.send();}catch(e){}
+}
+
+function uploadInBackground(reqId){
   var file=document.getElementById('fileInput').files[0];
-  if(!file){
-    sendReq(params+'&attachmentUrl=', id, btn);
-    return;
-  }
+  if(!file||!SCRIPT_URL||file.size>450000) return;
   var reader=new FileReader();
   reader.onload=function(e){
-    var base64=e.target.result.split(',')[1];
-    var uploadParams='action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&fileData='+encodeURIComponent(base64)+'&reqId='+encodeURIComponent(id);
-    var xhr=new XMLHttpRequest();
-    xhr.open('GET',SCRIPT_URL+'?'+uploadParams,true);
-    xhr.timeout=30000;
-    xhr.onload=function(){
-      try{var j=JSON.parse(xhr.responseText);sendReq(params+'&attachmentUrl='+encodeURIComponent(j.url||''), id, btn);}
-      catch(e){sendReq(params+'&attachmentUrl=', id, btn);}
-    };
-    xhr.onerror=xhr.ontimeout=function(){sendReq(params+'&attachmentUrl=', id, btn);};
-    xhr.send();
+    try{
+      var b64=e.target.result.split(',')[1];
+      var x=new XMLHttpRequest();
+      x.open('GET',SCRIPT_URL+'?action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&reqId='+encodeURIComponent(reqId)+'&fileData='+encodeURIComponent(b64),true);
+      x.timeout=30000;x.send();
+    }catch(e){}
   };
   reader.readAsDataURL(file);
 }
 
-function sendReq(params, id, btn){
-  uploadFileAndSubmit(params, id, btn);
-}
 
 function submitReq(){
   var dept=document.getElementById('dept').value,name=getName(),module=document.getElementById('module').value,
       priority=document.getElementById('priority').value,title=document.getElementById('title').value.trim(),
-      desc=document.getElementById('desc').value.trim(),notes=document.getElementById('notes').value.trim(),
+      desc=document.getElementById('desc').value.trim(),
       reqEmail=document.getElementById('reqEmail').value.trim(),
       consultant=module?(CONSULTANTS[module]||''):'';
   if(!dept){alert('Please select your department.');return}
@@ -181,16 +175,17 @@ function submitReq(){
   if(!priority){alert('Please select a priority.');return}
   if(!title){alert('Please enter a requirement title.');return}
   if(!desc){alert('Please describe the requirement.');return}
-  var btn=document.getElementById('subBtn');
-  btn.disabled=true;btn.textContent='Submitting...';
   var id='REQ-'+String(Date.now()).slice(-6);
   var params='action=submit&module='+encodeURIComponent(module)+'&title='+encodeURIComponent(title)
     +'&description='+encodeURIComponent(desc)+'&requester='+encodeURIComponent(name)
     +'&department='+encodeURIComponent(dept)+'&priority='+encodeURIComponent(priority)
     +'&consultant='+encodeURIComponent(consultant)+'&abapDev=&targetDate='
-    +'&notes='+encodeURIComponent(notes)+'&requesterEmail='+encodeURIComponent(reqEmail);
-  uploadFileAndSubmit(params, id, btn);
+    +'&notes=&requesterEmail='+encodeURIComponent(reqEmail)+'&attachmentUrl=';
+  showSuccess(id);
+  uploadInBackground(id);
+  sendInBackground(params);
 }
+
 function showSuccess(id){document.getElementById('successId').textContent=id;document.getElementById('formWrap').classList.add('hide');document.getElementById('successScreen').classList.add('show');window.scrollTo(0,0)}
 function resetForm(){
   ['dept','module','priority','nameSel'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
