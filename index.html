@@ -1,254 +1,351 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>IMARAT — Submit Requirement</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  background: #0a0e14; color: #edf0f7;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding-bottom: 60px; font-size: 16px;
-}
-.hdr {
-  background: #111720; border-bottom: 1px solid #1e2d3d;
-  padding: 14px 16px; display: flex; align-items: center; gap: 10px;
-  position: sticky; top: 0; z-index: 99;
-}
-.logo {
-  width: 36px; height: 36px; background: #00d68f; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 13px; color: #000; flex-shrink: 0;
-}
-.hdr-txt h1 { font-size: 15px; font-weight: 700; }
-.hdr-txt p  { font-size: 11px; color: #4a5568; margin-top: 1px; }
-.wrap { padding: 0 16px; }
-.sec {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-  color: #00d68f; font-weight: 700; padding: 20px 0 10px;
-  border-bottom: 1px solid #1e2d3d; margin-bottom: 14px;
-}
-.fld { margin-bottom: 16px; }
-.lbl { display: block; font-size: 13px; color: #8b96a8; margin-bottom: 7px; font-weight: 500; }
-.lbl .r { color: #ff5c6c; }
-input[type=text], input[type=email], textarea, select {
-  width: 100%; background: #1a2130; border: 2px solid #1e2d3d;
-  border-radius: 10px; padding: 14px; color: #edf0f7; font-size: 16px;
-  outline: none; -webkit-appearance: none; appearance: none;
-  font-family: inherit; transition: border-color 0.2s; display: block;
-}
-input[type=text]:focus, textarea:focus, select:focus { border-color: #00d68f; }
-input::placeholder, textarea::placeholder { color: #2d3748; }
-textarea { resize: none; height: 120px; line-height: 1.6; }
-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a5568'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 12px center;
-  background-size: 20px; padding-right: 40px; cursor: pointer;
-}
-select option { background: #1a2130; color: #edf0f7; }
-.sub-btn {
-  width: 100%; background: #00d68f; color: #000; border: none;
-  padding: 18px; border-radius: 12px; font-size: 17px; font-weight: 800;
-  cursor: pointer; margin-top: 28px; -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s;
-}
-.sub-btn:active { opacity: 0.8; }
-.sub-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.success { display: none; padding: 60px 24px; text-align: center; }
-.success.show { display: block; }
-.s-icon {
-  width: 80px; height: 80px; background: rgba(0,214,143,0.1);
-  border: 2px solid rgba(0,214,143,0.3); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 38px; margin: 0 auto 20px;
-}
-.s-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-.s-id {
-  display: inline-block; background: rgba(0,214,143,0.1); color: #00d68f;
-  font-family: monospace; font-size: 13px; padding: 6px 16px;
-  border-radius: 20px; margin: 8px 0 16px;
-}
-.s-desc { font-size: 14px; color: #4a5568; line-height: 1.7; }
-.new-btn {
-  margin-top: 28px; background: #1a2130; border: 2px solid #1e2d3d;
-  color: #8b96a8; padding: 14px 28px; border-radius: 10px;
-  font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
-}
-.form-wrap.hide { display: none; }
-</style>
-</head>
-<body>
-<div class="hdr">
-  <div class="logo">IM</div>
-  <div class="hdr-txt">
-    <h1>IMARAT SAP</h1>
-    <p>Requirement Submission</p>
-  </div>
-</div>
-<div class="wrap">
-  <div class="form-wrap" id="formWrap">
-
-    <div class="sec">Who Are You?</div>
-    <div class="fld">
-      <label class="lbl">Department <span class="r">*</span></label>
-      <select id="dept" onchange="onDept()">
-        <option value="">— Select Department —</option>
-        <option value="Finance">Finance</option>
-        <option value="HR">HR</option>
-        <option value="Procurement / MM">Procurement / MM</option>
-        <option value="Other">Other</option>
-      </select>
-    </div>
-    <div class="fld" id="nameFinWrap" style="display:none">
-      <label class="lbl">Your Name <span class="r">*</span></label>
-      <select id="nameSel">
-        <option value="">— Select Name —</option>
-        <option value="Adeel">Adeel</option>
-        <option value="Momin">Momin</option>
-      </select>
-    </div>
-    <div class="fld" id="nameOtherWrap" style="display:none">
-      <label class="lbl">Your Name <span class="r">*</span></label>
-      <input type="text" id="nameTxt" placeholder="Type your full name">
-    </div>
-
-    <div class="sec">Requirement Details</div>
-    <div class="fld">
-      <label class="lbl">SAP Module <span class="r">*</span></label>
-      <select id="module">
-        <option value="">— Select Module —</option>
-        <option value="FICO">FICO — Finance & Controlling</option>
-        <option value="MM">MM — Materials Management</option>
-        <option value="HCM">HCM — Human Capital Management</option>
-      </select>
-    </div>
-    <div class="fld">
-      <label class="lbl">Priority <span class="r">*</span></label>
-      <select id="priority">
-        <option value="">— Select Priority —</option>
-        <option value="High">High — Urgent / Blocking</option>
-        <option value="Medium">Medium — Normal</option>
-        <option value="Low">Low — Nice to Have</option>
-      </select>
-    </div>
-    <div class="fld">
-      <label class="lbl">Requirement Title <span class="r">*</span></label>
-      <input type="text" id="title" placeholder="e.g. Vendor master data update">
-    </div>
-    <div class="fld">
-      <label class="lbl">Description <span class="r">*</span></label>
-      <textarea id="desc" placeholder="Describe what you need in detail — what is the issue and what outcome do you expect?"></textarea>
-    </div>
-    <div class="fld">
-      <label class="lbl">Additional Notes</label>
-      <textarea id="notes" placeholder="Any extra context or references..." style="height:80px"></textarea>
-    </div>
-    <div class="fld">
-      <label class="lbl">Your Email <span style="color:#6b7a8d;font-size:11px;font-weight:400">(optional — for status updates)</span></label>
-      <input type="email" id="reqEmail" placeholder="your.email@company.com">
-    </div>
-
-    <button class="sub-btn" id="subBtn" onclick="submitReq()">Submit Requirement</button>
-  </div>
-
-  <div class="success" id="successScreen">
-    <div class="s-icon">✓</div>
-    <div class="s-title">Submitted!</div>
-    <div class="s-id" id="successId"></div>
-    <div class="s-desc">Your requirement has been received. The SAP team will review and assign it shortly.</div>
-    <button class="new-btn" onclick="resetForm()">Submit Another Requirement</button>
-  </div>
-</div>
-
-<script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
-var CONSULTANTS = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Rao Imran' };
-
-window.onload = function() {};
-
-function onDept() {
-  var v = document.getElementById('dept').value;
-  document.getElementById('nameFinWrap').style.display = v === 'Finance' ? 'block' : 'none';
-  document.getElementById('nameOtherWrap').style.display = (v && v !== 'Finance') ? 'block' : 'none';
+function doGet(e) {
+  return handleRequest(e);
 }
 
-function getName() {
-  var dept = document.getElementById('dept').value;
-  if (dept === 'Finance') return document.getElementById('nameSel').value;
-  return document.getElementById('nameTxt').value.trim();
+function doPost(e) {
+  return handleRequest(e);
 }
 
-function submitReq() {
-  var dept     = document.getElementById('dept').value;
-  var name     = getName();
-  var module   = document.getElementById('module').value;
-  var priority = document.getElementById('priority').value;
-  var title    = document.getElementById('title').value.trim();
-  var desc     = document.getElementById('desc').value.trim();
-  var notes    = document.getElementById('notes').value.trim();
-  var consultant = module ? (CONSULTANTS[module] || '') : '';
+// ── EMAIL CONFIG ──
+var TEAM_EMAILS = {
+  wasay:    'abdul.wasay@imarat.com.pk',
+  ayaz:     'ayaz.mughl@hotmail.com',
+  hassan:   'h.abbasi@propmax.ai',
+  raoImran: 'Rao.imran@imarat.com.pk',
+  saad:     'saadzahid537@gmail.com',
+  zeeshan:  'zeeshanhashim116@gmail.com',
+  umer:     'umer.naeem@imarat.com.pk'
+};
 
-  if (!dept)     { alert('Please select your department.'); return; }
-  if (!name)     { alert('Please enter your name.'); return; }
-  if (!module)   { alert('Please select a SAP module.'); return; }
-  if (!priority) { alert('Please select a priority.'); return; }
-  if (!title)    { alert('Please enter a requirement title.'); return; }
-  if (!desc)     { alert('Please describe the requirement.'); return; }
+// Module to consultant email mapping
+var MODULE_EMAILS = {
+  'FICO': TEAM_EMAILS.wasay,
+  'MM':   TEAM_EMAILS.hassan,
+  'HCM':  TEAM_EMAILS.raoImran
+};
 
-  var btn = document.getElementById('subBtn');
-  btn.disabled = true; btn.textContent = 'Submitting...';
+// Consultant name to email mapping
+var CONSULTANT_EMAILS = {
+  'Abdul Wasay': TEAM_EMAILS.wasay,
+  'Ayaz':        TEAM_EMAILS.ayaz,
+  'Hassan':      TEAM_EMAILS.hassan,
+  'Rao Imran':   TEAM_EMAILS.raoImran
+};
 
-  var id = 'REQ-' + String(Date.now()).slice(-6);
-  var reqEmail = document.getElementById('reqEmail').value.trim();
-  var params = 'action=submit'
-    + '&module='      + encodeURIComponent(module)
-    + '&title='       + encodeURIComponent(title)
-    + '&description=' + encodeURIComponent(desc)
-    + '&requester='   + encodeURIComponent(name)
-    + '&department='  + encodeURIComponent(dept)
-    + '&priority='    + encodeURIComponent(priority)
-    + '&consultant='  + encodeURIComponent(consultant)
-    + '&abapDev='     + encodeURIComponent('')
-    + '&targetDate='  + encodeURIComponent('')
-    + '&notes='       + encodeURIComponent(notes)
-    + '&requesterEmail=' + encodeURIComponent(reqEmail);
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', SCRIPT_URL + '?' + params, true);
-  xhr.timeout = 15000;
-  xhr.onload = function() {
-    try { var j = JSON.parse(xhr.responseText); if (j.success) id = j.id; } catch(e) {}
-    btn.disabled = false; btn.textContent = 'Submit Requirement';
-    showSuccess(id);
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    btn.disabled = false; btn.textContent = 'Submit Requirement';
-    showSuccess(id);
-  };
-  xhr.send();
+var ABAP_EMAILS = {
+  'Saad':    TEAM_EMAILS.saad,
+  'Zeeshan': TEAM_EMAILS.zeeshan
+};
+
+function sendNotification(to, subject, body) {
+  try {
+    if (!to || to === '') return;
+    MailApp.sendEmail({ to: to, subject: subject, htmlBody: body });
+  } catch(e) {
+    Logger.log('Email error: ' + e.message);
+  }
 }
 
-function showSuccess(id) {
-  document.getElementById('successId').textContent = id;
-  document.getElementById('formWrap').classList.add('hide');
-  document.getElementById('successScreen').classList.add('show');
-  window.scrollTo(0, 0);
-}
-
-function resetForm() {
-  ['dept','module','priority','nameSel'].forEach(function(id) {
-    var el = document.getElementById(id); if (el) el.value = '';
+function sendToMultiple(emails, subject, body) {
+  emails.filter(Boolean).forEach(function(email) {
+    sendNotification(email, subject, body);
   });
-  ['title','desc','notes','nameTxt'].forEach(function(id) {
-    var el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('nameFinWrap').style.display = 'none';
-  document.getElementById('nameOtherWrap').style.display = 'none';
-  document.getElementById('formWrap').classList.remove('hide');
-  document.getElementById('successScreen').classList.remove('show');
-  window.scrollTo(0, 0);
 }
-</script>
-</body>
-</html>
+
+function emailTemplate(title, content) {
+  return '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f5f5f5;padding:20px">'
+    + '<div style="background:#0a0e14;padding:20px;border-radius:10px 10px 0 0;text-align:center">'
+    + '<span style="color:var(--primary);font-size:22px;font-weight:800">IMARAT SAP</span>'
+    + '<div style="color:#4a5568;font-size:12px;margin-top:4px">Requirement Management System</div>'
+    + '</div>'
+    + '<div style="background:#fff;padding:24px;border-radius:0 0 10px 10px">'
+    + '<h2 style="color:#0a0e14;margin:0 0 16px">' + title + '</h2>'
+    + content
+    + '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#999">'
+    + 'IMARAT Group · SAP Team · This is an automated notification.'
+    + '</div></div></div>';
+}
+
+function handleRequest(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Requirements") || ss.insertSheet("Requirements");
+
+  var params = e.parameter || {};
+  var action = params.action || "";
+
+  var headers = ["ID","Timestamp","Module","Title","Description","Requester","Department",
+    "Priority","Consultant","ABAP Dev","Target Date","Status","Notes","Last Updated",
+    "Requester Email","Completion Date"];
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    sheet.getRange(1,1,1,headers.length).setFontWeight("bold");
+  }
+
+  var result = {};
+
+  if (action === "submit") {
+    var newId = "REQ-" + String(Date.now()).slice(-6);
+    var row = [
+      newId, new Date().toISOString(),
+      params.module || "", params.title || "", params.description || "",
+      params.requester || "", params.department || "", params.priority || "",
+      params.consultant || "", params.abapDev || "", params.targetDate || "",
+      "Not Started", params.notes || "", new Date().toISOString(),
+      params.requesterEmail || "", ""
+    ];
+    sheet.appendRow(row);
+
+    // Email consultant based on module
+    var consultantEmail = CONSULTANT_EMAILS[params.consultant] || MODULE_EMAILS[params.module] || TEAM_EMAILS.wasay;
+    var priorityColor = params.priority === 'High' ? '#ff5c6c' : params.priority === 'Medium' ? '#ffb547' : 'var(--primary)';
+
+    var alertBody = emailTemplate('🔔 New Requirement — Action Required',
+      '<table style="width:100%;border-collapse:collapse">'
+      + '<tr><td style="padding:8px;color:#666;width:130px">ID</td><td style="padding:8px;font-weight:bold;color:var(--primary)">' + newId + '</td></tr>'
+      + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Module</td><td style="padding:8px;font-weight:bold">' + (params.module||'') + '</td></tr>'
+      + '<tr><td style="padding:8px;color:#666">Title</td><td style="padding:8px;font-weight:bold">' + (params.title||'') + '</td></tr>'
+      + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Requester</td><td style="padding:8px">' + (params.requester||'') + ' (' + (params.department||'') + ')</td></tr>'
+      + '<tr><td style="padding:8px;color:#666">Priority</td><td style="padding:8px"><span style="color:' + priorityColor + ';font-weight:bold">' + (params.priority||'') + '</span></td></tr>'
+      + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Assigned To</td><td style="padding:8px">' + (params.consultant||'') + '</td></tr>'
+      + '<tr><td style="padding:8px;color:#666">Description</td><td style="padding:8px">' + (params.description||'') + '</td></tr>'
+      + '</table>'
+      + '<p style="margin-top:16px;padding:12px;background:#f0fff8;border-left:3px solid #00d68f;color:#00a86b">Please open the SAP Dashboard to review and set a target date.</p>'
+    );
+
+    // Send to assigned consultant
+    sendNotification(consultantEmail, '🔔 New SAP Requirement [' + (params.priority||'') + '] — ' + (params.module||'') + ' | ' + (params.title||''), alertBody);
+
+    // If consultant is Ayaz, also notify Wasay
+    if (params.consultant === 'Ayaz') {
+      sendNotification(TEAM_EMAILS.wasay, '🔔 New SAP Requirement assigned to Ayaz — ' + (params.title||''), alertBody);
+    }
+
+    // Confirmation to requester if email provided
+    if (params.requesterEmail) {
+      var confirmBody = emailTemplate('Your Requirement Has Been Received ✓',
+        '<p style="color:#555;margin:0 0 16px">Thank you for submitting your requirement. Here are the details:</p>'
+        + '<table style="width:100%;border-collapse:collapse">'
+        + '<tr><td style="padding:8px;color:#666;width:130px">Reference ID</td><td style="padding:8px;font-weight:bold;color:var(--primary)">' + newId + '</td></tr>'
+        + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Title</td><td style="padding:8px">' + (params.title||'') + '</td></tr>'
+        + '<tr><td style="padding:8px;color:#666">Module</td><td style="padding:8px">' + (params.module||'') + '</td></tr>'
+        + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Assigned To</td><td style="padding:8px">' + (params.consultant||'') + '</td></tr>'
+        + '<tr><td style="padding:8px;color:#666">Priority</td><td style="padding:8px">' + (params.priority||'') + '</td></tr>'
+        + '</table>'
+        + '<p style="margin-top:16px;padding:12px;background:#f0fff8;border-left:3px solid #00d68f;color:#00a86b">You will be notified when your requirement is completed. Please save your Reference ID for follow-up.</p>'
+      );
+      sendNotification(params.requesterEmail, '✓ SAP Requirement Received — ' + newId + ' | ' + (params.title||''), confirmBody);
+    }
+
+    result = {success: true, id: newId};
+
+  } else if (action === "updateStatus") {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0] === params.id) {
+        sheet.getRange(i+1, 12).setValue(params.status);
+        sheet.getRange(i+1, 14).setValue(new Date().toISOString());
+
+        // Auto-stamp completion date in column 16
+        if (params.status === 'Completed') {
+          sheet.getRange(i+1, 16).setValue(new Date().toISOString().split('T')[0]);
+
+          var reqTitle     = rows[i][3];
+          var reqModule    = rows[i][2];
+          var consultant   = rows[i][8];
+          var requesterEmail = rows[i][14] || '';
+
+          var completionBody = emailTemplate('Requirement Completed ✓',
+            '<p style="color:#666;margin:0 0 16px">The following requirement has been completed:</p>'
+            + '<table style="width:100%;border-collapse:collapse">'
+            + '<tr><td style="padding:8px;color:#666;width:130px">ID</td><td style="padding:8px;font-weight:bold;color:var(--primary)">' + params.id + '</td></tr>'
+            + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Module</td><td style="padding:8px">' + reqModule + '</td></tr>'
+            + '<tr><td style="padding:8px;color:#666">Title</td><td style="padding:8px;font-weight:bold">' + reqTitle + '</td></tr>'
+            + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Completed By</td><td style="padding:8px">' + consultant + '</td></tr>'
+            + '<tr><td style="padding:8px;color:#666">Date</td><td style="padding:8px">' + new Date().toLocaleDateString() + '</td></tr>'
+            + '</table>'
+            + '<p style="margin-top:16px;padding:12px;background:#f0fff8;border-left:3px solid #00d68f;color:#00a86b">Please verify the work and confirm it meets your requirements.</p>'
+          );
+
+          // Notify requester if email available
+          if (requesterEmail) sendNotification(requesterEmail, '✅ Your SAP Requirement is Complete — ' + reqTitle, completionBody);
+          // Always notify Wasay
+          sendNotification(TEAM_EMAILS.wasay, '✅ SAP Requirement Completed — ' + reqTitle, completionBody);
+        }
+        break;
+      }
+    }
+    result = {success: true};
+
+  } else if (action === "updateAssignment") {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0] === params.id) {
+        var oldConsultant = rows[i][8];
+        var oldAbap = rows[i][9];
+        if (params.consultant) sheet.getRange(i+1, 9).setValue(params.consultant);
+        if (params.abapDev !== undefined) sheet.getRange(i+1, 10).setValue(params.abapDev);
+        if (params.targetDate !== undefined) sheet.getRange(i+1, 11).setValue(params.targetDate);
+        sheet.getRange(i+1, 14).setValue(new Date().toISOString());
+
+        var reqTitle = rows[i][3];
+        var reqModule = rows[i][2];
+
+        // Notify new consultant if changed
+        if (params.consultant && params.consultant !== oldConsultant) {
+          var newConsultantEmail = CONSULTANT_EMAILS[params.consultant];
+          if (newConsultantEmail) {
+            var assignBody = emailTemplate('You Have Been Assigned a Requirement',
+              '<table style="width:100%;border-collapse:collapse">'
+              + '<tr><td style="padding:8px;color:#666">ID</td><td style="padding:8px;font-weight:bold;color:var(--primary)">' + params.id + '</td></tr>'
+              + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Title</td><td style="padding:8px">' + reqTitle + '</td></tr>'
+              + '<tr><td style="padding:8px;color:#666">Module</td><td style="padding:8px">' + reqModule + '</td></tr>'
+              + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Target Date</td><td style="padding:8px">' + (params.targetDate||'TBD') + '</td></tr>'
+              + '</table>'
+            );
+            sendNotification(newConsultantEmail, '📋 New Assignment — ' + reqTitle, assignBody);
+          }
+        }
+
+        // Notify ABAP developer if assigned
+        if (params.abapDev && params.abapDev !== oldAbap && params.abapDev !== '') {
+          var abapEmail = ABAP_EMAILS[params.abapDev];
+          if (abapEmail) {
+            var abapBody = emailTemplate('ABAP Development Required',
+              '<p style="color:#666;margin:0 0 16px">You have been assigned as ABAP developer for the following requirement:</p>'
+              + '<table style="width:100%;border-collapse:collapse">'
+              + '<tr><td style="padding:8px;color:#666">ID</td><td style="padding:8px;font-weight:bold;color:var(--primary)">' + params.id + '</td></tr>'
+              + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Title</td><td style="padding:8px">' + reqTitle + '</td></tr>'
+              + '<tr><td style="padding:8px;color:#666">Module</td><td style="padding:8px">' + reqModule + '</td></tr>'
+              + '<tr style="background:#f9f9f9"><td style="padding:8px;color:#666">Target Date</td><td style="padding:8px">' + (params.targetDate||'TBD') + '</td></tr>'
+              + '</table>'
+            );
+            sendNotification(abapEmail, '⚙ ABAP Assignment — ' + reqTitle, abapBody);
+          }
+        }
+        break;
+      }
+    }
+    result = {success: true};
+
+  } else if (action === "deleteReq") {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0] === params.id) {
+        sheet.deleteRow(i + 1);
+        break;
+      }
+    }
+    result = {success: true};
+
+  } else if (action === "read" || action === "") {
+    var rows = sheet.getDataRange().getValues();
+    var records = [];
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0]) {
+        records.push({
+          id: rows[i][0], timestamp: rows[i][1], module: rows[i][2],
+          title: rows[i][3], description: rows[i][4], requester: rows[i][5],
+          department: rows[i][6], priority: rows[i][7], consultant: rows[i][8],
+          abapDev: rows[i][9], targetDate: rows[i][10], status: rows[i][11],
+          notes: rows[i][12], lastUpdated: rows[i][13],
+          requesterEmail: rows[i][14] || '', completionDate: rows[i][15] || ''
+        });
+      }
+    }
+    result = {success: true, data: records};
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── WEEKLY DIGEST — Every Monday 8am ──
+function weeklyDigest() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Requirements");
+  if (!sheet) return;
+
+  var rows = sheet.getDataRange().getValues();
+  var total = rows.length - 1;
+  var completed = 0, inProgress = 0, notStarted = 0, overdue = 0, uat = 0;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+  var newThisWeek = 0;
+
+  for (var i = 1; i < rows.length; i++) {
+    var status = rows[i][11];
+    var targetDate = rows[i][10] ? new Date(rows[i][10]) : null;
+    var timestamp = rows[i][1] ? new Date(rows[i][1]) : null;
+    if (status === 'Completed') completed++;
+    else if (status === 'In Progress') inProgress++;
+    else if (status === 'Not Started') notStarted++;
+    else if (status === 'UAT') uat++;
+    if (targetDate && targetDate < today && status !== 'Completed') overdue++;
+    if (timestamp && timestamp >= weekAgo) newThisWeek++;
+  }
+
+  var digestBody = emailTemplate('📊 Weekly SAP Dashboard — ' + new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'}),
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+    + '<tr><td style="padding:12px;background:#f9f9f9;font-weight:bold;color:var(--primary)">New This Week</td><td style="padding:12px;background:#f9f9f9;font-size:22px;font-weight:800">' + newThisWeek + '</td></tr>'
+    + '<tr><td style="padding:12px;font-weight:bold;color:#4d9fff">In Progress</td><td style="padding:12px;font-size:22px;font-weight:800">' + inProgress + '</td></tr>'
+    + '<tr><td style="padding:12px;background:#f9f9f9;font-weight:bold;color:#a78bfa">In UAT</td><td style="padding:12px;background:#f9f9f9;font-size:22px;font-weight:800">' + uat + '</td></tr>'
+    + '<tr><td style="padding:12px;font-weight:bold;color:var(--primary)">Completed (All Time)</td><td style="padding:12px;font-size:22px;font-weight:800">' + completed + '</td></tr>'
+    + '<tr><td style="padding:12px;background:#f9f9f9;font-weight:bold;color:#ff5c6c">Overdue</td><td style="padding:12px;background:#f9f9f9;font-size:22px;font-weight:800;color:#ff5c6c">' + overdue + '</td></tr>'
+    + '<tr><td style="padding:12px;font-weight:bold;color:#666">Total Requirements</td><td style="padding:12px;font-size:22px;font-weight:800">' + total + '</td></tr>'
+    + '</table>'
+    + (overdue > 0 ? '<p style="padding:12px;background:#fff5f5;border-left:3px solid #ff5c6c;color:#ff5c6c;margin:0">⚠ ' + overdue + ' requirement(s) are past their target date.</p>' : '<p style="padding:12px;background:#f0fff8;border-left:3px solid #00d68f;color:#00a86b;margin:0">✓ No overdue requirements. Great work!</p>')
+  );
+
+  sendToMultiple([TEAM_EMAILS.wasay, TEAM_EMAILS.umer], '📊 IMARAT SAP Weekly Report — ' + new Date().toLocaleDateString(), digestBody);
+}
+
+// ── DEADLINE REMINDER — runs daily ──
+function deadlineReminder() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Requirements");
+  if (!sheet) return;
+
+  var rows = sheet.getDataRange().getValues();
+  var today = new Date(); today.setHours(0,0,0,0);
+  var in3days = new Date(today); in3days.setDate(in3days.getDate() + 3);
+  var dueSoon = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    if (!rows[i][10] || rows[i][11] === 'Completed') continue;
+    var target = new Date(rows[i][10]); target.setHours(0,0,0,0);
+    if (target.getTime() === in3days.getTime()) {
+      dueSoon.push({
+        id: rows[i][0], title: rows[i][3], module: rows[i][2],
+        consultant: rows[i][8], abapDev: rows[i][9],
+        target: rows[i][10], requesterEmail: rows[i][14] || ''
+      });
+    }
+  }
+
+  if (dueSoon.length === 0) return;
+
+  var reminderBody = emailTemplate('⏰ Deadline Reminder — ' + dueSoon.length + ' Task(s) Due in 3 Days',
+    '<p style="color:#666;margin:0 0 16px">The following requirements are due in 3 days. Please ensure they are on track:</p>'
+    + dueSoon.map(function(r) {
+      return '<div style="border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:8px">'
+        + '<div style="font-weight:bold;color:#ffb547">' + r.id + ' — ' + r.title + '</div>'
+        + '<div style="color:#666;font-size:13px;margin-top:4px">' + r.module + ' · ' + r.consultant + (r.abapDev ? ' · ⚙ ' + r.abapDev : '') + ' · Due: ' + r.target + '</div>'
+        + '</div>';
+    }).join('')
+  );
+
+  // Collect all unique recipients
+  var recipients = [TEAM_EMAILS.wasay];
+  dueSoon.forEach(function(r) {
+    var ce = CONSULTANT_EMAILS[r.consultant];
+    if (ce && recipients.indexOf(ce) === -1) recipients.push(ce);
+    if (r.abapDev) {
+      var ae = ABAP_EMAILS[r.abapDev];
+      if (ae && recipients.indexOf(ae) === -1) recipients.push(ae);
+    }
+    if (r.requesterEmail && recipients.indexOf(r.requesterEmail) === -1) recipients.push(r.requesterEmail);
+  });
+
+  sendToMultiple(recipients, '⏰ ' + dueSoon.length + ' SAP Requirement(s) Due in 3 Days', reminderBody);
+}
