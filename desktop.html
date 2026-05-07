@@ -107,14 +107,7 @@ select option{background:#fff}
           <textarea id="desc" placeholder="Describe what you need in detail — what is the current issue, what outcome do you expect?"></textarea>
         </div>
 
-        <div class="fld full">
-          <label class="lbl">Attachment <span style="font-weight:400;color:#8AABB8;font-size:10px;text-transform:none;letter-spacing:0">(optional — max 50MB)</span></label>
-          <label for="fileInput" id="fileLabel" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed #C0D8E8;border-radius:9px;padding:14px 16px;cursor:pointer;transition:all 0.2s">
-            <span style="font-size:20px">📎</span>
-            <span id="fileLabelText" style="font-size:13px;color:#8AABB8">Click to attach a file (image, PDF, Excel, Word)</span>
-          </label>
-          <input type="file" id="fileInput" accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg" style="display:none" onchange="onFileSelected()">
-        </div>
+
         <div class="fld full">
           <label class="lbl">Your Email <span style="font-weight:400;color:#8AABB8;font-size:10px;text-transform:none;letter-spacing:0">(optional — receive status updates)</span></label>
           <input type="email" id="reqEmail" placeholder="your.email@company.com">
@@ -139,43 +132,6 @@ var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1
 var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Rao Imran'};
 function onDept(){var v=document.getElementById('dept').value;document.getElementById('nameFinWrap').style.display=v==='Finance'?'block':'none';document.getElementById('nameOtherWrap').style.display=(v&&v!=='Finance')?'block':'none'}
 function getName(){return document.getElementById('nameTxt').value.trim();}
-function onFileSelected(){
-  var file=document.getElementById('fileInput').files[0];
-  if(file){
-    document.getElementById('fileLabelText').textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
-    document.getElementById('fileLabel').style.borderColor='#0891B2';
-    document.getElementById('fileLabel').style.background='#E0F4FA';
-  }
-}
-
-function sendInBackground(params){
-  if(!SCRIPT_URL) return;
-  try{var x=new XMLHttpRequest();x.open('GET',SCRIPT_URL+'?'+params,true);x.send();}catch(e){}
-}
-
-function uploadInBackground(reqId){
-  var file=document.getElementById('fileInput').files[0];
-  if(!file||!SCRIPT_URL) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      var b64=e.target.result.split(',')[1];
-      var body='action=uploadFile'
-        +'&fileName='+encodeURIComponent(file.name)
-        +'&mimeType='+encodeURIComponent(file.type)
-        +'&reqId='+encodeURIComponent(reqId)
-        +'&fileData='+encodeURIComponent(b64);
-      // Use no-cors fetch — bypasses CORS restriction from GitHub Pages
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {'Content-Type':'application/x-www-form-urlencoded'},
-        body: body
-      }).catch(function(){});
-    }catch(err){}
-  };
-  reader.readAsDataURL(file);
-}
 
 
 function submitReq(){
@@ -205,10 +161,7 @@ function showSuccess(id){document.getElementById('successId').textContent=id;doc
 function resetForm(){
   ['dept','module','priority',].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
   ['title','desc','nameTxt','reqEmail'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
-  document.getElementById('fileInput').value='';
-  document.getElementById('fileLabelText').textContent='Click to attach a file (image, PDF, Excel, Word)';
-  document.getElementById('fileLabel').style.borderColor='#C0D8E8';
-  document.getElementById('fileLabel').style.background='#fff';
+
   document.getElementById('nameWrap').style.display='none';
   document.getElementById('formWrap').classList.remove('hide');document.getElementById('successScreen').classList.remove('show');window.scrollTo(0,0);
 }
