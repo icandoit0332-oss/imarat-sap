@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#EFF5F8;color:#0C2D3E;font-family:'DM Sans',sans-serif;min-height:100vh} 
+body{background:#EFF5F8;color:#0C2D3E;font-family:'DM Sans',sans-serif;min-height:100vh}
 .hdr{background:#fff;border-bottom:1px solid #D6E8F0;padding:0 40px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:99;box-shadow:0 1px 3px rgba(8,145,178,0.06)}
 .logo{width:34px;height:34px;background:linear-gradient(135deg,#0891B2,#0C6A8B);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:13px;color:#fff;box-shadow:0 2px 6px rgba(8,145,178,0.25)}
 .hdr-name{font-weight:600;font-size:15px;color:#0C2D3E}
@@ -72,10 +72,10 @@ select option{background:#fff}
             <option value="Other">Other</option>
           </select>
         </div>
-    <div class="fld" id="nameWrap" style="display:none">
-      <label class="lbl">Your Name <span class="r">*</span></label>
-      <input type="text" id="nameTxt" placeholder="Enter your full name">
-    </div>
+        <div class="fld" id="nameWrap" style="display:none">
+          <label class="lbl">Your Name <span class="r">*</span></label>
+          <input type="text" id="nameTxt" placeholder="Enter your full name">
+        </div>
       </div>
 
       <div class="sec"><div class="sec-label">Requirement Details</div><div class="sec-line"></div></div>
@@ -84,7 +84,7 @@ select option{background:#fff}
           <label class="lbl">SAP Module <span class="r">*</span></label>
           <select id="module">
             <option value="">— Select Module —</option>
-            <option value="FICO">FICO — Finance & Controlling</option>
+            <option value="FICO">FICO — Finance &amp; Controlling</option>
             <option value="MM">MM — Materials Management</option>
             <option value="HCM">HCM — Human Capital Management</option>
           </select>
@@ -93,9 +93,9 @@ select option{background:#fff}
           <label class="lbl">Priority <span class="r">*</span></label>
           <select id="priority">
             <option value="">— Select Priority —</option>
-            <option value="High">🔴 High — Urgent / Blocking</option>
-            <option value="Medium">🟡 Medium — Normal</option>
-            <option value="Low">🟢 Low — Nice to Have</option>
+            <option value="High">High — Urgent / Blocking</option>
+            <option value="Medium">Medium — Normal</option>
+            <option value="Low">Low — Nice to Have</option>
           </select>
         </div>
         <div class="fld full">
@@ -106,19 +106,16 @@ select option{background:#fff}
           <label class="lbl">Description <span class="r">*</span></label>
           <textarea id="desc" placeholder="Describe what you need in detail — what is the current issue, what outcome do you expect?"></textarea>
         </div>
-
-
         <div class="fld full">
           <label class="lbl">Your Email <span style="font-weight:400;color:#8AABB8;font-size:10px;text-transform:none;letter-spacing:0">(optional — receive status updates)</span></label>
           <input type="email" id="reqEmail" placeholder="your.email@company.com">
         </div>
       </div>
-
-      <button class="sub-btn" id="subBtn" onclick="submitReq()">✦ Submit Requirement</button>
+      <button class="sub-btn" id="subBtn" onclick="submitReq()">Submit Requirement</button>
     </div>
 
     <div class="success" id="successScreen">
-      <div class="s-icon">✓</div>
+      <div class="s-icon">&#10003;</div>
       <div class="s-title">Requirement Submitted!</div>
       <div class="s-id" id="successId"></div>
       <div class="s-desc">Your requirement has been received. The SAP team will review, assign, and set a target date shortly.</div>
@@ -130,39 +127,77 @@ select option{background:#fff}
 <script>
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
 var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Rao Imran'};
-function onDept(){var v=document.getElementById('dept').value;document.getElementById('nameFinWrap').style.display=v==='Finance'?'block':'none';document.getElementById('nameOtherWrap').style.display=(v&&v!=='Finance')?'block':'none'}
-function getName(){return document.getElementById('nameTxt').value.trim();}
 
+function onDept(){
+  var v=document.getElementById('dept').value;
+  document.getElementById('nameWrap').style.display=v?'block':'none';
+}
+
+function getName(){
+  return document.getElementById('nameTxt').value.trim();
+}
+
+function sendInBackground(params){
+  if(!SCRIPT_URL) return;
+  try{
+    var x=new XMLHttpRequest();
+    x.open('GET',SCRIPT_URL+'?'+params,true);
+    x.send();
+  }catch(e){}
+}
 
 function submitReq(){
-  var dept=document.getElementById('dept').value,name=getName(),module=document.getElementById('module').value,
-      priority=document.getElementById('priority').value,title=document.getElementById('title').value.trim(),
-      desc=document.getElementById('desc').value.trim(),
-      reqEmail=document.getElementById('reqEmail').value.trim(),
-      consultant=module?(CONSULTANTS[module]||''):'';
-  if(!dept){alert('Please select your department.');return}
-  if(!name){alert('Please enter your name.');return}
-  if(!module){alert('Please select a SAP module.');return}
-  if(!priority){alert('Please select a priority.');return}
-  if(!title){alert('Please enter a requirement title.');return}
-  if(!desc){alert('Please describe the requirement.');return}
+  var dept=document.getElementById('dept').value;
+  var name=getName();
+  var module=document.getElementById('module').value;
+  var priority=document.getElementById('priority').value;
+  var title=document.getElementById('title').value.trim();
+  var desc=document.getElementById('desc').value.trim();
+  var reqEmail=document.getElementById('reqEmail').value.trim();
+  var consultant=module?(CONSULTANTS[module]||''):'';
+
+  if(!dept){alert('Please select your department.');return;}
+  if(!name){alert('Please enter your name.');return;}
+  if(!module){alert('Please select a SAP module.');return;}
+  if(!priority){alert('Please select a priority.');return;}
+  if(!title){alert('Please enter a requirement title.');return;}
+  if(!desc){alert('Please describe the requirement.');return;}
+
   var id='REQ-'+String(Date.now()).slice(-6);
-  var params='action=submit&module='+encodeURIComponent(module)+'&title='+encodeURIComponent(title)
-    +'&description='+encodeURIComponent(desc)+'&requester='+encodeURIComponent(name)
-    +'&department='+encodeURIComponent(dept)+'&priority='+encodeURIComponent(priority)
-    +'&consultant='+encodeURIComponent(consultant)+'&abapDev=&targetDate='
-    +'&notes=&requesterEmail='+encodeURIComponent(reqEmail)+'&attachmentUrl=';
+  var params='action=submit'
+    +'&module='+encodeURIComponent(module)
+    +'&title='+encodeURIComponent(title)
+    +'&description='+encodeURIComponent(desc)
+    +'&requester='+encodeURIComponent(name)
+    +'&department='+encodeURIComponent(dept)
+    +'&priority='+encodeURIComponent(priority)
+    +'&consultant='+encodeURIComponent(consultant)
+    +'&abapDev=&targetDate=&notes='
+    +'&requesterEmail='+encodeURIComponent(reqEmail)
+    +'&attachmentUrl=';
+
   showSuccess(id);
   sendInBackground(params);
 }
 
-function showSuccess(id){document.getElementById('successId').textContent=id;document.getElementById('formWrap').classList.add('hide');document.getElementById('successScreen').classList.add('show');window.scrollTo(0,0)}
-function resetForm(){
-  ['dept','module','priority',].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
-  ['title','desc','nameTxt','reqEmail'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});
+function showSuccess(id){
+  document.getElementById('successId').textContent=id;
+  document.getElementById('formWrap').classList.add('hide');
+  document.getElementById('successScreen').classList.add('show');
+  window.scrollTo(0,0);
+}
 
+function resetForm(){
+  ['dept','module','priority'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  ['title','desc','nameTxt','reqEmail'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
   document.getElementById('nameWrap').style.display='none';
-  document.getElementById('formWrap').classList.remove('hide');document.getElementById('successScreen').classList.remove('show');window.scrollTo(0,0);
+  document.getElementById('formWrap').classList.remove('hide');
+  document.getElementById('successScreen').classList.remove('show');
+  window.scrollTo(0,0);
 }
 </script>
 </body>
