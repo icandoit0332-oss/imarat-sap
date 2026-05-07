@@ -160,14 +160,19 @@ function uploadInBackground(reqId){
   reader.onload=function(e){
     try{
       var b64=e.target.result.split(',')[1];
-      // Use POST for all file sizes — avoids URL length limits
-      var x=new XMLHttpRequest();
-      x.open('POST', SCRIPT_URL, true);
-      x.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
-      x.timeout=60000;
-      var body='action=uploadFile&fileName='+encodeURIComponent(file.name)+'&mimeType='+encodeURIComponent(file.type)+'&reqId='+encodeURIComponent(reqId)+'&fileData='+encodeURIComponent(b64);
-      x.send(body);
-    }catch(e){}
+      var body='action=uploadFile'
+        +'&fileName='+encodeURIComponent(file.name)
+        +'&mimeType='+encodeURIComponent(file.type)
+        +'&reqId='+encodeURIComponent(reqId)
+        +'&fileData='+encodeURIComponent(b64);
+      // Use no-cors fetch — bypasses CORS restriction from GitHub Pages
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: body
+      }).catch(function(){});
+    }catch(err){}
   };
   reader.readAsDataURL(file);
 }
