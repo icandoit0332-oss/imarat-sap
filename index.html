@@ -141,7 +141,6 @@ function submitReq(){
     +'&consultant='+encodeURIComponent(consultant)+'&abapDev=&targetDate='
     +'&notes=&requesterEmail='+encodeURIComponent(reqEmail)+'&attachmentUrl=';
   showSuccess(id);
-  uploadInBackground(id);
   sendInBackground(params);
 }
 
