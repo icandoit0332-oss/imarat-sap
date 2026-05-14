@@ -2046,7 +2046,7 @@ function renderTasks() {
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)">${r.targetDate || '—'} ${dueBadge(r)}</td>
       <td style="display:flex;gap:5px">
         <button onclick="openModal('${r.id}')" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text-mid);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer">View</button>
-        <button onclick="deleteRequirement('${r.id}')" style="background:var(--red-dim);border:1px solid rgba(255,92,108,0.2);color:var(--red);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer" title="Delete">🗑</button>
+        ${currentRole !== 'viewer' ? `<button onclick="deleteRequirement('${r.id}')" style="background:var(--red-dim);border:1px solid rgba(255,92,108,0.2);color:var(--red);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer" title="Delete">🗑</button>` : ''}
       </td>
     </tr>
   `).join('') || `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-dim)">No requirements found</td></tr>`;
@@ -2478,4 +2478,3 @@ function showToast(msg, type='success') {
 </script>
 </body>
 </html>
-
