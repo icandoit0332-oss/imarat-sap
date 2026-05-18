@@ -353,151 +353,165 @@ table.ept tr:last-child td{border-bottom:none;}
 #refresh-status{font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);}
 
 /* ══════════════════════════════════════════════════════════
-   MOBILE RESPONSIVE — 768px and below
+   MOBILE RESPONSIVE
 ══════════════════════════════════════════════════════════ */
 @media(max-width:768px){
 
-  /* Header */
-  .hdr{padding:0 12px;height:48px;gap:8px;}
+  /* HEADER */
+  .hdr{padding:0 12px;height:48px;gap:6px;}
+  .hdr-l{gap:8px;}
+  .logo-box{width:28px;height:28px;border-radius:6px;}
   .brand-en{font-size:12px;}
   .brand-sub{display:none;}
+  .hdr-r{gap:5px;}
   .hdr-date{display:none;}
   #refresh-status{display:none;}
   .hdr-user{display:none;}
-  .hdr-r{gap:6px;}
   .hdr-btn{padding:5px 9px;font-size:11px;}
   .ref-lbl{display:none;}
   .ref-ico{display:inline!important;}
   #hpill{font-size:10px;padding:4px 8px;}
-  .logo-box{width:28px;height:28px;}
 
-  /* Nav */
-  .nav{padding:0 8px;}
-  .nt{padding:0 12px;font-size:11px;gap:5px;height:42px;}
-  .nt svg{width:13px;height:13px;}
+  /* NAV */
+  .nav{padding:0 4px;}
+  .nt{padding:0 10px;font-size:11px;gap:4px;height:40px;}
+  .nt svg{width:12px;height:12px;}
 
-  /* Main padding */
-  .main{padding:12px;}
+  /* MAIN */
+  .main{padding:10px;}
 
-  /* Grids → single column */
-  .g2,.g3,.g4,.g5,.g23{grid-template-columns:1fr;gap:10px;}
-  .g2[style*="1fr 2fr"],.g2[style*="2fr 1.3fr"]{grid-template-columns:1fr!important;}
+  /* ALL GRIDS — single column by default */
+  .g2,.g3,.g23{grid-template-columns:1fr!important;gap:10px!important;}
 
-  /* KPI cards — 2 per row, last one full width */
-  .g5{grid-template-columns:1fr 1fr;}
-  .g5 .kpi:last-child{grid-column:1/-1;}
-  .kpi{padding:14px 14px 12px;}
-  .kpi-val{font-size:20px;}
-  .kpi-lbl{font-size:9px;margin-bottom:4px;}
-  .kpi-sub{font-size:10px;padding-right:32px;}
-  .kpi-ico{width:28px;height:28px;font-size:14px;top:12px;right:10px;}
+  /* KPI — 2 per row, last one spans full */
+  .g5{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+  .g5>.kpi:last-child{grid-column:1 / -1;}
+  .kpi{padding:12px 12px 10px;margin-bottom:0;}
+  .kpi::before{width:3px;}
+  .kpi-ico{width:26px;height:26px;font-size:13px;top:10px;right:8px;border-radius:6px;}
+  .kpi-lbl{font-size:9px;margin-bottom:3px;padding-right:30px;}
+  .kpi-val{font-size:18px;margin-bottom:3px;}
+  .kpi-sub{font-size:10px;padding-right:30px;line-height:1.3;}
 
-  /* Cards */
-  .ch{padding:11px 14px;flex-wrap:wrap;gap:6px;}
+  /* BANK CARDS — 2 per row */
+  .g4{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+  .bkc{padding:12px 12px 14px;}
+  .bkn{font-size:10px;letter-spacing:.04em;}
+  .bka{font-size:16px;margin:5px 0 2px;}
+  .bks{font-size:9px;margin-bottom:8px;}
+
+  /* CARDS */
+  .card{margin-bottom:10px;border-radius:10px;}
+  .ch{padding:10px 14px;flex-wrap:wrap;gap:6px;}
   .cb{padding:12px 14px;}
   .ct{font-size:12px;}
 
-  /* Pipeline — keep horizontal, just shrink */
-  .pip{flex-direction:row;gap:2px;}
-  .po{padding:0 4px;font-size:14px;}
-  .pp{padding:8px 4px;}
-  .ppv{font-size:13px;}
-  .ppl{font-size:8px;}
+  /* PIPELINE */
+  .pip{flex-direction:column;gap:4px;align-items:stretch;}
+  .po{padding:0;text-align:center;font-size:16px;transform:rotate(90deg);line-height:1.2;}
+  .pp{padding:10px 12px;border-radius:8px;}
+  .ppv{font-size:15px;margin-bottom:2px;}
+  .ppl{font-size:9px;}
 
-  /* New Sales Flow */
-  .nsf{grid-template-columns:1fr auto 1fr;gap:4px;}
-  .nv{font-size:14px;}
-  .nl{font-size:9px;}
-  .ns{font-size:9px;}
-  .nar{font-size:16px;}
+  /* NEW SALES FLOW */
+  .nsf{grid-template-columns:1fr!important;gap:6px;}
+  .nar{transform:rotate(90deg);text-align:center;font-size:18px;padding:2px 0;}
+  .nbox{padding:12px;}
+  .nv{font-size:16px;}
+  .nl{font-size:10px;}
+  .ns{font-size:10px;}
 
-  /* Entity bars */
-  .ebv{font-size:12px;}
+  /* ENTITY BARS */
+  .eb{margin-bottom:12px;}
+  .ebv{font-size:13px;}
   .ebn{font-size:12px;}
 
-  /* Full picture grid */
-  .fp{grid-template-columns:1fr;}
-
-  /* Clearance grid */
-  .cg{grid-template-columns:1fr 1fr 1fr;gap:6px;}
-  .cv{font-size:12px;}
-  .cn{font-size:8px;}
-
-  /* Status rows */
-  .srl{width:110px;font-size:11px;}
+  /* STATUS ROWS */
+  .srl{width:105px;font-size:10px;}
   .srv{font-size:10px;min-width:60px;}
   .srp{font-size:9px;min-width:28px;}
 
-  /* Balance composition calc */
+  /* FULL PICTURE */
+  .fp{grid-template-columns:1fr 1fr;gap:1px;}
+  .fi{padding:10px 12px;}
+  .fl{font-size:8px;}
+  .fv{font-size:13px;}
+  .fs{font-size:9px;}
+
+  /* CLEARANCE GRID */
+  .cg{grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .ci{padding:9px 6px;}
+  .cv{font-size:12px;}
+  .cn{font-size:7px;}
+  .ctb{padding:10px 12px;}
+
+  /* BALANCE CALC */
   .calc{padding:12px 14px;}
-  .cr2{font-size:12px;}
-  .cva.gd{font-size:13px;}
+  .cr2{font-size:12px;padding:5px 0;}
+  .cva.gd{font-size:14px;}
 
-  /* Bank cards → 2 col */
-  .g4{grid-template-columns:1fr 1fr;gap:10px;}
-  .bka{font-size:18px;margin:6px 0 2px;}
-  .bkn{font-size:11px;}
-  .bks{font-size:10px;}
-
-  /* Balance entity bars */
+  /* BALANCE ENTITY BARS */
   .bcen{font-size:11px;}
-  .bcev{font-size:10px;min-width:60px;}
+  .bcev{font-size:11px;min-width:64px;}
+  .bcel{font-size:9px;}
 
-  /* Search inputs */
-  .srch{width:100%!important;font-size:12px;}
-  .ch .hdr-r,.ch>div{flex-wrap:wrap;gap:6px;width:100%;}
-
-  /* Tables */
-  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table.dt th{padding:7px 10px;font-size:9px;}
-  table.dt td{padding:7px 10px;font-size:11px;}
-  table.ept th,table.ept td{padding:7px 10px;font-size:11px;}
-
-  /* Receivables filters */
-  #rx-body .ch>div{flex-direction:column;align-items:stretch;}
-  #rx-srch,#rx-co,#rx-st,#rx-rf{width:100%!important;}
-
-  /* Risk cards → single col */
-  .g3#rx-risk-cards{grid-template-columns:1fr;}
-
-  /* Horizontal bars */
-  .hbl{width:120px;font-size:10px;}
-  .hbv{font-size:10px;min-width:60px;}
-
-  /* Advanced metrics */
-  .amv{font-size:16px;}
+  /* ADV METRICS */
+  .am{padding:12px 14px;}
+  .amv{font-size:17px;}
   .aml{font-size:9px;}
+  .ams{font-size:10px;}
 
-  /* Donut */
-  .dw{flex-direction:column;gap:10px;}
-  .dw svg{align-self:center;}
+  /* HBAR — expenses bars */
+  .hbr{margin-bottom:10px;gap:6px;align-items:center;}
+  .hbl{width:110px;font-size:10px;flex-shrink:0;}
+  .hbt{height:8px!important;border-radius:4px;}
+  .hbf{height:8px!important;border-radius:4px;}
+  .hbv{font-size:10px;min-width:62px;}
 
-  /* Login box */
-  .login-box{width:92vw;padding:28px 20px;}
+  /* EXPENSE SUMMARY KPIs */
+  #ex-sum{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+  #ex-sum .kpi{margin-bottom:0;}
 
-  /* Stale banner */
-  #stale-banner{font-size:11px;padding:5px 14px;}
+  /* DONUT */
+  .dw{flex-direction:column;align-items:center;gap:10px;}
 
-  /* Hide ledger balance col on small screens */
-  table.dt th:nth-child(5),
-  table.dt td:nth-child(5){display:none;}
+  /* TABLES */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt th{padding:7px 9px;font-size:9px;}
+  table.dt td{padding:7px 9px;font-size:11px;}
+  table.ept th,table.ept td{padding:7px 10px;font-size:11px;}
+  table.dt th:nth-child(5),table.dt td:nth-child(5){display:none;}
 
-  /* Receivables table — hide less critical cols */
-  #rx-tbody td:nth-child(3),
-  #rx-tbody td:nth-child(5),
+  /* RECEIVABLES */
+  #pane-receivables .ch>div{flex-direction:column;width:100%;}
+  #rx-srch,#rx-co,#rx-st,#rx-rf{width:100%!important;}
+  .g3#rx-risk-cards{grid-template-columns:1fr!important;}
+  #rx-tbody td:nth-child(3),#rx-tbody td:nth-child(5),
   #pane-receivables thead th:nth-child(3),
   #pane-receivables thead th:nth-child(5){display:none;}
+
+  /* EXPENSES — stack today/MTD charts vertically */
+  #ex-body>.g2:last-child{grid-template-columns:1fr!important;}
+  .hbl{width:130px;}
+
+  /* SEARCH */
+  .srch{width:100%!important;font-size:12px;}
+
+  /* LOGIN */
+  .login-box{width:90vw;padding:26px 18px;}
+
+  /* STALE BANNER */
+  #stale-banner{font-size:11px;padding:5px 14px;}
 }
 
-/* Extra small phones */
 @media(max-width:400px){
-  .g5{grid-template-columns:1fr 1fr;}
-  .g4{grid-template-columns:1fr 1fr;}
   .kpi-val{font-size:15px;}
-  .nt{padding:0 9px;font-size:10px;}
   .nt svg{display:none;}
+  .nt{padding:0 8px;font-size:10px;}
   .bka{font-size:14px;}
+  .fp{grid-template-columns:1fr;}
 }
+
 </style>
 </head>
 <body>
