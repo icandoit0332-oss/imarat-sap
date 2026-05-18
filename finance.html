@@ -358,16 +358,18 @@ table.ept tr:last-child td{border-bottom:none;}
 @media(max-width:768px){
 
   /* Header */
-  .hdr{padding:0 14px;height:52px;}
-  .brand-en{font-size:13px;}
+  .hdr{padding:0 12px;height:48px;gap:8px;}
+  .brand-en{font-size:12px;}
   .brand-sub{display:none;}
   .hdr-date{display:none;}
   #refresh-status{display:none;}
   .hdr-user{display:none;}
-  .hdr-btn{padding:4px 8px;font-size:10px;}
+  .hdr-r{gap:6px;}
+  .hdr-btn{padding:5px 9px;font-size:11px;}
   .ref-lbl{display:none;}
   .ref-ico{display:inline!important;}
   #hpill{font-size:10px;padding:4px 8px;}
+  .logo-box{width:28px;height:28px;}
 
   /* Nav */
   .nav{padding:0 8px;}
@@ -381,25 +383,26 @@ table.ept tr:last-child td{border-bottom:none;}
   .g2,.g3,.g4,.g5,.g23{grid-template-columns:1fr;gap:10px;}
   .g2[style*="1fr 2fr"],.g2[style*="2fr 1.3fr"]{grid-template-columns:1fr!important;}
 
-  /* KPI cards */
+  /* KPI cards — 2 per row, last one full width */
   .g5{grid-template-columns:1fr 1fr;}
-  .kpi{padding:12px 14px;}
-  .kpi-val{font-size:17px;}
-  .kpi-lbl{font-size:9px;}
-  .kpi-sub{font-size:10px;}
-  .kpi-ico{width:26px;height:26px;font-size:13px;top:10px;right:10px;}
+  .g5 .kpi:last-child{grid-column:1/-1;}
+  .kpi{padding:14px 14px 12px;}
+  .kpi-val{font-size:20px;}
+  .kpi-lbl{font-size:9px;margin-bottom:4px;}
+  .kpi-sub{font-size:10px;padding-right:32px;}
+  .kpi-ico{width:28px;height:28px;font-size:14px;top:12px;right:10px;}
 
   /* Cards */
   .ch{padding:11px 14px;flex-wrap:wrap;gap:6px;}
   .cb{padding:12px 14px;}
   .ct{font-size:12px;}
 
-  /* Pipeline */
-  .pip{flex-direction:column;gap:4px;}
-  .po{padding:0;text-align:center;font-size:14px;transform:rotate(90deg);}
-  .pp{padding:10px 8px;}
-  .ppv{font-size:15px;}
-  .ppl{font-size:9px;}
+  /* Pipeline — keep horizontal, just shrink */
+  .pip{flex-direction:row;gap:2px;}
+  .po{padding:0 4px;font-size:14px;}
+  .pp{padding:8px 4px;}
+  .ppv{font-size:13px;}
+  .ppl{font-size:8px;}
 
   /* New Sales Flow */
   .nsf{grid-template-columns:1fr auto 1fr;gap:4px;}
@@ -432,7 +435,7 @@ table.ept tr:last-child td{border-bottom:none;}
 
   /* Bank cards → 2 col */
   .g4{grid-template-columns:1fr 1fr;gap:10px;}
-  .bka{font-size:16px;}
+  .bka{font-size:18px;margin:6px 0 2px;}
   .bkn{font-size:11px;}
   .bks{font-size:10px;}
 
