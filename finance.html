@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0B2818">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="IMARAT Finance">
@@ -350,6 +351,150 @@ table.ept tr:last-child td{border-bottom:none;}
 
 /* ── REFRESH STATUS ───────────────────────────────────────── */
 #refresh-status{font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — 768px and below
+══════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* Header */
+  .hdr{padding:0 14px;height:52px;}
+  .brand-en{font-size:13px;}
+  .brand-sub{display:none;}
+  .hdr-date{display:none;}
+  #refresh-status{display:none;}
+  .hdr-user{display:none;}
+  .hdr-btn{padding:4px 8px;font-size:10px;}
+  .ref-lbl{display:none;}
+  .ref-ico{display:inline!important;}
+  #hpill{font-size:10px;padding:4px 8px;}
+
+  /* Nav */
+  .nav{padding:0 8px;}
+  .nt{padding:0 12px;font-size:11px;gap:5px;height:42px;}
+  .nt svg{width:13px;height:13px;}
+
+  /* Main padding */
+  .main{padding:12px;}
+
+  /* Grids → single column */
+  .g2,.g3,.g4,.g5,.g23{grid-template-columns:1fr;gap:10px;}
+  .g2[style*="1fr 2fr"],.g2[style*="2fr 1.3fr"]{grid-template-columns:1fr!important;}
+
+  /* KPI cards */
+  .g5{grid-template-columns:1fr 1fr;}
+  .kpi{padding:12px 14px;}
+  .kpi-val{font-size:17px;}
+  .kpi-lbl{font-size:9px;}
+  .kpi-sub{font-size:10px;}
+  .kpi-ico{width:26px;height:26px;font-size:13px;top:10px;right:10px;}
+
+  /* Cards */
+  .ch{padding:11px 14px;flex-wrap:wrap;gap:6px;}
+  .cb{padding:12px 14px;}
+  .ct{font-size:12px;}
+
+  /* Pipeline */
+  .pip{flex-direction:column;gap:4px;}
+  .po{padding:0;text-align:center;font-size:14px;transform:rotate(90deg);}
+  .pp{padding:10px 8px;}
+  .ppv{font-size:15px;}
+  .ppl{font-size:9px;}
+
+  /* New Sales Flow */
+  .nsf{grid-template-columns:1fr auto 1fr;gap:4px;}
+  .nv{font-size:14px;}
+  .nl{font-size:9px;}
+  .ns{font-size:9px;}
+  .nar{font-size:16px;}
+
+  /* Entity bars */
+  .ebv{font-size:12px;}
+  .ebn{font-size:12px;}
+
+  /* Full picture grid */
+  .fp{grid-template-columns:1fr;}
+
+  /* Clearance grid */
+  .cg{grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .cv{font-size:12px;}
+  .cn{font-size:8px;}
+
+  /* Status rows */
+  .srl{width:110px;font-size:11px;}
+  .srv{font-size:10px;min-width:60px;}
+  .srp{font-size:9px;min-width:28px;}
+
+  /* Balance composition calc */
+  .calc{padding:12px 14px;}
+  .cr2{font-size:12px;}
+  .cva.gd{font-size:13px;}
+
+  /* Bank cards → 2 col */
+  .g4{grid-template-columns:1fr 1fr;gap:10px;}
+  .bka{font-size:16px;}
+  .bkn{font-size:11px;}
+  .bks{font-size:10px;}
+
+  /* Balance entity bars */
+  .bcen{font-size:11px;}
+  .bcev{font-size:10px;min-width:60px;}
+
+  /* Search inputs */
+  .srch{width:100%!important;font-size:12px;}
+  .ch .hdr-r,.ch>div{flex-wrap:wrap;gap:6px;width:100%;}
+
+  /* Tables */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt th{padding:7px 10px;font-size:9px;}
+  table.dt td{padding:7px 10px;font-size:11px;}
+  table.ept th,table.ept td{padding:7px 10px;font-size:11px;}
+
+  /* Receivables filters */
+  #rx-body .ch>div{flex-direction:column;align-items:stretch;}
+  #rx-srch,#rx-co,#rx-st,#rx-rf{width:100%!important;}
+
+  /* Risk cards → single col */
+  .g3#rx-risk-cards{grid-template-columns:1fr;}
+
+  /* Horizontal bars */
+  .hbl{width:120px;font-size:10px;}
+  .hbv{font-size:10px;min-width:60px;}
+
+  /* Advanced metrics */
+  .amv{font-size:16px;}
+  .aml{font-size:9px;}
+
+  /* Donut */
+  .dw{flex-direction:column;gap:10px;}
+  .dw svg{align-self:center;}
+
+  /* Login box */
+  .login-box{width:92vw;padding:28px 20px;}
+
+  /* Stale banner */
+  #stale-banner{font-size:11px;padding:5px 14px;}
+
+  /* Hide ledger balance col on small screens */
+  table.dt th:nth-child(5),
+  table.dt td:nth-child(5){display:none;}
+
+  /* Receivables table — hide less critical cols */
+  #rx-tbody td:nth-child(3),
+  #rx-tbody td:nth-child(5),
+  #pane-receivables thead th:nth-child(3),
+  #pane-receivables thead th:nth-child(5){display:none;}
+}
+
+/* Extra small phones */
+@media(max-width:400px){
+  .g5{grid-template-columns:1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr;}
+  .kpi-val{font-size:15px;}
+  .nt{padding:0 9px;font-size:10px;}
+  .nt svg{display:none;}
+  .bka{font-size:14px;}
+}
 </style>
 </head>
 <body>
@@ -414,7 +559,7 @@ table.ept tr:last-child td{border-bottom:none;}
     <span id="refresh-status"></span>
     <div class="hdr-pill pill-amber" id="hpill">● Loading…</div>
     <div class="hdr-date" id="hdate">—</div>
-    <button class="hdr-btn" onclick="manualRefresh()" title="Refresh data">↻ Refresh</button>
+    <button class="hdr-btn" onclick="manualRefresh()" title="Refresh data"><span class="ref-lbl">↻ Refresh</span><span class="ref-ico" style="display:none;">↻</span></button>
     <span class="hdr-user" id="hdr-user-email"></span>
     <button class="hdr-btn" id="logout-btn" onclick="doLogout()">Sign out</button>
   </div>
