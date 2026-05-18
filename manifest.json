@@ -1,0 +1,27 @@
+{
+  "name": "IMARAT Finance Command Centre",
+  "short_name": "IMARAT Finance",
+  "description": "Live financial dashboard for IMARAT Group",
+  "start_url": "/imarat-sap/finance.html",
+  "scope": "/imarat-sap/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0B2818",
+  "background_color": "#0B2818",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230B2818'/%3E%3Crect x='20' y='130' width='22' height='52' rx='6' fill='%23C9A850'/%3E%3Crect x='55' y='100' width='22' height='82' rx='6' fill='%23C9A850'/%3E%3Crect x='90' y='70' width='22' height='112' rx='6' fill='%23C9A850'/%3E%3Crect x='125' y='100' width='22' height='82' rx='6' fill='%23C9A850'/%3E%3Crect x='160' y='130' width='22' height='52' rx='6' fill='%23C9A850'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%230B2818'/%3E%3Crect x='52' y='346' width='58' height='140' rx='16' fill='%23C9A850'/%3E%3Crect x='145' y='266' width='58' height='220' rx='16' fill='%23C9A850'/%3E%3Crect x='238' y='186' width='58' height='300' rx='16' fill='%23C9A850'/%3E%3Crect x='331' y='266' width='58' height='220' rx='16' fill='%23C9A850'/%3E%3Crect x='424' y='346' width='58' height='140' rx='16' fill='%23C9A850'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "lang": "en"
+}

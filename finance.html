@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B2818">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IMARAT Finance">
+<title>IMARAT Finance Command Centre</title>
+<link rel="manifest" href="/imarat-sap/manifest.json">
+
+<!-- Firebase SDK (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<style>
+:root{
+  --hdr:#0B2818;--nav:#0D3020;
+  --gold:#C9A850;--gold-l:#F5E8BE;--gold-d:#A8862E;
+  --bg:#F2F7F2;--white:#fff;
+  --t1:#132015;--t2:#4A6B4E;--t3:#8AAB8E;
+  --bdr:#D8E8DA;--bdr2:#C5DCC8;
+  --sh:0 1px 4px rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.04);
+  --green:#16A34A;--gbg:#DCFCE7;--gdk:#15803D;
+  --red:#DC2626;--rbg:#FEE2E2;
+  --amber:#D97706;--abg:#FEF3C7;
+  --blue:#2563EB;--bbg:#DBEAFE;
+  --pur:#7C3AED;--pubg:#EDE9FE;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:'SF Mono','Cascadia Code',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;}
+a{text-decoration:none;}
+
+/* ── LOGIN SCREEN ─────────────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;background:var(--hdr);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;
+}
+.login-box{
+  background:#fff;border-radius:16px;padding:36px 32px;width:340px;
+  box-shadow:0 8px 40px rgba(0,0,0,.35);
+}
+.login-logo{
+  display:flex;align-items:center;gap:12px;margin-bottom:28px;
+}
+.login-logo-icon{
+  width:44px;height:44px;background:var(--gold);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.login-title{font-size:18px;font-weight:700;color:var(--t1);}
+.login-sub{font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+.lf-lbl{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;display:block;}
+.lf-inp{
+  width:100%;padding:10px 12px;border:1.5px solid var(--bdr2);
+  border-radius:8px;font-size:14px;font-family:var(--font);
+  color:var(--t1);outline:none;margin-bottom:14px;
+  transition:border-color .2s;
+}
+.lf-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-l);}
+.lf-btn{
+  width:100%;padding:12px;background:linear-gradient(135deg,var(--hdr),#1A4D30);
+  color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;
+  cursor:pointer;font-family:var(--font);letter-spacing:.04em;
+  transition:opacity .2s;
+}
+.lf-btn:hover{opacity:.88;}
+.lf-btn:disabled{opacity:.55;cursor:default;}
+.lf-err{
+  background:var(--rbg);color:var(--red);border-radius:8px;
+  padding:8px 12px;font-size:12px;margin-top:10px;display:none;
+}
+
+/* ── LOADING OVERLAY ──────────────────────────────────────── */
+#loading-overlay{
+  position:fixed;inset:0;background:rgba(11,40,24,.7);
+  display:none;align-items:center;justify-content:center;z-index:900;
+}
+.spinner{
+  width:40px;height:40px;border:3px solid rgba(201,168,80,.3);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{color:#fff;font-size:13px;margin-top:12px;opacity:.8;}
+
+/* ── STALE DATA BANNER ────────────────────────────────────── */
+#stale-banner{
+  background:linear-gradient(90deg,var(--amber),#F59E0B);
+  color:#fff;font-size:12px;font-weight:600;
+  padding:6px 24px;text-align:center;display:none;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.hdr{
+  background:var(--hdr);padding:0 24px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.logo-box{
+  width:34px;height:34px;background:var(--gold);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-en{font-size:15px;font-weight:700;color:#fff;letter-spacing:.08em;}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;margin-top:1px;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.hdr-date{font-size:12px;color:rgba(255,255,255,.55);font-family:var(--mono);}
+.hdr-pill{
+  padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  display:flex;align-items:center;gap:5px;cursor:default;
+}
+.pill-green{background:rgba(22,163,74,.2);color:#4ADE80;}
+.pill-amber{background:rgba(201,168,80,.2);color:var(--gold);}
+.pill-blue{background:rgba(37,99,235,.2);color:#93C5FD;}
+.hdr-user{font-size:11px;color:rgba(255,255,255,.45);}
+.hdr-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.6);padding:5px 10px;border-radius:6px;
+  font-size:11px;cursor:pointer;font-family:var(--font);
+  transition:all .2s;
+}
+.hdr-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* ── NAV ──────────────────────────────────────────────────── */
+.nav{
+  background:var(--nav);border-bottom:1px solid rgba(255,255,255,.07);
+  padding:0 24px;display:flex;position:sticky;top:56px;z-index:199;overflow-x:auto;
+}
+.nt{
+  padding:0 18px;height:46px;display:flex;align-items:center;gap:7px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;
+  user-select:none;background:none;border-top:none;border-left:none;border-right:none;
+  font-family:var(--font);flex-shrink:0;
+}
+.nt:hover{color:rgba(255,255,255,.75);}
+.nt.on{color:#fff;border-bottom-color:var(--gold);}
+.nt svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── LAYOUT ───────────────────────────────────────────────── */
+.main{padding:24px;max-width:1440px;margin:0 auto;}
+.pane{display:none;}
+.pane.on{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.g23{display:grid;grid-template-columns:2fr 1.3fr;gap:16px;margin-bottom:16px;}
+
+/* ── CARD ─────────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:12px;box-shadow:var(--sh);overflow:hidden;margin-bottom:16px;}
+.card:last-child{margin-bottom:0;}
+.ch{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.ct{font-size:13px;font-weight:600;color:var(--t1);}
+.cb{padding:16px 18px;}
+
+/* ── KPI ──────────────────────────────────────────────────── */
+.kpi{background:var(--white);border-radius:12px;padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.kpi.green::before{background:var(--green);}
+.kpi.gold::before{background:var(--gold);}
+.kpi.amber::before{background:var(--amber);}
+.kpi.red::before{background:var(--red);}
+.kpi.blue::before{background:var(--blue);}
+.kpi-ico{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.kpi-val{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--t1);line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--t3);}
+
+/* ── BADGE ────────────────────────────────────────────────── */
+.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.bdg-gr{background:var(--gbg);color:var(--gdk);}
+.bdg-am{background:var(--abg);color:var(--amber);}
+.bdg-rd{background:var(--rbg);color:var(--red);}
+.bdg-bl{background:var(--bbg);color:var(--blue);}
+.bdg-gd{background:var(--gold-l);color:var(--gold-d);}
+.bdg-gy{background:#F1F5F1;color:var(--t2);}
+.bdg-pu{background:var(--pubg);color:var(--pur);}
+
+/* ── ROW ──────────────────────────────────────────────────── */
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid var(--bdr);}
+.row:last-child{border-bottom:none;}
+.rl{font-size:12px;color:var(--t2);}
+.rv{font-family:var(--mono);font-size:12px;font-weight:500;}
+
+/* ── BAR ──────────────────────────────────────────────────── */
+.bw{margin:6px 0;}
+.bh{display:flex;justify-content:space-between;margin-bottom:3px;}
+.bl{font-size:11px;color:var(--t2);}
+.bv{font-family:var(--mono);font-size:11px;font-weight:500;}
+.bt{background:var(--bdr);border-radius:3px;height:5px;overflow:hidden;}
+.bf{height:5px;border-radius:3px;transition:width .8s ease;}
+
+/* ── ENTITY BAR ───────────────────────────────────────────── */
+.eb{margin-bottom:14px;}
+.eb:last-child{margin-bottom:0;}
+.ebh{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.ebn{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;}
+.dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.ebs{display:flex;gap:12px;align-items:center;}
+.ebv{font-family:var(--mono);font-size:13px;font-weight:600;}
+.ebp{font-size:11px;color:var(--t3);}
+
+/* ── STATUS ROW ───────────────────────────────────────────── */
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sr:last-child{margin-bottom:0;}
+.srl{font-size:12px;color:var(--t2);width:140px;flex-shrink:0;display:flex;align-items:center;gap:6px;}
+.srb{flex:1;background:var(--bdr);border-radius:3px;height:5px;overflow:hidden;}
+.srf{height:5px;border-radius:3px;}
+.srv{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right;min-width:70px;}
+.srp{font-size:10px;color:var(--t3);min-width:35px;text-align:right;}
+
+/* ── PIPELINE ─────────────────────────────────────────────── */
+.pip{display:flex;align-items:stretch;gap:0;}
+.pp{flex:1;text-align:center;padding:14px 10px;background:var(--bg);border-radius:10px;}
+.pp.hi{background:linear-gradient(135deg,var(--gold-l),#FFF8E6);border:1px solid var(--gold);}
+.ppv{font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:4px;}
+.ppl{font-size:9px;color:var(--t2);letter-spacing:.04em;text-transform:uppercase;line-height:1.4;}
+.po{display:flex;align-items:center;padding:0 8px;font-size:20px;color:var(--t3);flex-shrink:0;}
+
+/* ── BANK CARDS ───────────────────────────────────────────── */
+.bkc{background:var(--white);border-radius:12px;padding:18px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.bkc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;border-radius:0 0 12px 12px;}
+.bkc.mcb::after{background:var(--blue);}
+.bkc.jazz::after{background:var(--amber);}
+.bkc.askari::after{background:var(--red);}
+.bkc.other::after{background:var(--pur);}
+.bkn{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.bka{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--t1);margin:8px 0 3px;}
+.bks{font-size:11px;color:var(--t3);margin-bottom:10px;}
+.bkbb{background:var(--bdr);border-radius:3px;height:4px;overflow:hidden;}
+.bkbf{height:4px;border-radius:3px;}
+
+/* ── TABLE ────────────────────────────────────────────────── */
+.tw{overflow-x:auto;}
+table.dt{width:100%;border-collapse:collapse;font-size:12px;}
+table.dt th{padding:9px 12px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);background:#F7FBF7;border-bottom:1px solid var(--bdr);white-space:nowrap;}
+table.dt td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+table.dt tr:last-child td{border-bottom:none;}
+table.dt tr:hover td{background:#F7FBF7;}
+.mono{font-family:var(--mono);}
+.chip{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;display:inline-block;}
+.ch-mcb{background:var(--bbg);color:var(--blue);}
+.ch-jazz{background:var(--abg);color:var(--amber);}
+.ch-askari{background:var(--rbg);color:var(--red);}
+.ch-ubl{background:var(--pubg);color:var(--pur);}
+.ch-oth{background:#F1F5F1;color:var(--t2);}
+
+/* ── SEARCH ───────────────────────────────────────────────── */
+.srch{padding:7px 12px;border:1px solid var(--bdr2);border-radius:8px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--t1);width:200px;outline:none;}
+.srch:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-l);}
+select.srch{cursor:pointer;}
+
+/* ── DONUT ────────────────────────────────────────────────── */
+.dw{display:flex;align-items:center;gap:20px;}
+.dl{flex:1;}
+.dli{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;}
+.dli:last-child{border-bottom:none;}
+.dll{display:flex;align-items:center;gap:7px;}
+.dlp{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t2);}
+
+/* ── CLEARANCE GRID ───────────────────────────────────────── */
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.ci{background:var(--gbg);border:1px solid rgba(22,163,74,.15);border-radius:8px;padding:12px;text-align:center;}
+.cn{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--gdk);margin-bottom:4px;font-weight:600;}
+.cv{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);}
+.ctb{background:linear-gradient(135deg,var(--gbg),#F0FFF4);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+
+/* ── NEW SALES FLOW ───────────────────────────────────────── */
+.nsf{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:6px;padding:4px 0 12px;}
+.nbox{text-align:center;padding:14px 10px;border-radius:10px;}
+.nbox.nb{background:#EFF6FF;border:1px solid #BFDBFE;}
+.nbox.nc{background:#DCFCE7;border:1px solid #BBF7D0;}
+.nbox.np{background:#FEF3C7;border:1px solid #FDE68A;}
+.nv{font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:3px;}
+.nl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.ns{font-size:10px;margin-top:3px;}
+.nar{font-size:20px;color:var(--t3);text-align:center;}
+
+/* ── ENTITY PERF TABLE ────────────────────────────────────── */
+table.ept{width:100%;border-collapse:collapse;font-size:12px;}
+table.ept th{padding:8px 14px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);background:#F7FBF7;border-bottom:1px solid var(--bdr);text-align:right;}
+table.ept th:first-child{text-align:left;}
+table.ept td{padding:10px 14px;border-bottom:1px solid var(--bdr);text-align:right;}
+table.ept td:first-child{text-align:left;font-weight:600;}
+table.ept tr:last-child td{border-bottom:none;}
+.rpill{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.rt{width:60px;height:6px;background:var(--bdr);border-radius:3px;overflow:hidden;}
+.rf{height:6px;border-radius:3px;}
+
+/* ── FULL PICTURE ─────────────────────────────────────────── */
+.fp{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bdr);border-radius:10px;overflow:hidden;border:1px solid var(--bdr);}
+.fi{background:var(--white);padding:12px 16px;}
+.fl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:4px;}
+.fv{font-family:var(--mono);font-size:14px;font-weight:700;}
+.fs{font-size:10px;color:var(--t3);margin-top:2px;}
+
+/* ── ADV METRIC ───────────────────────────────────────────── */
+.am{background:linear-gradient(135deg,var(--gold-l),#FFF8ED);border:1px solid rgba(201,168,80,.2);border-radius:10px;padding:14px 16px;}
+.am.gr{background:linear-gradient(135deg,#DCFCE7,#F0FFF4);border-color:rgba(22,163,74,.2);}
+.am.am2{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-color:rgba(217,119,6,.2);}
+.aml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gold-d);margin-bottom:6px;}
+.am.gr .aml{color:var(--gdk);}
+.am.am2 .aml{color:var(--amber);}
+.amv{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--gold-d);}
+.am.gr .amv{color:var(--gdk);}
+.am.am2 .amv{color:var(--amber);}
+.ams{font-size:11px;color:var(--t2);margin-top:3px;}
+
+/* ── BALANCE BAR CHART ────────────────────────────────────── */
+.bce{margin-bottom:10px;}
+.bceh{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.bcen{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;}
+.bcet{flex:1;background:var(--bdr);border-radius:3px;height:18px;overflow:hidden;}
+.bcef{height:18px;border-radius:3px;display:flex;align-items:center;padding-left:6px;}
+.bcel{font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
+.bcev{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right;min-width:72px;}
+
+/* ── CALC BOX ─────────────────────────────────────────────── */
+.calc{background:linear-gradient(135deg,#F8F3E6,#FFF8ED);border:1px solid rgba(201,168,80,.2);border-radius:10px;padding:14px 18px;}
+.cr2{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;}
+.cop{font-size:16px;text-align:center;padding:4px 0;color:var(--t3);}
+.ctotal{border-top:2px solid var(--gold);margin-top:4px;padding-top:8px;font-weight:700;}
+.cla{color:var(--t2);}
+.cva{font-family:var(--mono);font-weight:600;}
+.cva.gd{color:var(--gold-d);font-size:15px;}
+.flt{display:inline-flex;align-items:center;gap:4px;background:var(--abg);color:var(--amber);font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin-top:8px;}
+
+/* ── HBAR ─────────────────────────────────────────────────── */
+.hbr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hbr:last-child{margin-bottom:0;}
+.hbl{font-size:11px;color:var(--t2);width:180px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbt{flex:1;background:var(--bdr);border-radius:3px;height:6px;overflow:hidden;}
+.hbf{height:6px;border-radius:3px;}
+.hbv{font-family:var(--mono);font-size:11px;font-weight:500;text-align:right;min-width:78px;}
+
+/* ── RISK BADGE ───────────────────────────────────────────── */
+.risk-hl{background:#FEF2F2;color:#991B1B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.risk-es{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.risk-mo{background:#F0FFF4;color:#166534;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;}
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.empty{text-align:center;padding:60px 30px;color:var(--t3);}
+.empty span{font-size:40px;display:block;margin-bottom:12px;}
+.empty p{font-size:13px;line-height:1.8;}
+
+/* ── REFRESH STATUS ───────────────────────────────────────── */
+#refresh-status{font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN SCREEN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 22 22">
+          <rect x="2" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+          <rect x="6" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+          <rect x="10" y="7" width="2.5" height="14" rx=".8" fill="#0B2818"/>
+          <rect x="14" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+          <rect x="18" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-title">IMARAT <span style="color:var(--gold);font-weight:400;">Finance</span></div>
+        <div class="login-sub">Command Centre</div>
+      </div>
+    </div>
+    <label class="lf-lbl" for="li-email">Email</label>
+    <input class="lf-inp" id="li-email" type="email" placeholder="chairman@imarat.com.pk" autocomplete="email">
+    <label class="lf-lbl" for="li-pass">Password</label>
+    <input class="lf-inp" id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="lf-btn" id="li-btn" onclick="doLogin()">Sign In</button>
+    <div class="lf-err" id="li-err"></div>
+  </div>
+</div>
+
+<!-- ══════════════ LOADING OVERLAY ══════════════ -->
+<div id="loading-overlay" style="display:flex;flex-direction:column;align-items:center;">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loading-txt">Loading live data…</div>
+</div>
+
+<!-- ══════════════ STALE DATA BANNER ══════════════ -->
+<div id="stale-banner">
+  ⚠ Showing cached data from <span id="stale-time">—</span> — no internet connection
+</div>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="logo-box">
+      <svg width="22" height="22" viewBox="0 0 22 22">
+        <rect x="2" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+        <rect x="6" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+        <rect x="10" y="7" width="2.5" height="14" rx=".8" fill="#0B2818"/>
+        <rect x="14" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+        <rect x="18" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+        <rect x="2" y="4" width="18" height="1.5" rx=".7" fill="rgba(11,40,24,.5)"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-en">IMARAT <span style="color:var(--gold);font-weight:400;">Finance</span></div>
+      <div class="brand-sub">Command Centre</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span id="refresh-status"></span>
+    <div class="hdr-pill pill-amber" id="hpill">● Loading…</div>
+    <div class="hdr-date" id="hdate">—</div>
+    <button class="hdr-btn" onclick="manualRefresh()" title="Refresh data">↻ Refresh</button>
+    <span class="hdr-user" id="hdr-user-email"></span>
+    <button class="hdr-btn" id="logout-btn" onclick="doLogout()">Sign out</button>
+  </div>
+</header>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav class="nav">
+  <button class="nt on" onclick="goTab('overview',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Overview
+  </button>
+  <button class="nt" onclick="goTab('liquidity',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Bank Liquidity
+  </button>
+  <button class="nt" onclick="goTab('revenue',this)">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Revenue
+  </button>
+  <button class="nt" onclick="goTab('receivables',this)">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Receivables
+  </button>
+  <button class="nt" onclick="goTab('expenses',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    Expenses
+  </button>
+</nav>
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<div class="main">
+
+<!-- OVERVIEW -->
+<div class="pane on" id="pane-overview">
+  <div id="ov-empty" class="empty"><span>📊</span><p>Authenticating and loading data…</p></div>
+  <div id="ov-body" style="display:none;">
+    <div class="g5" id="ov-kpis"></div>
+    <div class="g23">
+      <div>
+        <div class="card">
+          <div class="ch"><span class="ct">Revenue Pipeline</span><span class="bdg bdg-gy" id="ov-aslbl">—</span></div>
+          <div class="cb">
+            <div class="pip" id="ov-pip"></div>
+            <div style="font-size:11px;color:var(--t3);margin-top:6px;" id="ov-pip-note"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Pending by Entity</span><span class="bdg bdg-gd" id="ov-ent-tot">—</span></div>
+          <div class="cb" id="ov-ents"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ch"><span class="ct">Status Breakdown</span></div>
+          <div class="cb">
+            <div class="dw">
+              <svg id="ov-donut" width="110" height="110" viewBox="0 0 110 110"></svg>
+              <div class="dl" id="ov-dleg"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Expected Clearance</span></div>
+          <div class="cb">
+            <div class="cg" id="ov-clrg"></div>
+            <div class="ctb"><span style="font-size:12px;color:var(--t2);">Total expected incoming</span><span style="font-family:var(--mono);font-weight:700;color:var(--green);" id="ov-clrt">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANK LIQUIDITY -->
+<div class="pane" id="pane-liquidity">
+  <div id="lq-empty" class="empty"><span>🏦</span><p>Loading…</p></div>
+  <div id="lq-body" style="display:none;">
+    <div class="g5" id="lq-kpis"></div>
+    <div class="g2" style="grid-template-columns:1fr 2fr;">
+      <div class="card">
+        <div class="ch"><span class="ct">Balance Composition</span></div>
+        <div class="cb"><div class="calc" id="lq-calc"></div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Balance by Entity</span></div>
+        <div class="cb" id="lq-bce"></div>
+      </div>
+    </div>
+    <div class="g4" id="lq-banks"></div>
+    <div class="card">
+      <div class="ch">
+        <span class="ct">All Accounts</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input class="srch" id="acc-srch" placeholder="Search account or bank…" oninput="filterAcc()">
+          <span class="bdg bdg-gy" id="lq-cnt">—</span>
+        </div>
+      </div>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th>Entity</th><th>Bank</th><th>Account Code</th><th>Working Balance</th><th>Ledger Balance</th><th>Float / Hold</th><th>Status</th></tr></thead>
+          <tbody id="acc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div class="pane" id="pane-revenue">
+  <div id="rv-empty" class="empty"><span>💰</span><p>Loading…</p></div>
+  <div id="rv-body" style="display:none;">
+    <div class="g3" style="margin-bottom:16px;">
+      <div class="am"><div class="aml">New Sales Booked</div><div class="amv" id="rv-ns">—</div><div class="ams" id="rv-ns-s">—</div></div>
+      <div class="am gr"><div class="aml">Cleared from New Sales</div><div class="amv" id="rv-cfn">—</div><div class="ams" id="rv-cfn-s">—</div></div>
+      <div class="am am2"><div class="aml">Pending from New Sales</div><div class="amv" id="rv-pfn">—</div><div class="ams" id="rv-pfn-s">—</div></div>
+    </div>
+    <div class="g2">
+      <div>
+        <div class="card">
+          <div class="ch"><span class="ct">Today's New Sales Flow</span><span class="bdg bdg-bl" id="rv-rate-b">—</span></div>
+          <div class="cb">
+            <div class="nsf">
+              <div class="nbox nb"><div class="nv" style="color:var(--blue);" id="rv-nb">—</div><div class="nl" style="color:var(--blue);">Booked</div><div class="ns" style="color:var(--t3);">New sales</div></div>
+              <div class="nar">→</div>
+              <div class="nbox nc"><div class="nv" style="color:var(--green);" id="rv-nc">—</div><div class="nl" style="color:var(--green);">Cleared</div><div class="ns" style="color:var(--t3);" id="rv-ncr">—</div></div>
+              <div class="nar">→</div>
+              <div class="nbox np"><div class="nv" style="color:var(--amber);" id="rv-np">—</div><div class="nl" style="color:var(--amber);">Outstanding</div><div class="ns" style="color:var(--t3);" id="rv-npp">—</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:5px;">Clearance rate from new sales</div>
+            <div style="background:var(--bdr);border-radius:5px;height:10px;overflow:hidden;">
+              <div id="rv-cbar" style="height:10px;border-radius:5px;background:linear-gradient(90deg,var(--green),#22C55E);transition:width .8s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:3px;font-family:var(--mono);">
+              <span>0%</span><span id="rv-cpct" style="color:var(--green);font-weight:600;"></span><span>100%</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Pending Pipeline</span></div>
+          <div class="cb">
+            <div class="pip" id="rv-pip"></div>
+            <div style="font-size:11px;color:var(--t3);margin-top:6px;padding-top:8px;border-top:1px solid var(--bdr);" id="rv-pip-note"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Full Picture</span></div>
+          <div class="cb" style="padding:12px 18px;"><div class="fp" id="rv-fp"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ch"><span class="ct">Entity Performance</span><span class="bdg bdg-gd" id="rv-ent-tot">—</span></div>
+          <div class="tw"><table class="ept"><thead><tr><th>Entity</th><th>Pending</th><th>Expected</th><th>Coverage</th></tr></thead><tbody id="rv-ep"></tbody></table></div>
+          <div class="cb" id="rv-ents" style="padding-top:0;"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Status Distribution</span></div>
+          <div class="cb" id="rv-status"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Expected Clearance by Entity</span></div>
+          <div class="cb">
+            <div class="cg" id="rv-clrg"></div>
+            <div class="ctb"><span style="font-size:12px;color:var(--t2);">Total expected</span><span style="font-family:var(--mono);font-weight:700;color:var(--green);" id="rv-clrt">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIVABLES (uses PENIDNG REV detail data) -->
+<div class="pane" id="pane-receivables">
+  <div id="rx-empty" class="empty"><span>📄</span><p>Loading…</p></div>
+  <div id="rx-body" style="display:none;">
+    <!-- Summary KPI row -->
+    <div class="g4" style="margin-bottom:16px;" id="rx-kpis"></div>
+    <!-- Risk summary -->
+    <div class="g3" style="margin-bottom:16px;" id="rx-risk-cards"></div>
+    <!-- Detail table -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Pending Receivables Detail</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <input class="srch" id="rx-srch" placeholder="Search customer / advisor…" oninput="filterRx()" style="width:180px;">
+          <select class="srch" id="rx-co" onchange="filterRx()" style="width:120px;">
+            <option value="">All Entities</option>
+            <option value="Agency 21">Agency 21</option>
+            <option value="Graana">Graana</option>
+            <option value="IMARAT">IMARAT</option>
+          </select>
+          <select class="srch" id="rx-st" onchange="filterRx()" style="width:130px;">
+            <option value="">All Statuses</option>
+            <option value="Returned">Returned</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Postdated">Postdated</option>
+            <option value="Presented">Presented</option>
+            <option value="Chq not received">Chq not received</option>
+            <option value="To Be Deposited">To Be Deposited</option>
+          </select>
+          <select class="srch" id="rx-rf" onchange="filterRx()" style="width:140px;">
+            <option value="">All Risk Flags</option>
+            <option value="HIGH RISK - LEGAL">High Risk — Legal</option>
+            <option value="ESCALATE">Escalate</option>
+            <option value="MONITOR">Monitor</option>
+          </select>
+          <span class="bdg bdg-gy" id="rx-cnt">—</span>
+        </div>
+      </div>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th>Date</th><th>Entity</th><th>Office</th><th>Customer</th><th>Advisor</th><th>Status</th><th>Amount</th><th>Aging</th><th>Risk</th></tr></thead>
+          <tbody id="rx-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSES -->
+<div class="pane" id="pane-expenses">
+  <div id="ex-empty" class="empty"><span>📋</span><p>Loading…</p></div>
+  <div id="ex-body" style="display:none;">
+    <div class="g2" style="margin-bottom:16px;" id="ex-sum"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><span class="ct">Today — by Category</span><span class="bdg bdg-rd" id="ex-tb">—</span></div>
+        <div class="cb" id="ex-today"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">MTD — by Category</span><span class="bdg bdg-am" id="ex-mb">—</span></div>
+        <div class="cb" id="ex-mtd"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════
+// CONFIG — fill these in before deploying
+// ════════════════════════════════════════════════════════════
+var FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyBei-lo6GIehz3UT93xg2KTs5bU_1-4osQ',
+  authDomain:        'imarat-sap-aff7f.firebaseapp.com',
+  projectId:         'imarat-sap-aff7f',
+  storageBucket:     'imarat-sap-aff7f.firebasestorage.app',
+  messagingSenderId: '117630327064',
+  appId:             '1:117630327064:web:a9f35c5ec768e6d1db666d'
+};
+
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-u5oYdhTMkl_3DafpMvCnjqfoIRmqQFtCQbJredQ_XnVTaZSwWMJ2mYhF52FN7T5Gig/exec';
+var CLIENT_KEY      = 'IMARAT_SAP_KEY_2024';
+var CACHE_KEY       = 'im7';
+var REFRESH_MS      = 5 * 60 * 1000;   // auto-refresh every 5 minutes
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+var D = null;        // parsed data object
+var allAcc = [];     // bank accounts for filtering
+var allRx  = [];     // receivables rows for filtering
+var refreshTimer = null;
+var auth;
+
+// ── Entity colours ──────────────────────────────────────────
+var ECOL = { 'IMARAT':'#0B2818', 'Graana':'#2563EB', 'Agency 21':'#C9A850', 'Other':'#7C3AED' };
+var EMAP = {
+  'MCB-M1-9470':'IMARAT','MCB-GR-1231':'Graana','MCB-A21-0483':'Agency 21',
+  'MCB-M2-0342':'IMARAT','MCB-AMr-9469':'IMARAT','MCB-IR-0322':'IMARAT',
+  'MCB-GF-9548':'Graana','MCB-ID-9719':'IMARAT','MCB-P-9739':'IMARAT',
+  'MCB-IH-0712':'IMARAT','MCB-GR-SR':'Graana','MCB-A21-SSR':'Agency 21',
+  'Askari-ID-0798':'IMARAT','Askari-Prestige':'IMARAT',
+  'UBL-GR-7955':'Graana','UBL-IBM':'IMARAT','UBL-A21-5155':'Agency 21',
+  'JAZZ-PROP':'IMARAT','UBANK Graana':'Graana','M1-UBANK':'IMARAT',
+  'A21-UBANK':'Agency 21','PROP-UBANK':'IMARAT','IMARAT HOSP-UBANK':'IMARAT',
+  'IBM-UBANK':'IMARAT','IIT-UBANK':'IMARAT','SCB-Graana':'Graana'
+};
+var BCHIP = { MCB:'ch-mcb', JAZZ:'ch-jazz', ASKARI:'ch-askari', UBL:'ch-ubl' };
+
+// ════════════════════════════════════════════════════════════
+// FIREBASE INIT
+// ════════════════════════════════════════════════════════════
+firebase.initializeApp(FIREBASE_CONFIG);
+auth = firebase.auth();
+
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    // Logged in
+    ge('login-screen').style.display = 'none';
+    ge('hdr-user-email').textContent = user.email;
+    ge('logout-btn').style.display = '';
+    ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    loadData();
+    startAutoRefresh();
+  } else {
+    // Logged out
+    ge('login-screen').style.display = 'flex';
+    ge('hdr-user-email').textContent = '';
+    stopAutoRefresh();
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════════
+function doLogin() {
+  var email = ge('li-email').value.trim();
+  var pass  = ge('li-pass').value;
+  var err   = ge('li-err');
+  var btn   = ge('li-btn');
+  err.style.display = 'none';
+  if (!email || !pass) { showErr('Please enter email and password.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(function() {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      var msg = 'Login failed. Check your credentials.';
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'Incorrect email or password.';
+      if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+      showErr(msg);
+    });
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+function showErr(msg) {
+  var el = ge('li-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// Enter key on password field triggers login
+ge('li-pass').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ════════════════════════════════════════════════════════════
+// DATA LOADING
+// ════════════════════════════════════════════════════════════
+function loadData() {
+  showLoading('Fetching live data from Google Sheets…');
+  var url = APPS_SCRIPT_URL + '?action=read&clientKey=' + CLIENT_KEY + '&_=' + Date.now();
+  fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(json) {
+      if (json.status !== 'ok') throw new Error(json.message || 'Server error');
+      D = mapResponse(json);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(D)); } catch(x){}
+      hideLoading();
+      hideStaleBanner();
+      updateHpill(json.at);
+      ge('refresh-status').textContent = 'Updated ' + fmtTime(new Date());
+      render();
+    })
+    .catch(function(err) {
+      hideLoading();
+      console.warn('Fetch failed:', err.message);
+      loadFromCache();
+    });
+}
+
+function loadFromCache() {
+  try {
+    var saved = localStorage.getItem(CACHE_KEY);
+    if (saved) {
+      D = JSON.parse(saved);
+      showStaleBanner(D.at);
+      ge('refresh-status').textContent = 'Offline — cached ' + fmtTime(new Date(D.at));
+      render();
+    } else {
+      ge('ov-empty').querySelector('p').textContent = 'Could not load data. Check internet connection.';
+    }
+  } catch(x) {}
+}
+
+// Map Apps Script JSON response to the D object used by render functions
+function mapResponse(json) {
+  var d = json.data;
+  return {
+    I:             d.inflow,
+    E:             d.expenses,
+    B:             attachEntities(d.balances),
+    pendingDetail: d.pendingDetail || [],
+    at:            json.at
+  };
+}
+
+// Attach entity to each account using EMAP
+function attachEntities(b) {
+  var accs = b.accounts || [];
+  for (var i = 0; i < accs.length; i++) {
+    accs[i].entity = EMAP[accs[i].code] || guessEnt(accs[i].code);
+  }
+  return b;
+}
+
+function guessEnt(code) {
+  var c = (code || '').toUpperCase();
+  if (c.indexOf('GR') >= 0 && c.indexOf('PROP') < 0) return 'Graana';
+  if (c.indexOf('A21') >= 0) return 'Agency 21';
+  return 'IMARAT';
+}
+
+function manualRefresh() {
+  if (!auth.currentUser) return;
+  loadData();
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  refreshTimer = setInterval(function() {
+    if (auth.currentUser) loadData();
+  }, REFRESH_MS);
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+// ════════════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════════════
+function ge(id) { return document.getElementById(id); }
+function st(id, txt) { var e = ge(id); if (e) e.textContent = txt; }
+function showLoading(txt) {
+  ge('loading-overlay').style.display = 'flex';
+  ge('loading-txt').textContent = txt || 'Loading…';
+}
+function hideLoading() { ge('loading-overlay').style.display = 'none'; }
+function showStaleBanner(isoDate) {
+  ge('stale-banner').style.display = 'block';
+  ge('stale-time').textContent = isoDate ? fmtTime(new Date(isoDate)) : '—';
+}
+function hideStaleBanner() { ge('stale-banner').style.display = 'none'; }
+function updateHpill(isoDate) {
+  var el = ge('hpill');
+  el.className = 'hdr-pill pill-green';
+  el.textContent = '● Live — ' + (isoDate ? fmtTime(new Date(isoDate)) : '—');
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+}
+
+function goTab(name, btn) {
+  var panes = document.querySelectorAll('.pane');
+  for (var i = 0; i < panes.length; i++) panes[i].classList.remove('on');
+  var tabs = document.querySelectorAll('.nt');
+  for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('on');
+  var p = ge('pane-' + name);
+  if (p) p.classList.add('on');
+  if (btn) btn.classList.add('on');
+}
+
+// ════════════════════════════════════════════════════════════
+// FORMAT
+// ════════════════════════════════════════════════════════════
+function M(n) {
+  if (!n && n !== 0) return '—';
+  var a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e9) return s + 'Rs ' + (a/1e9).toFixed(2) + ' B';
+  if (a >= 1e7) return s + 'Rs ' + (a/1e7).toFixed(2) + ' Cr';
+  if (a >= 1e6) return s + 'Rs ' + (a/1e6).toFixed(2) + ' M';
+  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(0) + ' K';
+  return s + 'Rs ' + Math.round(a).toLocaleString();
+}
+function PKR(n) {
+  if (!n && n !== 0) return '—';
+  var a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e7) return s + (a/1e7).toFixed(2) + ' Cr';
+  if (a >= 1e5) return s + (a/1e5).toFixed(1) + ' L';
+  return s + Math.round(a).toLocaleString('en-IN');
+}
+
+// ════════════════════════════════════════════════════════════
+// MASTER RENDER
+// ════════════════════════════════════════════════════════════
+function render() {
+  if (!D) return;
+  try { rOV(); } catch(e) { console.error('OV:', e); }
+  try { rLQ(); } catch(e) { console.error('LQ:', e); }
+  try { rRV(); } catch(e) { console.error('RV:', e); }
+  try { rRX(); } catch(e) { console.error('RX:', e); }
+  try { rEX(); } catch(e) { console.error('EX:', e); }
+}
+
+// ════════════════════════════════════════════════════════════
+// OVERVIEW
+// ════════════════════════════════════════════════════════════
+function rOV() {
+  var I = D.I, B = D.B, E = D.E;
+  ge('ov-empty').style.display = 'none';
+  ge('ov-body').style.display = 'block';
+  var kpis = [
+    { l:'Working Balance', v:M(B.totalWorking), sub:'Bank + Cash', cls:'green', ico:'💰' },
+    { l:'Float / Hold',    v:M(B.float),        sub:'In transit',  cls:'amber', ico:'⏳' },
+    { l:'Pending Till Date',v:M(I.pending_till_date), sub:I.as_of_label||'Net outstanding', cls:'gold', ico:'📊' },
+    { l:'Expected Clearance',v:M(I.exp_total),  sub:'Near-term incoming', cls:'green', ico:'✅' },
+    { l:"Today's Expenses", v:M(E.totalToday),  sub:'Paid out today', cls:'red', ico:'📋' }
+  ];
+  var kh = '';
+  for (var i = 0; i < kpis.length; i++) {
+    var k = kpis[i];
+    var ibg = k.cls==='green'?'var(--gbg)':k.cls==='gold'?'var(--gold-l)':k.cls==='amber'?'var(--abg)':'var(--rbg)';
+    kh += '<div class="kpi '+k.cls+'"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+  }
+  ge('ov-kpis').innerHTML = kh;
+  ge('ov-aslbl').textContent = I.as_of_label || 'Pending Till Date';
+  ge('ov-pip').innerHTML = pip3(I.overall_pending,'var(--amber)','Overall Pending', I.cleared_from_pending,'var(--green)','Cleared', I.pending_till_date,'var(--gold-d)','Pending Till Date', true);
+  ge('ov-pip-note').textContent = 'New sales: '+PKR(I.new_sales)+' · Cleared from new: '+PKR(I.cleared_from_new)+' · Total cleared: '+PKR(I.total_cleared);
+  var tot = I.pending_till_date || 1;
+  var ents = [{n:'Graana',v:I.entity_graana,c:ECOL.Graana},{n:'Agency 21',v:I.entity_a21,c:ECOL['Agency 21']},{n:'IMARAT',v:I.entity_imarat,c:ECOL.IMARAT}];
+  ge('ov-ent-tot').textContent = PKR(I.pending_till_date);
+  ge('ov-ents').innerHTML = entityBars(ents, tot);
+  buildDonut('ov-donut','ov-dleg', I, tot);
+  ge('ov-clrg').innerHTML = clrGrid(I.exp_a21, I.exp_graana, I.exp_imarat);
+  ge('ov-clrt').textContent = M(I.exp_total);
+}
+
+// ════════════════════════════════════════════════════════════
+// BANK LIQUIDITY
+// ════════════════════════════════════════════════════════════
+function rLQ() {
+  var B = D.B;
+  ge('lq-empty').style.display = 'none';
+  ge('lq-body').style.display = 'block';
+  var active = B.accounts.filter(function(a){ return a.working > 0; });
+  var zeros  = B.accounts.filter(function(a){ return a.working === 0; });
+  var lkpis = [
+    {l:'Total Working Balance',v:M(B.totalWorking),sub:'Bank + Cash',cls:'green',ico:'💳'},
+    {l:'Bank Balance',          v:M(B.currentBalance),sub:'All accounts',cls:'blue',ico:'🏦'},
+    {l:'Cash in Hand',          v:M(B.cashInHand),  sub:'Physical cash',cls:'gold',ico:'💵'},
+    {l:'Float / Hold',          v:M(B.float),        sub:'In transit',cls:'amber',ico:'⏳'},
+    {l:'Active Accounts',       v:String(active.length),sub:zeros.length+' zero-balance',cls:'blue',ico:'📂'}
+  ];
+  var lkh = '';
+  for (var i = 0; i < lkpis.length; i++) {
+    var k = lkpis[i];
+    var ibg = k.cls==='green'?'var(--gbg)':k.cls==='gold'?'var(--gold-l)':k.cls==='amber'?'var(--abg)':'var(--bbg)';
+    lkh += '<div class="kpi '+k.cls+'"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+  }
+  ge('lq-kpis').innerHTML = lkh;
+  ge('lq-calc').innerHTML = '<div class="cr2"><span class="cla">Bank (Current) Balance</span><span class="cva">'+M(B.currentBalance)+'</span></div><div class="cop">+</div><div class="cr2"><span class="cla">Cash in Hand</span><span class="cva">'+M(B.cashInHand)+'</span></div><div class="cr2 ctotal"><span class="cla" style="font-weight:700;">Total Working Balance</span><span class="cva gd">'+M(B.totalWorking)+'</span></div><div><span class="flt">⏳ Float: '+M(B.float)+'</span></div>';
+  // Entity balance bars
+  var etots = {};
+  for (var i = 0; i < B.accounts.length; i++) {
+    var a = B.accounts[i];
+    if (!etots[a.entity]) etots[a.entity] = 0;
+    etots[a.entity] += a.working;
+  }
+  var earr = Object.keys(etots).map(function(k){ return {n:k,v:etots[k]}; }).sort(function(a,b){ return b.v-a.v; });
+  var bce_html = '';
+  for (var i = 0; i < earr.length; i++) {
+    var e = earr[i], w = B.currentBalance > 0 ? (e.v/B.currentBalance*100) : 0;
+    var c = ECOL[e.n]||'#7C3AED';
+    bce_html += '<div class="bce"><div class="bceh"><div class="bcen"><div class="dot" style="background:'+c+'"></div>'+e.n+'</div><div class="bcev">'+M(e.v)+'</div></div><div class="bcet"><div class="bcef" style="width:'+w.toFixed(1)+'%;background:'+c+'"><span class="bcel">'+w.toFixed(1)+'%</span></div></div></div>';
+  }
+  ge('lq-bce').innerHTML = bce_html;
+  // Bank group cards
+  var bg = {};
+  for (var i = 0; i < B.accounts.length; i++) {
+    var a = B.accounts[i];
+    if (!bg[a.bank]) bg[a.bank] = {tot:0,cnt:0,act:0,fl:0};
+    bg[a.bank].tot += a.working; bg[a.bank].fl += a.float||0;
+    bg[a.bank].cnt++; if (a.working > 0) bg[a.bank].act++;
+  }
+  var barr = Object.keys(bg).map(function(k){ return {n:k,d:bg[k]}; }).sort(function(a,b){ return b.d.tot-a.d.tot; }).slice(0,4);
+  var bcls = {MCB:'mcb',JAZZ:'jazz',ASKARI:'askari',UBL:'other',UBANK:'other',SCB:'other'};
+  var bcol = {MCB:'var(--blue)',JAZZ:'var(--amber)',ASKARI:'var(--red)',UBL:'var(--pur)',UBANK:'var(--t3)',SCB:'var(--t3)'};
+  var bkh = '';
+  for (var i = 0; i < barr.length; i++) {
+    var b = barr[i], pct = B.currentBalance>0?(b.d.tot/B.currentBalance*100):0;
+    var cls = bcls[b.n]||'other', col = bcol[b.n]||'var(--pur)';
+    bkh += '<div class="bkc '+cls+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="bkn" style="color:'+col+'">'+b.n+'</div><span class="bdg bdg-gy">'+b.d.act+'/'+b.d.cnt+' active</span></div><div class="bka">'+M(b.d.tot)+'</div><div class="bks">Working Balance · '+pct.toFixed(1)+'% of total</div><div class="bkbb"><div class="bkbf" style="width:'+pct.toFixed(1)+'%;background:'+col+'"></div></div>'+(b.d.fl>0?'<div style="margin-top:8px;"><span class="flt">⏳ '+M(b.d.fl)+'</span></div>':'')+'</div>';
+  }
+  ge('lq-banks').innerHTML = bkh;
+  allAcc = B.accounts;
+  renderAcc(B.accounts);
+  ge('lq-cnt').textContent = B.accounts.length + ' accounts';
+}
+
+function renderAcc(accs) {
+  var active = accs.filter(function(a){ return a.working > 0; });
+  var zero   = accs.filter(function(a){ return a.working === 0; });
+  var rows   = active.concat(zero);
+  var h = '';
+  for (var i = 0; i < rows.length; i++) {
+    var a = rows[i], c = ECOL[a.entity]||'#7C3AED';
+    var chip_cls = BCHIP[a.bank]||'ch-oth';
+    var zr  = a.working === 0 ? 'style="color:#9CAA9D;background:#FAFCFA;"' : '';
+    var pct = D && D.B.currentBalance > 0 ? (a.working/D.B.currentBalance*100) : 0;
+    var warn = pct > 25 ? ' <span style="color:var(--amber)">⚠</span>' : '';
+    h += '<tr '+zr+'><td><span class="dot" style="background:'+c+';display:inline-block;margin-right:5px;vertical-align:middle;"></span>'+a.entity+'</td><td><span class="chip '+chip_cls+'">'+a.bank+'</span></td><td class="mono" style="font-weight:600;">'+a.code+'</td><td class="mono" style="font-weight:600;color:'+(a.working>0?'var(--green)':'var(--t3)')+';\">'+(a.working>0?M(a.working):'—')+'</td><td class="mono" style="color:var(--t2);">'+(a.ledger>0?M(a.ledger):'—')+'</td><td class="mono" style="color:'+(a.float>0?'var(--amber)':'var(--t3)')+';\">'+(a.float>0?M(a.float):'—')+'</td><td>'+(a.working>0?'<span class="bdg bdg-gr">Active</span>'+warn:'<span class="bdg bdg-gy">Zero</span>')+'</td></tr>';
+  }
+  ge('acc-tbody').innerHTML = h;
+}
+
+function filterAcc() {
+  var q = ge('acc-srch').value.toLowerCase();
+  if (!q) { renderAcc(allAcc); ge('lq-cnt').textContent = allAcc.length+' accounts'; return; }
+  var f = allAcc.filter(function(a){ return a.code.toLowerCase().indexOf(q)>=0||a.bank.toLowerCase().indexOf(q)>=0||a.entity.toLowerCase().indexOf(q)>=0; });
+  renderAcc(f);
+  ge('lq-cnt').textContent = f.length+'/'+allAcc.length;
+}
+
+// ════════════════════════════════════════════════════════════
+// REVENUE
+// ════════════════════════════════════════════════════════════
+function rRV() {
+  var I = D.I, tot = I.pending_till_date || 1;
+  var ns = I.new_sales||0, cfn = I.cleared_from_new||0, pfn = I.pending_from_new||0;
+  var conv = ns > 0 ? (cfn/ns*100) : 0;
+  ge('rv-empty').style.display = 'none';
+  ge('rv-body').style.display = 'block';
+  st('rv-ns', M(ns)); st('rv-ns-s', 'Total value of transactions booked today');
+  st('rv-cfn', M(cfn)); st('rv-cfn-s', conv.toFixed(1)+'% of new sales cleared');
+  st('rv-pfn', M(pfn)); st('rv-pfn-s', (ns>0?(pfn/ns*100):0).toFixed(1)+'% of new sales outstanding');
+  ge('rv-rate-b').textContent = conv.toFixed(1)+'% cleared';
+  st('rv-nb', M(ns)); st('rv-nc', M(cfn));
+  st('rv-ncr', conv.toFixed(1)+'% of booked'); st('rv-np', M(pfn));
+  st('rv-npp', (ns>0?(pfn/ns*100):0).toFixed(1)+'% outstanding');
+  ge('rv-cbar').style.width = conv.toFixed(1)+'%';
+  st('rv-cpct', conv.toFixed(1)+'%');
+  ge('rv-pip').innerHTML = pip3(I.overall_pending,'var(--amber)','Overall Pending', I.cleared_from_pending,'var(--green)','Cleared from Pending', I.pending_till_date,'var(--gold-d)','Pending Till Date', true);
+  ge('rv-pip-note').innerHTML = 'Total cleared (all sources): <strong>'+M(I.total_cleared)+'</strong> &nbsp;|&nbsp; From new sales: <strong>'+M(cfn)+'</strong> &nbsp;|&nbsp; From pending pool: <strong>'+M(I.cleared_from_pending)+'</strong>';
+  var ents = [{n:'Graana',v:I.entity_graana,exp:I.exp_graana,c:ECOL.Graana},{n:'Agency 21',v:I.entity_a21,exp:I.exp_a21,c:ECOL['Agency 21']},{n:'IMARAT',v:I.entity_imarat,exp:I.exp_imarat,c:ECOL.IMARAT}];
+  ge('rv-ent-tot').textContent = M(I.pending_till_date);
+  var eph = '';
+  for (var i = 0; i < ents.length; i++) {
+    var e = ents[i], r = e.v>0?(e.exp/e.v*100):0;
+    eph += '<tr><td style="display:flex;align-items:center;gap:6px;padding-left:14px;"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'</td><td class="mono" style="font-weight:600;">'+M(e.v)+'</td><td class="mono" style="color:var(--green);">'+M(e.exp)+'</td><td><div class="rpill"><span class="mono" style="font-size:10px;">'+r.toFixed(1)+'%</span><div class="rt"><div class="rf" style="width:'+Math.min(r,100).toFixed(1)+'%;background:'+e.c+'"></div></div></div></td></tr>';
+  }
+  ge('rv-ep').innerHTML = eph;
+  ge('rv-ents').innerHTML = entityBars(ents, tot);
+  var fp = [
+    {l:'New Sales Booked',v:M(ns),s:"Today's new transactions",c:'var(--blue)'},
+    {l:'Cleared from New', v:M(cfn),s:conv.toFixed(1)+'% clearance rate',c:'var(--green)'},
+    {l:'Overall Pending Pool',v:M(I.overall_pending),s:'Before clearances',c:'var(--amber)'},
+    {l:'Cleared from Pending',v:M(I.cleared_from_pending),s:'Recovered from pool',c:'var(--green)'},
+    {l:'Pending Till Date',v:M(I.pending_till_date),s:'Net outstanding',c:'var(--gold-d)'},
+    {l:'Expected Clearance',v:M(I.exp_total),s:'Incoming near-term',c:'var(--green)'}
+  ];
+  var fph = '';
+  for (var i = 0; i < fp.length; i++) {
+    fph += '<div class="fi"><div class="fl">'+fp[i].l+'</div><div class="fv" style="color:'+fp[i].c+'">'+fp[i].v+'</div><div class="fs">'+fp[i].s+'</div></div>';
+  }
+  ge('rv-fp').innerHTML = fph;
+  var st2 = [
+    {n:'Returned',v:I.returned,c:'#DC2626'},{n:'On Hold',v:I.on_hold,c:'#D97706'},
+    {n:'Postdated',v:I.postdated,c:'#7C3AED'},{n:'Presented',v:I.presented,c:'#16A34A'},
+    {n:'Chq Not Recv',v:I.chq_not_received,c:'#2563EB'},{n:'To Deposit',v:I.to_be_deposited,c:'#8AAB8E'}
+  ].filter(function(x){ return x.v > 0; });
+  var sth = '';
+  for (var i = 0; i < st2.length; i++) {
+    var s = st2[i], w = (s.v/tot*100);
+    sth += '<div class="sr"><div class="srl"><div class="dot" style="background:'+s.c+'"></div>'+s.n+'</div><div class="srb"><div class="srf" style="width:'+w.toFixed(1)+'%;background:'+s.c+'"></div></div><div class="srv">'+M(s.v)+'</div><div class="srp">'+w.toFixed(1)+'%</div></div>';
+  }
+  ge('rv-status').innerHTML = sth;
+  ge('rv-clrg').innerHTML = clrGrid(I.exp_a21, I.exp_graana, I.exp_imarat);
+  ge('rv-clrt').textContent = M(I.exp_total);
+}
+
+// ════════════════════════════════════════════════════════════
+// RECEIVABLES (PENIDNG REV detail)
+// ════════════════════════════════════════════════════════════
+function rRX() {
+  var rows = D.pendingDetail || [];
+  ge('rx-empty').style.display = 'none';
+  ge('rx-body').style.display = 'block';
+  allRx = rows;
+
+  // KPIs
+  var total = 0, highRisk = 0, escalate = 0, monitor = 0;
+  for (var i = 0; i < rows.length; i++) {
+    total += rows[i].amount;
+    var rf = (rows[i].riskFlag || '').toUpperCase();
+    if (rf.indexOf('HIGH RISK') >= 0) highRisk += rows[i].amount;
+    else if (rf === 'ESCALATE')       escalate += rows[i].amount;
+    else                               monitor  += rows[i].amount;
+  }
+  var kpis2 = [
+    {l:'Total Pending',  v:M(total),    sub:rows.length+' transactions',   cls:'gold', ico:'📊'},
+    {l:'High Risk / Legal',v:M(highRisk),sub:'Requires legal review',     cls:'red',  ico:'⚠️'},
+    {l:'Escalate',       v:M(escalate), sub:'Needs management attention',  cls:'amber',ico:'🔺'},
+    {l:'Monitor',        v:M(monitor),  sub:'Being tracked',              cls:'green',ico:'👁'}
+  ];
+  var kh = '';
+  for (var i = 0; i < kpis2.length; i++) {
+    var k = kpis2[i];
+    var ibg = k.cls==='green'?'var(--gbg)':k.cls==='gold'?'var(--gold-l)':k.cls==='amber'?'var(--abg)':'var(--rbg)';
+    kh += '<div class="kpi '+k.cls+'"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+  }
+  ge('rx-kpis').innerHTML = kh;
+
+  // Risk summary cards
+  var companies = ['Agency 21','Graana','IMARAT'];
+  var rch = '';
+  for (var i = 0; i < companies.length; i++) {
+    var co = companies[i];
+    var coRows = rows.filter(function(r){ return r.company === co; });
+    var coTotal = coRows.reduce(function(s, r){ return s + r.amount; }, 0);
+    var coHR = coRows.filter(function(r){ return (r.riskFlag||'').toUpperCase().indexOf('HIGH RISK') >= 0; });
+    var c = ECOL[co]||'#7C3AED';
+    rch += '<div class="card" style="margin-bottom:0;"><div class="ch"><span class="ct" style="display:flex;align-items:center;gap:7px;"><div class="dot" style="background:'+c+'"></div>'+co+'</span><span class="bdg bdg-gd">'+coRows.length+' txns</span></div><div class="cb"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:'+c+';margin-bottom:6px;">'+M(coTotal)+'</div><div style="font-size:11px;color:var(--t2);">'+coHR.length+' high-risk items &nbsp;·&nbsp; '+M(coHR.reduce(function(s,r){return s+r.amount;},0))+'</div></div></div>';
+  }
+  ge('rx-risk-cards').innerHTML = rch;
+
+  renderRx(rows);
+}
+
+function renderRx(rows) {
+  var statusColors = {
+    'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED',
+    'Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'
+  };
+  var h = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var sc = statusColors[r.status] || 'var(--t3)';
+    var rf = (r.riskFlag || '').toUpperCase();
+    var riskBadge = rf.indexOf('HIGH RISK') >= 0
+      ? '<span class="risk-hl">⚠ HIGH RISK</span>'
+      : rf === 'ESCALATE'
+        ? '<span class="risk-es">↑ ESCALATE</span>'
+        : '<span class="risk-mo">● MONITOR</span>';
+    var ag = r.daysAging != null ? r.daysAging + 'd' : '—';
+    var agCol = r.daysAging > 20 ? 'color:var(--red);font-weight:600;' : r.daysAging > 10 ? 'color:var(--amber);' : '';
+    var co = ECOL[r.company]||'#7C3AED';
+    h += '<tr><td class="mono" style="font-size:11px;color:var(--t2);">'+(r.entryDate||'—')+'</td><td><span class="dot" style="background:'+co+';display:inline-block;margin-right:5px;vertical-align:middle;"></span>'+r.company+'</td><td style="font-size:11px;color:var(--t2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(r.office||'—')+'</td><td style="font-weight:500;">'+(r.customer||'—')+'</td><td style="font-size:11px;color:var(--t2);">'+(r.advisor||'—')+'</td><td><span style="color:'+sc+';font-size:11px;font-weight:600;">'+r.status+'</span></td><td class="mono" style="font-weight:600;text-align:right;">'+M(r.amount)+'</td><td class="mono" style="text-align:right;'+agCol+'">'+ag+'</td><td>'+riskBadge+'</td></tr>';
+  }
+  ge('rx-tbody').innerHTML = h || '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">No records match your filters</td></tr>';
+  ge('rx-cnt').textContent = rows.length + (rows.length !== allRx.length ? '/'+allRx.length : '') + ' txns';
+}
+
+function filterRx() {
+  var q  = ge('rx-srch').value.toLowerCase();
+  var co = ge('rx-co').value;
+  var st3 = ge('rx-st').value;
+  var rf = ge('rx-rf').value;
+  var f = allRx.filter(function(r) {
+    if (co && r.company !== co) return false;
+    if (st3 && r.status !== st3) return false;
+    if (rf && r.riskFlag !== rf) return false;
+    if (q && (r.customer||'').toLowerCase().indexOf(q) < 0 && (r.advisor||'').toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+  renderRx(f);
+}
+
+// ════════════════════════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════════════════════════
+function rEX() {
+  var E = D.E;
+  ge('ex-empty').style.display = 'none';
+  ge('ex-body').style.display = 'block';
+  ge('ex-sum').innerHTML = '<div class="kpi red" style="margin-bottom:0;"><div class="kpi-ico" style="background:var(--rbg)">📋</div><div class="kpi-lbl">Today\'s Total</div><div class="kpi-val">'+M(E.totalToday)+'</div><div class="kpi-sub">'+E.expenses.filter(function(x){return x.today>0;}).length+' categories</div></div><div class="kpi amber" style="margin-bottom:0;"><div class="kpi-ico" style="background:var(--abg)">📊</div><div class="kpi-lbl">MTD Total</div><div class="kpi-val">'+M(E.totalMTD)+'</div><div class="kpi-sub">'+E.expenses.filter(function(x){return x.mtd>0;}).length+' active categories</div></div>';
+  var cats = {H:'var(--blue)',I:'var(--red)',P:'var(--amber)',T:'var(--green)',A:'var(--pur)',M:'var(--t3)'};
+  var tsrt = E.expenses.filter(function(x){return x.today>0;}).sort(function(a,b){return b.today-a.today;});
+  var msrt = E.expenses.filter(function(x){return x.mtd>0;}).sort(function(a,b){return b.mtd-a.mtd;});
+  var mxt  = tsrt.length ? tsrt[0].today : 1;
+  var mxm  = msrt.length ? msrt[0].mtd   : 1;
+  ge('ex-tb').textContent = M(E.totalToday);
+  ge('ex-mb').textContent = M(E.totalMTD);
+  var th = '';
+  for (var i = 0; i < tsrt.length; i++) {
+    var e = tsrt[i], c = cats[e.cat]||'var(--pur)';
+    th += '<div class="hbr"><div class="hbl" title="'+e.head+'">'+e.head+'</div><div class="hbt"><div class="hbf" style="width:'+(e.today/mxt*100).toFixed(1)+'%;background:'+c+'"></div></div><div class="hbv">'+M(e.today)+'</div></div>';
+  }
+  ge('ex-today').innerHTML = th || '<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px;">No expenses today</div>';
+  var mh = '';
+  for (var i = 0; i < msrt.length; i++) {
+    var e = msrt[i], c = cats[e.cat]||'var(--pur)';
+    mh += '<div class="hbr"><div class="hbl" title="'+e.head+'">'+(i===0?'⭐ ':'')+e.head+'</div><div class="hbt"><div class="hbf" style="width:'+(e.mtd/mxm*100).toFixed(1)+'%;background:'+c+'"></div></div><div class="hbv">'+M(e.mtd)+'</div></div>';
+  }
+  ge('ex-mtd').innerHTML = mh || '<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px;">No MTD data</div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// SHARED HELPERS
+// ════════════════════════════════════════════════════════════
+function pip3(v1,c1,l1, v2,c2,l2, v3,c3,l3, hi) {
+  return '<div class="pp"><div class="ppv" style="color:'+c1+'">'+PKR(v1)+'</div><div class="ppl">'+l1+'</div></div><div class="po">→</div><div class="pp"><div class="ppv" style="color:'+c2+'">'+PKR(v2)+'</div><div class="ppl">'+l2+'</div></div><div class="po">=</div><div class="pp'+(hi?' hi':'')+'"><div class="ppv" style="color:'+c3+'">'+PKR(v3)+'</div><div class="ppl">'+l3+'</div></div>';
+}
+function entityBars(ents, tot) {
+  var h = '';
+  for (var i = 0; i < ents.length; i++) {
+    var e = ents[i], w = (e.v/tot*100);
+    h += '<div class="eb"><div class="ebh"><div class="ebn"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'</div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
+  }
+  return h;
+}
+function clrGrid(a21, graana, imarat) {
+  return '<div class="ci"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
+}
+function buildDonut(svgId, legId, I, tot) {
+  var items = [
+    {n:'Returned',v:I.returned,c:'#DC2626'},{n:'On Hold',v:I.on_hold,c:'#D97706'},
+    {n:'Postdated',v:I.postdated,c:'#7C3AED'},{n:'Presented',v:I.presented,c:'#16A34A'},
+    {n:'Chq Not Recv',v:I.chq_not_received,c:'#2563EB'},{n:'To Deposit',v:I.to_be_deposited,c:'#8AAB8E'}
+  ].filter(function(x){ return x.v > 0; });
+  var r=38,cx=55,cy=55,sw=14,C=2*Math.PI*r,off=0,arcs='';
+  for (var i = 0; i < items.length; i++) {
+    var dash = (items[i].v/tot)*C;
+    arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+items[i].c+'" stroke-width="'+sw+'" stroke-dasharray="'+dash+' '+C+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90,'+cx+','+cy+')"/>';
+    off += dash;
+  }
+  arcs += '<text x="'+cx+'" y="'+(cy-5)+'" text-anchor="middle" font-size="9" fill="var(--t2)" font-weight="600">PENDING</text><text x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-size="10" fill="var(--t1)" font-weight="700">'+PKR(tot)+'</text>';
+  ge(svgId).innerHTML = arcs;
+  var lh = '';
+  for (var i = 0; i < items.length; i++) {
+    lh += '<div class="dli"><div class="dll"><div class="dot" style="background:'+items[i].c+'"></div>'+items[i].n+'</div><span class="dlp">'+(items[i].v/tot*100).toFixed(1)+'%</span></div>';
+  }
+  ge(legId).innerHTML = lh;
+}
+
+// ════════════════════════════════════════════════════════════
+// PWA SERVICE WORKER
+// ════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/imarat-sap/sw.js')
+    .then(function(reg) { console.log('SW registered, scope:', reg.scope); })
+    .catch(function(err) { console.warn('SW registration failed:', err); });
+}
+
+// ── Init date ───────────────────────────────────────────────
+ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+</script>
+</body>
+</html>
