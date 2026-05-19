@@ -487,9 +487,9 @@ table.ept tr:last-child td{border-bottom:none;}
   #pane-receivables .ch>div{flex-direction:column;width:100%;}
   #rx-srch,#rx-co,#rx-st,#rx-rf{width:100%!important;}
   .g3#rx-risk-cards{grid-template-columns:1fr!important;}
-  #rx-tbody td:nth-child(3),#rx-tbody td:nth-child(5),
+  #rx-tbody td:nth-child(3),#rx-tbody td:nth-child(4),
   #pane-receivables thead th:nth-child(3),
-  #pane-receivables thead th:nth-child(5){display:none;}
+  #pane-receivables thead th:nth-child(4){display:none;}
 
   /* EXPENSES — stack today/MTD charts vertically */
   #ex-body>.g2:last-child{grid-template-columns:1fr!important;}
@@ -930,7 +930,7 @@ ge('li-pass').addEventListener('keydown', function(e) {
 // DATA LOADING
 // ════════════════════════════════════════════════════════════
 function loadData() {
-  showLoading('Fetching live data from Google Sheets…');
+  showLoading('Fetching live data from System…');
   var url = APPS_SCRIPT_URL + '?action=read&clientKey=' + CLIENT_KEY + '&_=' + Date.now();
   fetch(url)
     .then(function(r) {
@@ -1274,7 +1274,7 @@ function rRX() {
   }
   var kpis2 = [
     {l:'Total Pending',  v:M(total),    sub:rows.length+' transactions',   cls:'gold', ico:'📊'},
-    {l:'High Risk / Legal',v:M(highRisk),sub:'Requires legal review',     cls:'red',  ico:'⚠️'},
+    {l:'High Risk',v:M(highRisk),sub:'Requires legal review',     cls:'red',  ico:'⚠️'},
     {l:'Escalate',       v:M(escalate), sub:'Needs management attention',  cls:'amber',ico:'🔺'},
     {l:'Monitor',        v:M(monitor),  sub:'Being tracked',              cls:'green',ico:'👁'}
   ];
