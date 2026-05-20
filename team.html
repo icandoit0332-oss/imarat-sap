@@ -1569,7 +1569,7 @@ function renderDeptList(depts) {
   container.innerHTML = depts.map(function(d) {
     return '<div class="umgmt-row">'
       + '<div class="umgmt-info"><div class="umgmt-email">' + d + '</div></div>'
-      + '<button class="umgmt-del" onclick="removeDepartment('' + d + '')">Remove</button>'
+      + '<button class="umgmt-del" onclick="removeDepartment(\'' + d + '\')">Remove</button>'
       + '</div>';
   }).join('');
 }
@@ -1637,7 +1637,7 @@ function renderConsList(cons) {
       + '<div class="umgmt-email">' + c.name + ' <span style="font-size:10px;background:rgba(8,145,178,0.1);color:' + (typeColors[c.type]||'var(--primary)') + ';padding:1px 7px;border-radius:8px;font-family:'DM Mono',monospace">' + c.type + '</span></div>'
       + '<div class="umgmt-meta">' + c.email + '</div>'
       + '</div>'
-      + '<button class="umgmt-del" onclick="removeConsultant('' + c.name + '')">Remove</button>'
+      + '<button class="umgmt-del" onclick="removeConsultant(\'' + c.name + '\')">Remove</button>'
       + '</div>';
   }).join('');
 }
