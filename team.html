@@ -468,39 +468,72 @@ body.viewer-mode .edit-section { display:none !important; }
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 0 !important;
-    padding-bottom: 12px;
+    padding-bottom: 16px;
     margin: 0 -14px;
     padding-left: 14px;
-    padding-right: 14px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   .pipeline::-webkit-scrollbar { display: none; }
   .pipeline-col {
-    min-width: calc(90vw - 28px) !important;
-    max-width: calc(90vw - 28px) !important;
+    min-width: calc(100vw - 42px) !important;
+    max-width: calc(100vw - 42px) !important;
     scroll-snap-align: start;
-    margin-right: 12px;
+    margin-right: 14px;
     flex-shrink: 0;
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 14px;
+    box-shadow: 0 1px 4px rgba(8,145,178,0.07);
   }
   .pipeline-col:last-child { margin-right: 14px; }
 
-  /* Pipeline column header sticky */
+  /* Pipeline column header */
   .col-header {
     position: sticky; top: 0; z-index: 10;
-    background: var(--bg); padding: 10px 0 8px;
+    background: var(--surface);
+    padding: 4px 0 12px;
+    margin: -4px 0 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .col-label { font-size: 14px; font-weight: 700; }
+  .col-count { font-size: 13px; }
+
+  /* Pipeline req cards on mobile */
+  .req-card {
+    padding: 12px 14px !important;
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+  }
+  .pipe-card-title {
+    font-size: 13px !important;
+    margin-bottom: 8px !important;
+    line-height: 1.4 !important;
   }
 
+  /* Pipeline stage indicator dots */
+  .pipe-stage-dots {
+    display: flex; gap: 6px; justify-content: center;
+    padding: 8px 0 4px; margin: 0 -14px;
+  }
+  .pipe-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); transition: all 0.2s;
+    cursor: pointer;
+  }
+  .pipe-dot.active { background: var(--primary); width: 18px; border-radius: 3px; }
+
   /* Pipeline scroll hint */
-  #pane-pipeline::before {
-    content: '← Swipe to see all stages →';
+  #pane-pipeline .page-header-row::after {
+    content: 'Swipe between stages →';
     display: block;
-    text-align: center;
     font-size: 10px;
     color: var(--text-dim);
     font-family: 'DM Mono', monospace;
-    padding: 0 0 8px;
-    letter-spacing: 0.5px;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
   }
 
   /* ── DASHBOARD MOBILE ── */
@@ -639,10 +672,6 @@ body.viewer-mode .edit-section { display:none !important; }
       <span class="bn-icon">📊</span>
       <span class="bn-label">Dashboard</span>
     </button>
-    <button class="bn-tab edit-only" id="bn-new" onclick="goTab('new')" style="background:none;border:none;">
-      <span class="bn-icon" style="width:40px;height:40px;background:linear-gradient(135deg,#0891B2,#0C6A8B);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:-4px;box-shadow:0 3px 10px rgba(8,145,178,0.35);">➕</span>
-      <span class="bn-label">New</span>
-    </button>
     <button class="bn-tab" id="bn-tasks" onclick="goTab('tasks')">
       <span class="bn-icon">📋</span>
       <span class="bn-label">Tasks</span>
@@ -650,6 +679,10 @@ body.viewer-mode .edit-section { display:none !important; }
     <button class="bn-tab" id="bn-rankings" onclick="goTab('rankings')">
       <span class="bn-icon">🏆</span>
       <span class="bn-label">Rankings</span>
+    </button>
+    <button class="bn-tab" id="bn-calendar" onclick="goTab('calendar')">
+      <span class="bn-icon">📅</span>
+      <span class="bn-label">Calendar</span>
     </button>
   </div>
 </div>
