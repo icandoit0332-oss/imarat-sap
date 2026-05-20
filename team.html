@@ -608,7 +608,7 @@ body.viewer-mode .edit-section { display:none !important; }
         <option value="Abdul Wasay">Abdul Wasay</option>
         <option value="Ayaz">Ayaz</option>
         <option value="Hassan">Hassan</option>
-        <option value="Rao Imran">Rao Imran</option>
+        <option value="Sarmad">Sarmad</option>
       </select>
       <select class="tb-filter" id="fPri" onchange="renderTasks()">
         <option value="">All Priorities</option>
@@ -668,7 +668,7 @@ body.viewer-mode .edit-section { display:none !important; }
         <option value="Abdul Wasay">Abdul Wasay</option>
         <option value="Ayaz">Ayaz</option>
         <option value="Hassan">Hassan</option>
-        <option value="Rao Imran">Rao Imran</option>
+        <option value="Sarmad">Sarmad</option>
       </select>
       <select class="cal-filter" id="calFilterStatus" onchange="renderCalendar()">
         <option value="">All Statuses</option>
@@ -737,6 +737,36 @@ body.viewer-mode .edit-section { display:none !important; }
       </div>
     </div>
 
+
+    <!-- DEPARTMENTS MANAGEMENT — Admin only -->
+    <div class="settings-section" id="deptMgmtSection" style="display:none">
+      <div class="settings-title" style="font-size:16px;margin-bottom:6px">🏢 Manage Departments</div>
+      <div class="settings-desc">Add or remove departments. The submission form updates automatically.</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;margin-top:14px">
+        <input class="form-control" type="text" id="newDeptName" placeholder="e.g. Legal, IT, Operations" style="flex:1">
+        <button onclick="addDepartment()" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--green);padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Mono',monospace;white-space:nowrap">+ Add</button>
+      </div>
+      <div id="deptList"><div style="color:var(--text-dim);font-size:13px;font-family:'DM Mono',monospace">Loading...</div></div>
+    </div>
+
+    <!-- CONSULTANTS MANAGEMENT — Admin only -->
+    <div class="settings-section" id="consMgmtSection" style="display:none">
+      <div class="settings-title" style="font-size:16px;margin-bottom:6px">👨‍💼 Manage Consultants</div>
+      <div class="settings-desc">Add or remove consultants. Dashboard and form dropdowns update automatically.</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;margin-top:14px;flex-wrap:wrap">
+        <input class="form-control" type="text" id="newConsName" placeholder="Full name" style="flex:1;min-width:140px">
+        <input class="form-control" type="email" id="newConsEmail" placeholder="email@company.com" style="flex:1;min-width:180px">
+        <select id="newConsType" style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);cursor:pointer">
+          <option value="FICO">FICO</option>
+          <option value="MM">MM</option>
+          <option value="HCM">HCM</option>
+          <option value="ABAP">ABAP</option>
+        </select>
+        <button onclick="addConsultant()" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--green);padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Mono',monospace;white-space:nowrap">+ Add</button>
+      </div>
+      <div id="consList"><div style="color:var(--text-dim);font-size:13px;font-family:'DM Mono',monospace">Loading...</div></div>
+    </div>
+
     <!-- USER MANAGEMENT — ADMIN ONLY -->
     <div class="settings-section" id="userMgmtSection" style="display:none;">
       <div class="form-label" style="margin-bottom:16px">👥 User Management</div>
@@ -793,10 +823,10 @@ body.viewer-mode .edit-section { display:none !important; }
 const CONSULTANTS = {
   FICO: ['Abdul Wasay', 'Ayaz'],
   MM:   ['Hassan'],
-  HCM:  ['Rao Imran'],
+  HCM:  ['Sarmad'],
 };
 
-const ALL_CONSULTANTS = ['Abdul Wasay', 'Ayaz', 'Hassan', 'Rao Imran'];
+const ALL_CONSULTANTS = ['Abdul Wasay', 'Ayaz', 'Hassan', 'Sarmad'];
 
 const STATUS_ORDER = ['Not Started','In Progress','UAT','Completed'];
 
@@ -811,14 +841,16 @@ var WASAY    = 'abdul.wasay@imarat.com.pk';
 var AYAZ     = 'ayaz.mughl@hotmail.com';
 var HASSAN   = 'h.abbasi@propmax.ai';
 var RAO      = 'Rao.imran@imarat.com.pk';
+var SARMAD   = 'sarmad.mudassar@gmail.com';
+var HUSSAIN  = 'hussain.abbas@propmax.ai';
 var SAAD     = 'saadzahid537@gmail.com';
 var ZEESHAN  = 'zeeshanhashim116@gmail.com';
 var UMER     = 'umer.naeem@imarat.com.pk';
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
 
-var MODULE_EMAIL = { 'FICO': WASAY, 'MM': HASSAN, 'HCM': RAO };
-var CONS_EMAIL   = { 'Abdul Wasay': WASAY, 'Ayaz': AYAZ, 'Hassan': HASSAN, 'Rao Imran': RAO };
-var ABAP_EMAIL   = { 'Saad': SAAD, 'Zeeshan': ZEESHAN };
+var MODULE_EMAIL = { 'FICO': WASAY, 'MM': HASSAN, 'HCM': SARMAD };
+var CONS_EMAIL   = { 'Abdul Wasay': WASAY, 'Ayaz': AYAZ, 'Hassan': HASSAN, 'Sarmad': SARMAD, 'Rao Imran': RAO };
+var ABAP_EMAIL   = { 'Saad': SAAD, 'Zeeshan': ZEESHAN, 'Hussain': HUSSAIN };
 
 function mail(to, subj, body) {
   try { if (to) MailApp.sendEmail({ to: to, subject: subj, htmlBody: body }); }
@@ -1418,7 +1450,7 @@ fbAuth.onAuthStateChanged(async (user) => {
 
     // Load data
     if (scriptUrl) loadAllData();
-    if (currentRole === 'admin') loadUsersList();
+    if (currentRole === 'admin') { loadUsersList(); loadDeptList(); loadConsList(); }
 
   } else {
     currentUser = null; currentRole = 'viewer';
@@ -1451,6 +1483,10 @@ function applyRole(role) {
   }
   const umSection = document.getElementById('userMgmtSection');
   if (umSection) umSection.style.display = role === 'admin' ? '' : 'none';
+  const deptSection = document.getElementById('deptMgmtSection');
+  if (deptSection) deptSection.style.display = role === 'admin' ? '' : 'none';
+  const consSection = document.getElementById('consMgmtSection');
+  if (consSection) consSection.style.display = role === 'admin' ? '' : 'none';
 }
 
 // ── USER MANAGEMENT ──
@@ -1507,6 +1543,133 @@ async function removeUser(uid, email) {
   if (!confirm('Remove '+email+'?')) return;
   try { await fbDb.collection('users').doc(uid).delete(); showToast('✓ User removed','green'); loadUsersList(); }
   catch(e) { showToast('Error: '+e.message,'red'); }
+}
+
+
+// ══════════════════════════════════════════
+//  DEPARTMENTS MANAGEMENT
+// ══════════════════════════════════════════
+var defaultDepts = ['Finance','HR','Procurement','Other'];
+
+async function loadDeptList() {
+  var container = document.getElementById('deptList');
+  if (!container) return;
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('departments').get();
+    var depts = snap.exists ? (snap.data().list || defaultDepts) : defaultDepts;
+    renderDeptList(depts);
+  } catch(e) {
+    renderDeptList(defaultDepts);
+  }
+}
+
+function renderDeptList(depts) {
+  var container = document.getElementById('deptList');
+  if (!container) return;
+  container.innerHTML = depts.map(function(d) {
+    return '<div class="umgmt-row">'
+      + '<div class="umgmt-info"><div class="umgmt-email">' + d + '</div></div>'
+      + '<button class="umgmt-del" onclick="removeDepartment('' + d + '')">Remove</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function addDepartment() {
+  var name = document.getElementById('newDeptName').value.trim();
+  if (!name) { showToast('Enter a department name'); return; }
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('departments').get();
+    var depts = snap.exists ? (snap.data().list || defaultDepts) : defaultDepts.slice();
+    if (depts.indexOf(name) > -1) { showToast('Department already exists'); return; }
+    depts.push(name);
+    await window.__fbDb.collection('app-config').doc('departments').set({ list: depts });
+    document.getElementById('newDeptName').value = '';
+    renderDeptList(depts);
+    showToast('✓ Department added');
+  } catch(e) { showToast('✗ Error: ' + e.message); }
+}
+
+async function removeDepartment(name) {
+  if (!confirm('Remove department "' + name + '"?')) return;
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('departments').get();
+    var depts = snap.exists ? (snap.data().list || []) : [];
+    depts = depts.filter(function(d) { return d !== name; });
+    await window.__fbDb.collection('app-config').doc('departments').set({ list: depts });
+    renderDeptList(depts);
+    showToast('✓ Department removed');
+  } catch(e) { showToast('✗ Error: ' + e.message); }
+}
+
+// ══════════════════════════════════════════
+//  CONSULTANTS MANAGEMENT
+// ══════════════════════════════════════════
+var defaultCons = [
+  { name:'Abdul Wasay', email:'abdul.wasay@imarat.com.pk', type:'FICO' },
+  { name:'Ayaz',        email:'ayaz.mughl@hotmail.com',    type:'FICO' },
+  { name:'Hassan',      email:'h.abbasi@propmax.ai',       type:'MM'   },
+  { name:'Sarmad',      email:'sarmad.mudassar@gmail.com', type:'HCM'  },
+  { name:'Saad',        email:'saadzahid537@gmail.com',    type:'ABAP' },
+  { name:'Zeeshan',     email:'zeeshanhashim116@gmail.com',type:'ABAP' },
+  { name:'Hussain',     email:'hussain.abbas@propmax.ai',  type:'ABAP' }
+];
+
+async function loadConsList() {
+  var container = document.getElementById('consList');
+  if (!container) return;
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('consultants').get();
+    var cons = snap.exists ? (snap.data().list || defaultCons) : defaultCons;
+    renderConsList(cons);
+  } catch(e) {
+    renderConsList(defaultCons);
+  }
+}
+
+function renderConsList(cons) {
+  var container = document.getElementById('consList');
+  if (!container) return;
+  var typeColors = { FICO:'var(--primary)', MM:'var(--green)', HCM:'var(--purple, #7C3AED)', ABAP:'var(--amber)' };
+  container.innerHTML = cons.map(function(c) {
+    return '<div class="umgmt-row">'
+      + '<div class="u-avatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">' + (c.name||'?').substring(0,2).toUpperCase() + '</div>'
+      + '<div class="umgmt-info">'
+      + '<div class="umgmt-email">' + c.name + ' <span style="font-size:10px;background:rgba(8,145,178,0.1);color:' + (typeColors[c.type]||'var(--primary)') + ';padding:1px 7px;border-radius:8px;font-family:'DM Mono',monospace">' + c.type + '</span></div>'
+      + '<div class="umgmt-meta">' + c.email + '</div>'
+      + '</div>'
+      + '<button class="umgmt-del" onclick="removeConsultant('' + c.name + '')">Remove</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function addConsultant() {
+  var name  = document.getElementById('newConsName').value.trim();
+  var email = document.getElementById('newConsEmail').value.trim();
+  var type  = document.getElementById('newConsType').value;
+  if (!name || !email) { showToast('Enter name and email'); return; }
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('consultants').get();
+    var cons = snap.exists ? (snap.data().list || defaultCons.slice()) : defaultCons.slice();
+    if (cons.find(function(c){ return c.name === name; })) { showToast('Consultant already exists'); return; }
+    cons.push({ name:name, email:email, type:type });
+    await window.__fbDb.collection('app-config').doc('consultants').set({ list: cons });
+    document.getElementById('newConsName').value = '';
+    document.getElementById('newConsEmail').value = '';
+    renderConsList(cons);
+    showToast('✓ Consultant added');
+  } catch(e) { showToast('✗ Error: ' + e.message); }
+}
+
+async function removeConsultant(name) {
+  if (!confirm('Remove ' + name + ' from the system?')) return;
+  try {
+    var snap = await window.__fbDb.collection('app-config').doc('consultants').get();
+    var cons = snap.exists ? (snap.data().list || []) : [];
+    cons = cons.filter(function(c) { return c.name !== name; });
+    await window.__fbDb.collection('app-config').doc('consultants').set({ list: cons });
+    renderConsList(cons);
+    showToast('✓ Consultant removed');
+  } catch(e) { showToast('✗ Error: ' + e.message); }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1573,7 +1736,7 @@ async function submitRequirement() {
   const reqEmail = document.getElementById('f-email') ? document.getElementById('f-email').value.trim() : '';
 
   // Auto-assign consultant based on module
-  const defaultConsultants = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Rao Imran' };
+  const defaultConsultants = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Sarmad' };
   const consultant = module ? (defaultConsultants[module] || '') : '';
 
   if (!dept)     { showToast('Please select your department.','error'); return; }
@@ -2184,7 +2347,7 @@ function renderRankings() {
     </div>
 
     ${(() => {
-      const abapStats = ['Saad','Zeeshan'].map(name => {
+      const abapStats = ['Saad','Zeeshan','Hussain'].map(name => {
         const tasks = requirements.filter(r => r.abapDev === name);
         const done  = tasks.filter(r => r.status === 'Completed').length;
         const s = getOnTimeStats(tasks);
@@ -2310,6 +2473,7 @@ function openModal(id) {
             <option value="">Not Required</option>
             <option value="Saad" ${r.abapDev==='Saad'?'selected':''}>⚙ Saad</option>
             <option value="Zeeshan" ${r.abapDev==='Zeeshan'?'selected':''}>⚙ Zeeshan</option>
+            <option value="Hussain" ${r.abapDev==='Hussain'?'selected':''}>⚙ Hussain</option>
           </select>
         </div>
         <div style="display:flex;align-items:flex-end">
