@@ -402,6 +402,173 @@ td.td-title div { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; m
 /* ── VIEWER MODE ── */
 body.viewer-mode .edit-only { display:none !important; }
 body.viewer-mode .edit-section { display:none !important; }
+/* ════════════════════════════════════════
+   MOBILE APP DESIGN (max-width: 768px)
+   ════════════════════════════════════════ */
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(8,145,178,0.08);
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bottom-nav-inner {
+  display: flex; height: 60px;
+}
+.bn-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--text-dim); border: none; background: none;
+  font-family: 'DM Sans', sans-serif; padding: 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.bn-tab.active { color: var(--primary); }
+.bn-tab:active { transform: scale(0.92); }
+.bn-icon { font-size: 18px; line-height: 1; }
+.bn-label { font-size: 9px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+.bn-badge {
+  position: absolute; top: 6px; right: calc(50% - 16px);
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 700; min-width: 14px; height: 14px;
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; font-family: 'DM Mono', monospace;
+}
+
+@media (max-width: 768px) {
+
+  /* ── SHOW BOTTOM NAV ── */
+  .bottom-nav { display: block; }
+  .nav { display: none !important; }
+
+  /* ── PAGE PADDING for bottom nav ── */
+  .page { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); padding-top: 8px; }
+
+  /* ── HEADER COMPACT ── */
+  .header { padding: 0 14px; height: 52px; }
+  .logo-tag { display: none; }
+  .logo-name { font-size: 13px; }
+  .logo-mark { width: 30px; height: 30px; font-size: 12px; }
+  .sync-status span { display: none; }
+  .sync-dot { width: 8px; height: 8px; }
+  .btn-refresh { padding: 6px 10px; font-size: 11px; }
+  .btn-logout { padding: 5px 8px; font-size: 10px; }
+  .user-nm { display: none; }
+  .role-badge { display: none; }
+
+  /* ── PIPELINE HORIZONTAL SCROLL ── */
+  .pipeline {
+    display: flex !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0 !important;
+    padding-bottom: 12px;
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .pipeline::-webkit-scrollbar { display: none; }
+  .pipeline-col {
+    min-width: calc(90vw - 28px) !important;
+    max-width: calc(90vw - 28px) !important;
+    scroll-snap-align: start;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .pipeline-col:last-child { margin-right: 14px; }
+
+  /* Pipeline column header sticky */
+  .col-header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg); padding: 10px 0 8px;
+  }
+
+  /* Pipeline scroll hint */
+  #pane-pipeline::before {
+    content: '← Swipe to see all stages →';
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    padding: 0 0 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── DASHBOARD MOBILE ── */
+  .kpi-row { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .chart-row { grid-template-columns: 1fr !important; gap: 12px; }
+  .kpi-card { padding: 14px; }
+  .kpi-val { font-size: 28px; }
+  .kpi-label { font-size: 10px; }
+
+  /* ── RANKINGS MOBILE ── */
+  .rank-row { grid-template-columns: 1fr !important; }
+  .rank-card { padding: 16px; }
+  .rank-card-title { font-size: 14px; }
+
+  /* ── ALL TASKS MOBILE ── */
+  .task-filters { flex-wrap: wrap; gap: 8px; }
+  .task-filters select { font-size: 12px; padding: 7px 10px; }
+  .task-table-header { display: none; }
+  .task-row {
+    display: flex !important;
+    flex-direction: column;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .task-row td { padding: 0 !important; border: none !important; font-size: 13px; }
+  .task-row td:first-child { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--primary); font-weight: 600; }
+
+  /* ── MODAL FULL SCREEN ── */
+  .modal { padding: 0 !important; align-items: flex-end !important; }
+  .modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    overflow-y: auto;
+    padding: 20px 18px 32px !important;
+  }
+
+  /* ── CALENDAR MOBILE ── */
+  .cal-grid { grid-template-columns: repeat(7, 1fr); font-size: 10px; }
+  .cal-day { min-height: 44px; padding: 3px; }
+  .cal-day-num { font-size: 10px; }
+  .cal-dot { width: 4px; height: 4px; }
+
+  /* ── NEW REQUIREMENT FORM MOBILE ── */
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-page-header { margin-bottom: 16px; }
+  .form-page-title { font-size: 20px; }
+
+  /* ── SETTINGS MOBILE ── */
+  .settings-box { max-width: 100%; }
+  .settings-title { font-size: 16px; }
+
+  /* ── CARDS TOUCH FEEDBACK ── */
+  .req-card:active { transform: scale(0.98); transition: transform 0.1s; }
+  .task-row:active { background: var(--surface2); }
+}
+
+@media (max-width: 380px) {
+  .kpi-row { grid-template-columns: 1fr 1fr !important; }
+  .kpi-val { font-size: 24px; }
+  .bn-label { font-size: 8px; }
+}
+
 </style>
 </head>
 <body>
@@ -459,6 +626,34 @@ body.viewer-mode .edit-section { display:none !important; }
   <div class="nav-tab" data-tab="calendar" onclick="goTab('calendar')">📅 Calendar</div>
   <div class="nav-tab edit-only" data-tab="settings" onclick="goTab('settings')">⚙️ Settings</div>
 </nav>
+
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bn-tab" id="bn-pipeline" onclick="goTab('pipeline')">
+      <span class="bn-icon">🔄</span>
+      <span class="bn-label">Pipeline</span>
+      <span class="bn-badge" id="bnBadge" style="display:none">0</span>
+    </button>
+    <button class="bn-tab" id="bn-dashboard" onclick="goTab('dashboard')">
+      <span class="bn-icon">📊</span>
+      <span class="bn-label">Dashboard</span>
+    </button>
+    <button class="bn-tab edit-only" id="bn-new" onclick="goTab('new')" style="background:none;border:none;">
+      <span class="bn-icon" style="width:40px;height:40px;background:linear-gradient(135deg,#0891B2,#0C6A8B);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:-4px;box-shadow:0 3px 10px rgba(8,145,178,0.35);">➕</span>
+      <span class="bn-label">New</span>
+    </button>
+    <button class="bn-tab" id="bn-tasks" onclick="goTab('tasks')">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Tasks</span>
+    </button>
+    <button class="bn-tab" id="bn-rankings" onclick="goTab('rankings')">
+      <span class="bn-icon">🏆</span>
+      <span class="bn-label">Rankings</span>
+    </button>
+  </div>
+</div>
+
 
 <!-- PAGES -->
 <div class="page">
@@ -1711,10 +1906,15 @@ function goTab(name) {
   if (currentRole === 'viewer' && (name === 'new' || name === 'settings')) name = 'pipeline';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bn-tab').forEach(t => t.classList.remove('active'));
   const navEl = document.querySelector(`[data-tab="${name}"]`);
   const paneEl = document.getElementById(`pane-${name}`);
+  const bnEl = document.getElementById(`bn-${name}`);
   if (navEl) navEl.classList.add('active');
   if (paneEl) paneEl.classList.add('active');
+  if (bnEl) bnEl.classList.add('active');
+  // Scroll to top on mobile tab switch
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (name === 'pipeline')  renderPipeline();
   if (name === 'dashboard') renderDashboard();
