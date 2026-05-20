@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IMARAT SAP">
+<meta name="theme-color" content="#0891B2">
+<link rel="manifest" href="/imarat-sap/manifest-team.json">
+<link rel="apple-touch-icon" href="/imarat-sap/apple-touch-icon.png">
 <title>IMARAT SAP — Requirement Management System</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -2653,6 +2659,11 @@ function showToast(msg, type='success') {
   t.className = `toast ${type} show`;
   const delay = type === 'error' ? 8000 : 3500;
   setTimeout(() => t.classList.remove('show'), delay);
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/imarat-sap/sw.js').catch(function(){});
 }
 </script>
 </body>
