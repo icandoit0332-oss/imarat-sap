@@ -1641,7 +1641,7 @@ function renderConsList(cons) {
     return '<div class="umgmt-row">'
       + '<div class="u-avatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">' + (c.name||'?').substring(0,2).toUpperCase() + '</div>'
       + '<div class="umgmt-info">'
-      + '<div class="umgmt-email">' + c.name + ' <span style="font-size:10px;background:rgba(8,145,178,0.1);color:' + (typeColors[c.type]||'var(--primary)') + ';padding:1px 7px;border-radius:8px;font-family:'DM Mono',monospace">' + c.type + '</span></div>'
+      + '<div class="umgmt-email">' + c.name + ' <span style="font-size:10px;background:rgba(8,145,178,0.1);color:' + (typeColors[c.type]||'var(--primary)') + ';padding:1px 7px;border-radius:8px;font-family:monospace">' + c.type + '</span></div>'
       + '<div class="umgmt-meta">' + c.email + '</div>'
       + '</div>'
       + '<button class="umgmt-del" data-cons="' + i + '" onclick="removeConsByIndex(this)">Remove</button>'
