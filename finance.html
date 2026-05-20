@@ -690,7 +690,7 @@ table.ept tr:last-child td{border-bottom:none;}
   <div id="rv-empty" class="empty"><span>💰</span><p>Loading…</p></div>
   <div id="rv-body" style="display:none;">
     <div class="g3" style="margin-bottom:16px;">
-      <div class="am"><div class="aml">New Sales Booked</div><div class="amv" id="rv-ns">—</div><div class="ams" id="rv-ns-s">—</div></div>
+      <div class="am"><div class="aml">New Sales</div><div class="amv" id="rv-ns">—</div><div class="ams" id="rv-ns-s">—</div></div>
       <div class="am gr"><div class="aml">Cleared from New Sales</div><div class="amv" id="rv-cfn">—</div><div class="ams" id="rv-cfn-s">—</div></div>
       <div class="am am2"><div class="aml">Pending from New Sales</div><div class="amv" id="rv-pfn">—</div><div class="ams" id="rv-pfn-s">—</div></div>
     </div>
@@ -1088,7 +1088,7 @@ function rOV() {
   var kpis = [
     { l:'Working Balance', v:M(B.totalWorking), sub:'Bank + Cash', cls:'green', ico:'💰' },
     { l:'Float / Hold',    v:M(B.float),        sub:'In transit',  cls:'amber', ico:'⏳' },
-    { l:'Pending Till Date',v:M(I.pending_till_date), sub:I.as_of_label||'Net outstanding', cls:'gold', ico:'📊' },
+    { l:'Pending Till Date',v:M(I.pending_till_date), sub:'COB ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), cls:'gold', ico:'📊' },
     { l:'Expected Clearance',v:M(I.exp_total),  sub:'Near-term incoming', cls:'green', ico:'✅' },
     { l:"Today's Expenses", v:M(E.totalToday),  sub:'Paid out today', cls:'red', ico:'📋' }
   ];
@@ -1099,7 +1099,7 @@ function rOV() {
     kh += '<div class="kpi '+k.cls+'"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
   }
   ge('ov-kpis').innerHTML = kh;
-  ge('ov-aslbl').textContent = I.as_of_label || 'Pending Till Date';
+  ge('ov-aslbl').textContent = 'COB ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   ge('ov-pip').innerHTML = pip3(I.overall_pending,'var(--amber)','Overall Pending', I.cleared_from_pending,'var(--green)','Cleared', I.pending_till_date,'var(--gold-d)','Pending Till Date', true);
   ge('ov-pip-note').textContent = 'New sales: '+PKR(I.new_sales)+' · Cleared from new: '+PKR(I.cleared_from_new)+' · Total cleared: '+PKR(I.total_cleared);
   var tot = I.pending_till_date || 1;
