@@ -1566,10 +1566,10 @@ async function loadDeptList() {
 function renderDeptList(depts) {
   var container = document.getElementById('deptList');
   if (!container) return;
-  container.innerHTML = depts.map(function(d) {
+  container.innerHTML = depts.map(function(d, i) {
     return '<div class="umgmt-row">'
       + '<div class="umgmt-info"><div class="umgmt-email">' + d + '</div></div>'
-      + '<button class="umgmt-del" onclick="removeDepartment(\'' + d + '\')">Remove</button>'
+      + '<button class="umgmt-del" data-dept="' + i + '" onclick="removeDeptByIndex(this)">Remove</button>'
       + '</div>';
   }).join('');
 }
@@ -1589,8 +1589,15 @@ async function addDepartment() {
   } catch(e) { showToast('✗ Error: ' + e.message); }
 }
 
+function removeDeptByIndex(btn) {
+  var idx = parseInt(btn.getAttribute('data-dept'));
+  var rows = document.querySelectorAll('#deptList .umgmt-row');
+  var name = rows[idx] ? rows[idx].querySelector('.umgmt-email').textContent : '';
+  if (!name || !confirm('Remove department "' + name + '"?')) return;
+  removeDepartment(name);
+}
+
 async function removeDepartment(name) {
-  if (!confirm('Remove department "' + name + '"?')) return;
   try {
     var snap = await window.__fbDb.collection('app-config').doc('departments').get();
     var depts = snap.exists ? (snap.data().list || []) : [];
@@ -1630,14 +1637,14 @@ function renderConsList(cons) {
   var container = document.getElementById('consList');
   if (!container) return;
   var typeColors = { FICO:'var(--primary)', MM:'var(--green)', HCM:'var(--purple, #7C3AED)', ABAP:'var(--amber)' };
-  container.innerHTML = cons.map(function(c) {
+  container.innerHTML = cons.map(function(c, i) {
     return '<div class="umgmt-row">'
       + '<div class="u-avatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">' + (c.name||'?').substring(0,2).toUpperCase() + '</div>'
       + '<div class="umgmt-info">'
       + '<div class="umgmt-email">' + c.name + ' <span style="font-size:10px;background:rgba(8,145,178,0.1);color:' + (typeColors[c.type]||'var(--primary)') + ';padding:1px 7px;border-radius:8px;font-family:'DM Mono',monospace">' + c.type + '</span></div>'
       + '<div class="umgmt-meta">' + c.email + '</div>'
       + '</div>'
-      + '<button class="umgmt-del" onclick="removeConsultant(\'' + c.name + '\')">Remove</button>'
+      + '<button class="umgmt-del" data-cons="' + i + '" onclick="removeConsByIndex(this)">Remove</button>'
       + '</div>';
   }).join('');
 }
@@ -1658,6 +1665,14 @@ async function addConsultant() {
     renderConsList(cons);
     showToast('✓ Consultant added');
   } catch(e) { showToast('✗ Error: ' + e.message); }
+}
+
+function removeConsByIndex(btn) {
+  var idx = parseInt(btn.getAttribute('data-cons'));
+  var rows = document.querySelectorAll('#consList .umgmt-row');
+  var name = rows[idx] ? rows[idx].querySelector('.umgmt-email').textContent : '';
+  if (!name) return;
+  removeConsultant(name);
 }
 
 async function removeConsultant(name) {
