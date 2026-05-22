@@ -1048,6 +1048,7 @@ function fmtTime(d) {
 }
 
 function goTab(name, btn) {
+  // Switch active pane
   var panes = document.querySelectorAll('.pane');
   for (var i = 0; i < panes.length; i++) panes[i].classList.remove('on');
   var tabs = document.querySelectorAll('.nt');
@@ -1055,7 +1056,8 @@ function goTab(name, btn) {
   var p = ge('pane-' + name);
   if (p) p.classList.add('on');
   if (btn) btn.classList.add('on');
-  // If no btn found, find and activate correct nav tab
+
+  // If no btn passed, find and activate correct nav tab
   if (!btn) {
     var allNt = document.querySelectorAll('.nt');
     for (var k = 0; k < allNt.length; k++) {
@@ -1065,6 +1067,15 @@ function goTab(name, btn) {
         break;
       }
     }
+  }
+
+  // Always render the target tab so body divs are visible
+  if (D) {
+    if (name === 'overview')    { try { rOV(); } catch(e) { console.error(e); } }
+    if (name === 'liquidity')   { try { rLQ(); } catch(e) { console.error(e); } }
+    if (name === 'revenue')     { try { rRV(); } catch(e) { console.error(e); } }
+    if (name === 'receivables') { try { rRX(); } catch(e) { console.error(e); } }
+    if (name === 'expenses')    { try { rEX(); } catch(e) { console.error(e); } }
   }
 }
 
