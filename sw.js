@@ -1,60 +1,42 @@
-// IMARAT Finance Dashboard — Service Worker
-// Handles offline caching so the chairman can open the app without internet
+// IMARAT Finance Dashboard — Service Worker v10
+// Cache-busting version: does NOT cache finance.html to ensure updates are always live
 
-var CACHE_NAME = 'imarat-finance-v9';
-var SHELL_URLS = [
-  '/imarat-sap/finance.html',
-  '/imarat-sap/manifest.json'
-];
+var CACHE_NAME = 'imarat-finance-v10';
 
-// Install: cache the app shell
+// Install: skip waiting immediately
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(SHELL_URLS);
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate: remove old caches
+// Activate: clear ALL old caches
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.filter(function(k) { return k !== CACHE_NAME; })
-            .map(function(k) { return caches.delete(k); })
-      );
+      return Promise.all(keys.map(function(k) { return caches.delete(k); }));
     })
   );
   self.clients.claim();
 });
 
-// Fetch: cache-first for app shell, network-first for data API calls
+// Fetch: ALWAYS go to network for finance.html and sw.js
+// Only cache static assets like Firebase SDK
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
-
-  // Never intercept Apps Script / Firebase API calls — always go network
-  if (url.indexOf('script.google.com') >= 0 ||
+  
+  // Never cache the main app files — always fetch fresh
+  if (url.indexOf('finance.html') >= 0 ||
+      url.indexOf('sw.js') >= 0 ||
+      url.indexOf('manifest.json') >= 0 ||
+      url.indexOf('script.google.com') >= 0 ||
       url.indexOf('firebaseapp.com') >= 0 ||
-      url.indexOf('googleapis.com') >= 0 ||
-      url.indexOf('identitytoolkit') >= 0) {
-    return; // Fall through to browser default (network)
+      url.indexOf('googleapis.com') >= 0) {
+    return; // Always fetch from network
   }
-
-  // App shell: cache-first
+  
+  // For everything else (Firebase SDK etc), use cache
   e.respondWith(
     caches.match(e.request).then(function(cached) {
-      return cached || fetch(e.request).then(function(response) {
-        // Cache valid responses
-        if (response && response.status === 200 && response.type === 'basic') {
-          var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(e.request, clone);
-          });
-        }
-        return response;
-      });
+      return cached || fetch(e.request);
     })
   );
 });
