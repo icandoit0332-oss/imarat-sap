@@ -1,7 +1,7 @@
 // IMARAT Finance Dashboard — Service Worker
 // Handles offline caching so the chairman can open the app without internet
 
-var CACHE_NAME = 'imarat-finance-v5';
+var CACHE_NAME = 'imarat-finance-v6';
 var SHELL_URLS = [
   '/imarat-sap/finance.html',
   '/imarat-sap/manifest.json'
