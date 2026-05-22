@@ -1082,6 +1082,14 @@ function PKR(n) {
 // ════════════════════════════════════════════════════════════
 // INTERACTIVE NAVIGATION
 // ════════════════════════════════════════════════════════════
+function handleClick(el) {
+  var tab = el.getAttribute('data-tab') || 'receivables';
+  var ent = el.getAttribute('data-ent') || '';
+  var st  = el.getAttribute('data-st')  || '';
+  var filters = (ent || st) ? {entity: ent, status: st} : null;
+  navTo(tab, filters);
+}
+
 function navTo(tabName, filters) {
   var tabs = document.querySelectorAll('.nt');
   var targetBtn = null;
@@ -1126,7 +1134,7 @@ function rOV() {
   for (var i = 0; i < kpis.length; i++) {
     var k = kpis[i];
     var ibg = k.cls==='green'?'var(--gbg)':k.cls==='gold'?'var(--gold-l)':k.cls==='amber'?'var(--abg)':'var(--rbg)';
-    kh += '<div class="kpi '+k.cls+' clickable" onclick="navTo(\''+k.nav+'\')"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+    kh += '<div class="kpi '+k.cls+' clickable" data-tab="'+k.nav+'" onclick="handleClick(this)"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
   }
   ge('ov-kpis').innerHTML = kh;
   ge('ov-aslbl').textContent = 'COB ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
@@ -1410,12 +1418,12 @@ function entityBars(ents, tot) {
   var h = '';
   for (var i = 0; i < ents.length; i++) {
     var e = ents[i], w = (e.v/tot*100);
-    h += '<div class="eb clickable" onclick="navTo('receivables',{entity:''+e.n+''})" title="View '+e.n+' receivables"><div class="ebh"><div class="ebn"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px;">→</span></div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
+    h += '<div class="eb clickable" data-tab="receivables" data-ent="'+e.n+'" onclick="handleClick(this)" title="View '+e.n+'"><div class="ebh"><div class="ebn"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px;">→</span></div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
   }
   return h;
 }
 function clrGrid(a21, graana, imarat) {
-  return '<div class="ci clickable" onclick="navTo('receivables',{entity:'Agency 21'})" title="View Agency 21"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci clickable" onclick="navTo('receivables',{entity:'Graana'})" title="View Graana"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci clickable" onclick="navTo('receivables',{entity:'IMARAT'})" title="View IMARAT"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
+  return '<div class="ci clickable" data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)" title="View Agency 21"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci clickable" data-tab="receivables" data-ent="Graana" onclick="handleClick(this)" title="View Graana"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci clickable" data-tab="receivables" data-ent="IMARAT" onclick="handleClick(this)" title="View IMARAT"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
 }
 function buildDonut(svgId, legId, I, tot) {
   var items = [
@@ -1433,7 +1441,7 @@ function buildDonut(svgId, legId, I, tot) {
   ge(svgId).innerHTML = arcs;
   var lh = '';
   for (var i = 0; i < items.length; i++) {
-    lh += '<div class="dli clickable" onclick="navTo('receivables',{status:''+items[i].n+''})" title="View '+items[i].n+'"><div class="dll"><div class="dot" style="background:'+items[i].c+'"></div>'+items[i].n+'<span style="font-size:10px;color:var(--t3);margin-left:4px;">→</span></div><span class="dlp">'+(items[i].v/tot*100).toFixed(1)+'%</span></div>';
+    lh += '<div class="dli clickable" data-tab="receivables" data-st="'+items[i].n+'" onclick="handleClick(this)" title="View '+items[i].n+'"><div class="dll"><div class="dot" style="background:'+items[i].c+'"></div>'+items[i].n+'<span style="font-size:10px;color:var(--t3);margin-left:4px;">→</span></div><span class="dlp">'+(items[i].v/tot*100).toFixed(1)+'%</span></div>';
   }
   ge(legId).innerHTML = lh;
 }
