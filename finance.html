@@ -352,6 +352,14 @@ table.ept tr:last-child td{border-bottom:none;}
 /* ── REFRESH STATUS ───────────────────────────────────────── */
 #refresh-status{font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);}
 
+/* ── INTERACTIVE / CLICKABLE ──────────────────────────────── */
+.clickable{cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;}
+.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.12);opacity:.92;}
+.clickable:active{transform:translateY(0);opacity:.8;}
+.eb.clickable:hover .bt{opacity:.7;}
+.dli.clickable:hover{background:#F7FBF7;border-radius:6px;}
+.ci.clickable:hover{background:var(--gbg);transform:scale(1.03);}
+
 /* ══════════════════════════════════════════════════════════
    MOBILE RESPONSIVE
 ══════════════════════════════════════════════════════════ */
@@ -850,7 +858,7 @@ var refreshTimer = null;
 var auth;
 
 // ── Entity colours ──────────────────────────────────────────
-var ECOL = { 'IMARAT':'#0B2818', 'Graana':'#2563EB', 'Agency 21':'#C9A850', 'Other':'#7C3AED' };
+var ECOL = { 'IMARAT':'#166534', 'Graana':'#DC2626', 'Agency 21':'#22C55E', 'Other':'#7C3AED' };
 var EMAP = {
   'MCB-M1-9470':'IMARAT','MCB-GR-1231':'Graana','MCB-A21-0483':'Agency 21',
   'MCB-M2-0342':'IMARAT','MCB-AMr-9469':'IMARAT','MCB-IR-0322':'IMARAT',
@@ -1055,23 +1063,42 @@ function goTab(name, btn) {
 function M(n) {
   if (!n && n !== 0) return '—';
   var a = Math.abs(n), s = n < 0 ? '-' : '';
-  if (a >= 1e9) return s + 'Rs ' + (a/1e9).toFixed(2) + ' B';
-  if (a >= 1e7) return s + 'Rs ' + (a/1e7).toFixed(2) + ' Cr';
+  if (a >= 1e9) return s + 'Rs ' + (a/1e6).toFixed(1) + ' M';
   if (a >= 1e6) return s + 'Rs ' + (a/1e6).toFixed(2) + ' M';
-  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(0) + ' K';
+  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(1) + ' K';
   return s + 'Rs ' + Math.round(a).toLocaleString();
 }
 function PKR(n) {
   if (!n && n !== 0) return '—';
   var a = Math.abs(n), s = n < 0 ? '-' : '';
-  if (a >= 1e7) return s + (a/1e7).toFixed(2) + ' Cr';
-  if (a >= 1e5) return s + (a/1e5).toFixed(1) + ' L';
+  if (a >= 1e6) return s + (a/1e6).toFixed(2) + ' M';
+  if (a >= 1e3) return s + (a/1e3).toFixed(1) + ' K';
   return s + Math.round(a).toLocaleString('en-IN');
 }
 
 // ════════════════════════════════════════════════════════════
 // MASTER RENDER
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// INTERACTIVE NAVIGATION
+// ════════════════════════════════════════════════════════════
+function navTo(tabName, filters) {
+  var tabs = document.querySelectorAll('.nt');
+  var targetBtn = null;
+  for (var i = 0; i < tabs.length; i++) {
+    var oc = tabs[i].getAttribute('onclick') || '';
+    if (oc.indexOf("'" + tabName + "'") >= 0) { targetBtn = tabs[i]; break; }
+  }
+  goTab(tabName, targetBtn);
+  if (filters) {
+    if (ge('rx-co')) ge('rx-co').value = filters.entity || '';
+    if (ge('rx-st')) ge('rx-st').value = filters.status || '';
+    if (ge('rx-rf')) ge('rx-rf').value = filters.risk   || '';
+    filterRx();
+  }
+  window.scrollTo(0, 0);
+}
+
 function render() {
   if (!D) return;
   try { rOV(); } catch(e) { console.error('OV:', e); }
@@ -1099,7 +1126,7 @@ function rOV() {
   for (var i = 0; i < kpis.length; i++) {
     var k = kpis[i];
     var ibg = k.cls==='green'?'var(--gbg)':k.cls==='gold'?'var(--gold-l)':k.cls==='amber'?'var(--abg)':'var(--rbg)';
-    kh += '<div class="kpi '+k.cls+'"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+    kh += '<div class="kpi '+k.cls+' clickable" onclick="navTo(\''+k.nav+'\')"><div class="kpi-ico" style="background:'+ibg+'">'+k.ico+'</div><div class="kpi-lbl">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
   }
   ge('ov-kpis').innerHTML = kh;
   ge('ov-aslbl').textContent = 'COB ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
@@ -1383,12 +1410,12 @@ function entityBars(ents, tot) {
   var h = '';
   for (var i = 0; i < ents.length; i++) {
     var e = ents[i], w = (e.v/tot*100);
-    h += '<div class="eb"><div class="ebh"><div class="ebn"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'</div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
+    h += '<div class="eb clickable" onclick="navTo('receivables',{entity:''+e.n+''})" title="View '+e.n+' receivables"><div class="ebh"><div class="ebn"><div class="dot" style="background:'+e.c+'"></div>'+e.n+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px;">→</span></div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
   }
   return h;
 }
 function clrGrid(a21, graana, imarat) {
-  return '<div class="ci"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
+  return '<div class="ci clickable" onclick="navTo('receivables',{entity:'Agency 21'})" title="View Agency 21"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci clickable" onclick="navTo('receivables',{entity:'Graana'})" title="View Graana"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci clickable" onclick="navTo('receivables',{entity:'IMARAT'})" title="View IMARAT"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
 }
 function buildDonut(svgId, legId, I, tot) {
   var items = [
@@ -1406,7 +1433,7 @@ function buildDonut(svgId, legId, I, tot) {
   ge(svgId).innerHTML = arcs;
   var lh = '';
   for (var i = 0; i < items.length; i++) {
-    lh += '<div class="dli"><div class="dll"><div class="dot" style="background:'+items[i].c+'"></div>'+items[i].n+'</div><span class="dlp">'+(items[i].v/tot*100).toFixed(1)+'%</span></div>';
+    lh += '<div class="dli clickable" onclick="navTo('receivables',{status:''+items[i].n+''})" title="View '+items[i].n+'"><div class="dll"><div class="dot" style="background:'+items[i].c+'"></div>'+items[i].n+'<span style="font-size:10px;color:var(--t3);margin-left:4px;">→</span></div><span class="dlp">'+(items[i].v/tot*100).toFixed(1)+'%</span></div>';
   }
   ge(legId).innerHTML = lh;
 }
