@@ -1055,6 +1055,17 @@ function goTab(name, btn) {
   var p = ge('pane-' + name);
   if (p) p.classList.add('on');
   if (btn) btn.classList.add('on');
+  // If no btn found, find and activate correct nav tab
+  if (!btn) {
+    var allNt = document.querySelectorAll('.nt');
+    for (var k = 0; k < allNt.length; k++) {
+      var oc = allNt[k].getAttribute('onclick') || '';
+      if (oc.indexOf("'" + name + "'") >= 0) {
+        allNt[k].classList.add('on');
+        break;
+      }
+    }
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1091,6 +1102,7 @@ function handleClick(el) {
 }
 
 function navTo(tabName, filters) {
+  // Find and click the nav tab button
   var tabs = document.querySelectorAll('.nt');
   var targetBtn = null;
   for (var i = 0; i < tabs.length; i++) {
@@ -1098,12 +1110,31 @@ function navTo(tabName, filters) {
     if (oc.indexOf("'" + tabName + "'") >= 0) { targetBtn = tabs[i]; break; }
   }
   goTab(tabName, targetBtn);
+
+  // Apply filters for receivables
   if (filters) {
     if (ge('rx-co')) ge('rx-co').value = filters.entity || '';
     if (ge('rx-st')) ge('rx-st').value = filters.status || '';
     if (ge('rx-rf')) ge('rx-rf').value = filters.risk   || '';
+    if (filters.entity || filters.status) filterRx();
+  }
+
+  // Ensure content is rendered
+  if (D) {
+    if (tabName === 'liquidity')    { try { rLQ(); } catch(e){} }
+    if (tabName === 'revenue')      { try { rRV(); } catch(e){} }
+    if (tabName === 'receivables')  { try { rRX(); } catch(e){} }
+    if (tabName === 'expenses')     { try { rEX(); } catch(e){} }
+    if (tabName === 'overview')     { try { rOV(); } catch(e){} }
+  }
+
+  // Re-apply filters after render
+  if (filters && (filters.entity || filters.status)) {
+    if (ge('rx-co')) ge('rx-co').value = filters.entity || '';
+    if (ge('rx-st')) ge('rx-st').value = filters.status || '';
     filterRx();
   }
+
   window.scrollTo(0, 0);
 }
 
