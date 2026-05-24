@@ -15,8 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════
-   IMARAT FINANCE — Design System v2.0
-   Pixel-perfect match to Claude Design mockups
+   IMARAT FINANCE — Design System v2.1 (bug-fixed)
 ═══════════════════════════════════════════════════════ */
 :root{
   --hdr:#0B2818;--nav:#0D3020;--body-bg:#0F1A12;
@@ -337,14 +336,14 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
   </div>
 </div>
 
-<!-- LOADING -->
-<div id="loading-overlay" style="display:flex;flex-direction:column;align-items:center;">
+<!-- LOADING — FIX: no inline display:flex; CSS controls this -->
+<div id="loading-overlay">
   <div class="spinner"></div>
   <div class="loading-txt" id="loading-txt">Fetching live data from System…</div>
 </div>
 
 <!-- STALE BANNER -->
-<div id="stale-banner">⚠ Showing cached data from <span id="stale-time">—</span></div>
+<div id="stale-banner">&#9888; Showing cached data from <span id="stale-time">—</span></div>
 
 <!-- HEADER -->
 <header class="hdr">
@@ -364,9 +363,9 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
     </div>
   </div>
   <div class="hdr-r">
-    <div class="live-pill" id="hpill">● Loading…</div>
+    <div class="live-pill" id="hpill">&#9679; Loading&hellip;</div>
     <div class="hdr-date" id="hdate"></div>
-    <button class="hdr-btn" onclick="manualRefresh()">↻</button>
+    <button class="hdr-btn" onclick="manualRefresh()">&#8635;</button>
     <span class="hdr-user" id="hdr-user-email"></span>
     <button class="hdr-btn" id="logout-btn" onclick="doLogout()">Sign out</button>
   </div>
@@ -407,11 +406,9 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 
 <script>
 'use strict';
-'use strict';
-'use strict';
 
 // ════════════════════════════════════════════════════════════
-// CONFIG — fill these in before deploying
+// CONFIG
 // ════════════════════════════════════════════════════════════
 var FIREBASE_CONFIG = {
   apiKey:            'AIzaSyBei-lo6GIehz3UT93xg2KTs5bU_1-4osQ',
@@ -422,21 +419,19 @@ var FIREBASE_CONFIG = {
   appId:             '1:117630327064:web:a9f35c5ec768e6d1db666d'
 };
 
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-u5oYdhTMkl_3DafpMvCnjqfoIRmqQFtCQbJredQ_XnVTaZSwWMJ2mYhF52FN7T5Gig/exec';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykbYka3cqRuaIsEhfNNef48wnwoHwwhTmQvttt-vjNW4KV9BVFs1rdjHFVfNZY_tTP/exec';
 var CLIENT_KEY      = 'IMARAT_SAP_KEY_2024';
-var CACHE_KEY       = 'im7';
-var REFRESH_MS      = 5 * 60 * 1000;   // auto-refresh every 5 minutes
+var CACHE_KEY       = 'im8';
+var REFRESH_MS      = 5 * 60 * 1000;
 
 // ════════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════════
-var D = null;        // parsed data object
-var allAcc = [];     // bank accounts for filtering
-var allRx  = [];     // receivables rows for filtering
+var D = null;
 var refreshTimer = null;
 var auth;
 
-// ── Entity colours ──────────────────────────────────────────
+// Entity colours
 var ECOL = { 'IMARAT':'#166534', 'Graana':'#DC2626', 'Agency 21':'#22C55E', 'Other':'#7C3AED' };
 var EMAP = {
   'MCB-M1-9470':'IMARAT','MCB-GR-1231':'Graana','MCB-A21-0483':'Agency 21',
@@ -449,7 +444,6 @@ var EMAP = {
   'A21-UBANK':'Agency 21','PROP-UBANK':'IMARAT','IMARAT HOSP-UBANK':'IMARAT',
   'IBM-UBANK':'IMARAT','IIT-UBANK':'IMARAT','SCB-Graana':'Graana'
 };
-var BCHIP = { MCB:'ch-mcb', JAZZ:'ch-jazz', ASKARI:'ch-askari', UBL:'ch-ubl' };
 
 // ════════════════════════════════════════════════════════════
 // FIREBASE INIT
@@ -459,17 +453,15 @@ auth = firebase.auth();
 
 auth.onAuthStateChanged(function(user) {
   if (user) {
-    // Logged in
     ge('login-screen').style.display = 'none';
-    ge('hdr-user-email').textContent = user.email;
-    ge('logout-btn').style.display = '';
+    ge('hdr-user-email').textContent  = user.email;
+    ge('logout-btn').style.display    = '';
     ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
     loadData();
     startAutoRefresh();
   } else {
-    // Logged out
-    ge('login-screen').style.display = 'flex';
-    ge('hdr-user-email').textContent = '';
+    ge('login-screen').style.display  = 'flex';
+    ge('hdr-user-email').textContent  = '';
     stopAutoRefresh();
   }
 });
@@ -480,12 +472,11 @@ auth.onAuthStateChanged(function(user) {
 function doLogin() {
   var email = ge('li-email').value.trim();
   var pass  = ge('li-pass').value;
-  var err   = ge('li-err');
   var btn   = ge('li-btn');
-  err.style.display = 'none';
+  ge('li-err').style.display = 'none';
   if (!email || !pass) { showErr('Please enter email and password.'); return; }
   btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  btn.textContent = 'Signing in\u2026';
   auth.signInWithEmailAndPassword(email, pass)
     .then(function() {
       btn.disabled = false;
@@ -501,9 +492,7 @@ function doLogin() {
     });
 }
 
-function doLogout() {
-  auth.signOut();
-}
+function doLogout() { auth.signOut(); }
 
 function showErr(msg) {
   var el = ge('li-err');
@@ -511,7 +500,6 @@ function showErr(msg) {
   el.style.display = 'block';
 }
 
-// Enter key on password field triggers login
 ge('li-pass').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doLogin();
 });
@@ -520,7 +508,7 @@ ge('li-pass').addEventListener('keydown', function(e) {
 // DATA LOADING
 // ════════════════════════════════════════════════════════════
 function loadData() {
-  showLoading('Fetching live data from System…');
+  showLoading('Fetching live data from System\u2026');
   var url = APPS_SCRIPT_URL + '?action=read&clientKey=' + CLIENT_KEY + '&_=' + Date.now();
   fetch(url)
     .then(function(r) {
@@ -528,7 +516,10 @@ function loadData() {
       return r.json();
     })
     .then(function(json) {
-      if (json.status !== 'ok') throw new Error(json.message || 'Server error');
+      console.log('[IMARAT] Apps Script raw response keys:', Object.keys(json));
+      console.log('[IMARAT] status:', json.status, '| at:', json.at);
+      if (json.data) console.log('[IMARAT] data keys:', Object.keys(json.data));
+      if (json.status !== 'ok') throw new Error(json.message || 'Server error: status=' + json.status);
       D = mapResponse(json);
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(D)); } catch(x){}
       hideLoading();
@@ -550,27 +541,31 @@ function loadFromCache() {
     if (saved) {
       D = JSON.parse(saved);
       showStaleBanner(D.at);
-      ge('refresh-status').textContent = 'Offline — cached ' + fmtTime(new Date(D.at));
+      ge('refresh-status').textContent = 'Offline \u2014 cached ' + fmtTime(new Date(D.at));
       render();
     } else {
-      ge('ov-empty').querySelector('p').textContent = 'Could not load data. Check internet connection.';
+      console.warn('No cached data available.');
     }
-  } catch(x) {}
+  } catch(x) { console.warn('Cache read error:', x); }
 }
 
-// Map Apps Script JSON response to the D object used by render functions
 function mapResponse(json) {
-  var d = json.data;
+  var d = json.data || {};
+  // Defensive fallbacks — if any sheet tab is missing, we get safe empty objects
+  var inflow   = d.inflow   || {};
+  var expenses = d.expenses || { expenses: [], totalToday: 0, totalMTD: 0 };
+  var balances = d.balances || { accounts: [], currentBalance: 0, cashInHand: 0, totalWorking: 0, float: 0 };
+  if (!expenses.expenses) expenses.expenses = [];
+  if (!balances.accounts) balances.accounts = [];
   return {
-    I:             d.inflow,
-    E:             d.expenses,
-    B:             attachEntities(d.balances),
+    I:             inflow,
+    E:             expenses,
+    B:             attachEntities(balances),
     pendingDetail: d.pendingDetail || [],
     at:            json.at
   };
 }
 
-// Attach entity to each account using EMAP
 function attachEntities(b) {
   var accs = b.accounts || [];
   for (var i = 0; i < accs.length; i++) {
@@ -606,28 +601,31 @@ function stopAutoRefresh() {
 // UI HELPERS
 // ════════════════════════════════════════════════════════════
 function ge(id) { return document.getElementById(id); }
-function st(id, txt) { var e = ge(id); if (e) e.textContent = txt; }
+
 function showLoading(txt) {
   ge('loading-overlay').style.display = 'flex';
-  ge('loading-txt').textContent = txt || 'Loading…';
+  ge('loading-txt').textContent = txt || 'Loading\u2026';
 }
 function hideLoading() { ge('loading-overlay').style.display = 'none'; }
+
 function showStaleBanner(isoDate) {
   ge('stale-banner').style.display = 'block';
-  ge('stale-time').textContent = isoDate ? fmtTime(new Date(isoDate)) : '—';
+  ge('stale-time').textContent = isoDate ? fmtTime(new Date(isoDate)) : '\u2014';
 }
 function hideStaleBanner() { ge('stale-banner').style.display = 'none'; }
+
+// FIX: was setting 'hdr-pill pill-green' — class doesn't exist; use 'live-pill'
 function updateHpill(isoDate) {
   var el = ge('hpill');
-  el.className = 'hdr-pill pill-green';
-  el.textContent = '● Live — ' + (isoDate ? fmtTime(new Date(isoDate)) : '—');
+  el.className = 'live-pill';
+  el.textContent = '\u25cf Live \u2014 ' + (isoDate ? fmtTime(new Date(isoDate)) : '\u2014');
 }
+
 function fmtTime(d) {
   return d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
 }
 
 function goTab(name, btn) {
-  // Switch active pane
   var panes = document.querySelectorAll('.pane');
   for (var i = 0; i < panes.length; i++) panes[i].classList.remove('on');
   var tabs = document.querySelectorAll('.nt');
@@ -635,66 +633,36 @@ function goTab(name, btn) {
   var p = ge('pane-' + name);
   if (p) p.classList.add('on');
   if (btn) btn.classList.add('on');
-
-  // If no btn passed, find and activate correct nav tab
   if (!btn) {
     var allNt = document.querySelectorAll('.nt');
     for (var k = 0; k < allNt.length; k++) {
       var oc = allNt[k].getAttribute('onclick') || '';
-      if (oc.indexOf("'" + name + "'") >= 0) {
-        allNt[k].classList.add('on');
-        break;
-      }
+      if (oc.indexOf("'" + name + "'") >= 0) { allNt[k].classList.add('on'); break; }
     }
   }
-
-  // Render target tab
   if (D) {
     try {
-      if(name==='overview') rOV();
-      else if(name==='liquidity') rLQ();
-      else if(name==='revenue') rRV();
-      else if(name==='receivables') rRX();
-      else if(name==='expenses') rEX();
+      if (name === 'overview')    rOV();
+      else if (name === 'liquidity')   rLQ();
+      else if (name === 'revenue')     rRV();
+      else if (name === 'receivables') rRX();
+      else if (name === 'expenses')    rEX();
     } catch(e) { console.error('goTab render:', e); }
   }
 }
 
 // ════════════════════════════════════════════════════════════
-// FORMAT
-// ════════════════════════════════════════════════════════════
-function M(n) {
-  if (!n && n !== 0) return '—';
-  var a = Math.abs(n), s = n < 0 ? '-' : '';
-  if (a >= 1e9) return s + 'Rs ' + (a/1e9).toFixed(2) + ' B';
-  if (a >= 1e6) return s + 'Rs ' + (a/1e6).toFixed(2) + ' M';
-  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(1) + ' K';
-  return s + 'Rs ' + Math.round(a).toLocaleString();
-}
-function PKR(n) {
-  if (!n && n !== 0) return '—';
-  var a = Math.abs(n), s = n < 0 ? '-' : '';
-  if (a >= 1e6) return s + (a/1e6).toFixed(2) + ' M';
-  if (a >= 1e3) return s + (a/1e3).toFixed(1) + ' K';
-  return s + Math.round(a).toLocaleString('en-IN');
-}
-
-// ════════════════════════════════════════════════════════════
-// MASTER RENDER
-// ════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════
 // INTERACTIVE NAVIGATION
 // ════════════════════════════════════════════════════════════
 function handleClick(el) {
-  var tab = el.getAttribute('data-tab') || 'receivables';
-  var ent = el.getAttribute('data-ent') || '';
-  var st  = el.getAttribute('data-st')  || '';
+  var tab  = el.getAttribute('data-tab') || 'receivables';
+  var ent  = el.getAttribute('data-ent') || '';
+  var st   = el.getAttribute('data-st')  || '';
   var filters = (ent || st) ? {entity: ent, status: st} : null;
   navTo(tab, filters);
 }
 
 function navTo(tabName, filters) {
-  // Find and click the nav tab button
   var tabs = document.querySelectorAll('.nt');
   var targetBtn = null;
   for (var i = 0; i < tabs.length; i++) {
@@ -703,28 +671,17 @@ function navTo(tabName, filters) {
   }
   goTab(tabName, targetBtn);
 
-  // Apply filters for receivables
-  if (filters) {
-    if (ge('rx-co')) ge('rx-co').value = filters.entity || '';
-    if (ge('rx-st')) ge('rx-st').value = filters.status || '';
-    if (ge('rx-rf')) ge('rx-rf').value = filters.risk   || '';
-    if (filters.entity || filters.status) filterRx();
-  }
-
-  // Ensure content is rendered
-  if (D) {
-    if (tabName === 'liquidity')    { try { rLQ(); } catch(e){} }
-    if (tabName === 'revenue')      { try { rRV(); } catch(e){} }
-    if (tabName === 'receivables')  { try { rRX(); } catch(e){} }
-    if (tabName === 'expenses')     { try { rEX(); } catch(e){} }
-    if (tabName === 'overview')     { try { rOV(); } catch(e){} }
-  }
-
-  // Re-apply filters after render
-  if (filters && (filters.entity || filters.status)) {
-    if (ge('rx-co')) ge('rx-co').value = filters.entity || '';
-    if (ge('rx-st')) ge('rx-st').value = filters.status || '';
-    filterRx();
+  // FIX: filterRx was undefined; use rxEnt for entity filter, inline status filter
+  if (filters && D) {
+    if (tabName === 'receivables') {
+      if (filters.entity) {
+        var pills = document.querySelectorAll('.epill');
+        for (var p = 0; p < pills.length; p++) pills[p].classList.remove('active');
+        rxEnt(filters.entity, null);
+      } else if (filters.status) {
+        rxSt(filters.status);
+      }
+    }
   }
 
   window.scrollTo(0, 0);
@@ -732,158 +689,210 @@ function navTo(tabName, filters) {
 
 function render() {
   if (!D) return;
-  var tab = document.querySelector('.pane.on');
-  var tabId = tab ? tab.id.replace('pane-','') : 'overview';
-  try { rOV(); } catch(e) { console.error('OV:', e); }
-  try { rLQ(); } catch(e) { console.error('LQ:', e); }
-  try { rRV(); } catch(e) { console.error('RV:', e); }
-  try { rRX(); } catch(e) { console.error('RX:', e); }
-  try { rEX(); } catch(e) { console.error('EX:', e); }
+  // Debug: log data structure so any issues can be identified in console
+  console.log('[IMARAT] D keys:', Object.keys(D));
+  console.log('[IMARAT] D.I:', D.I ? Object.keys(D.I) : 'MISSING');
+  console.log('[IMARAT] D.E:', D.E ? (D.E.expenses ? 'ok ('+D.E.expenses.length+' items)' : Object.keys(D.E)) : 'MISSING');
+  console.log('[IMARAT] D.B:', D.B ? (D.B.accounts ? 'ok ('+D.B.accounts.length+' accounts)' : Object.keys(D.B)) : 'MISSING');
+  console.log('[IMARAT] pendingDetail:', (D.pendingDetail||[]).length, 'rows');
+  try { rOV(); } catch(e) { console.error('[IMARAT] rOV error:', e); showPaneError('ov-body', e); }
+  try { rLQ(); } catch(e) { console.error('[IMARAT] rLQ error:', e); showPaneError('lq-body', e); }
+  try { rRV(); } catch(e) { console.error('[IMARAT] rRV error:', e); showPaneError('rv-body', e); }
+  try { rRX(); } catch(e) { console.error('[IMARAT] rRX error:', e); showPaneError('rx-body', e); }
+  try { rEX(); } catch(e) { console.error('[IMARAT] rEX error:', e); showPaneError('ex-body', e); }
+}
+
+function showPaneError(paneId, err) {
+  var el = ge(paneId);
+  if (!el || el.innerHTML.trim()) return; // don't overwrite if something already rendered
+  el.innerHTML = '<div class="card" style="margin-top:12px"><div class="cb"><div style="text-align:center;padding:20px">'
+    + '<div style="font-size:24px;margin-bottom:8px">&#9888;</div>'
+    + '<div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px">Data render error</div>'
+    + '<div style="font-size:11px;color:var(--t3);margin-bottom:12px">' + (err && err.message ? err.message : String(err)) + '</div>'
+    + '<button onclick="manualRefresh()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">&#8635; Retry</button>'
+    + '</div></div></div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// FORMAT
+// ════════════════════════════════════════════════════════════
+function M(n) {
+  if (!n && n !== 0) return '\u2014';
+  var a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e9) return s + 'Rs ' + (a/1e9).toFixed(2) + ' B';
+  if (a >= 1e6) return s + 'Rs ' + (a/1e6).toFixed(2) + ' M';
+  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(1) + ' K';
+  return s + 'Rs ' + Math.round(a).toLocaleString();
+}
+function PKR(n) {
+  if (!n && n !== 0) return '\u2014';
+  var a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e6) return s + (a/1e6).toFixed(2) + ' M';
+  if (a >= 1e3) return s + (a/1e3).toFixed(1) + ' K';
+  return s + Math.round(a).toLocaleString('en-IN');
+}
+
+// ════════════════════════════════════════════════════════════
+// SHARED CARD BUILDERS
+// ════════════════════════════════════════════════════════════
+
+// Shows when data is present but mapped fields are missing — helps diagnose Apps Script format issues
+function noDataCard(tabName, d) {
+  var keys = d ? Object.keys(d).join(', ') : 'null';
+  var iKeys = (d && d.I) ? Object.keys(d.I).slice(0,6).join(', ')+'...' : 'not present';
+  var eKeys = (d && d.E) ? Object.keys(d.E).slice(0,4).join(', ')+'...' : 'not present';
+  var bKeys = (d && d.B) ? Object.keys(d.B).slice(0,4).join(', ')+'...' : 'not present';
+  return '<div class="card" style="margin-top:12px"><div class="cb"><div style="text-align:center;padding:20px 10px">'
+    + '<div style="font-size:24px;margin-bottom:8px">&#128203;</div>'
+    + '<div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px">' + tabName + ' data not available</div>'
+    + '<div style="font-size:11px;color:var(--t3);margin-bottom:12px">The dashboard received data but could not map it to this view.<br>Check the Apps Script response format.</div>'
+    + '<div style="text-align:left;background:#F0F5F0;border-radius:8px;padding:10px;font-size:10px;color:var(--t2);font-family:monospace;margin-bottom:12px">'
+    + '<b>D keys:</b> ' + keys + '<br>'
+    + '<b>D.I (inflow):</b> ' + iKeys + '<br>'
+    + '<b>D.E (expenses):</b> ' + eKeys + '<br>'
+    + '<b>D.B (balances):</b> ' + bKeys
+    + '</div>'
+    + '<button onclick="manualRefresh()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--font)">&#8635; Refresh Data</button>'
+    + '</div></div></div>';
+}
+function flatKpi(lbl, val, sub, accent, nav) {
+  return '<div class="flat-kpi" style="--ac:' + accent + '" data-tab="' + nav + '" onclick="handleClick(this)">'
+    + '<div class="fk-lbl">' + lbl + '</div>'
+    + '<div class="fk-val">' + val + '</div>'
+    + '<div class="fk-sub">' + sub + '</div>'
+    + '<div class="fk-bar"></div>'
+    + '</div>';
+}
+
+function card(title, badge, body) {
+  return '<div class="card"><div class="ch"><span class="ct">' + title + '</span>' + badge + '</div><div class="cb">' + body + '</div></div>';
+}
+
+function bdg(txt, type) {
+  return '<span class="bdg bdg-' + type + '">' + txt + '</span>';
 }
 
 // ════════════════════════════════════════════════════════════
 // OVERVIEW
 // ════════════════════════════════════════════════════════════
 function rOV() {
+  if (!D || !D.I || !D.E || !D.B) {
+    ge('ov-body').innerHTML = noDataCard('Overview', D);
+    return;
+  }
   var I = D.I, B = D.B, E = D.E;
   var tot = I.pending_till_date || 1;
   var today = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
 
-  // Hero card
   var hero = '<div class="hero-card" data-tab="liquidity" onclick="handleClick(this)">'
-    + '<div class="hero-icon">💰</div>'
+    + '<div class="hero-icon">&#128176;</div>'
     + '<div class="hero-lbl">TOTAL WORKING BALANCE</div>'
-    + '<div class="hero-val">'+M(B.totalWorking)+'</div>'
-    + '<div class="hero-sub">Bank + Cash &middot; across all entities <span class="hero-arr">→</span></div>'
+    + '<div class="hero-val">' + M(B.totalWorking) + '</div>'
+    + '<div class="hero-sub">Bank + Cash &middot; across all entities <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
-  // Flat KPIs
   var flatKpis = '<div class="flat-grid">'
-    + flatKpi('PENDING', M(I.pending_till_date), 'COB '+today, '#C9A850', 'revenue')
-    + flatKpi('EXPECTED', M(I.exp_total), 'Near-term incoming', '#16A34A', 'revenue')
-    + flatKpi('FLOAT', M(B.float), 'In transit', '#D97706', 'liquidity')
-    + flatKpi('EXPENSES', M(E.totalToday), 'Paid out today', '#DC2626', 'expenses')
+    + flatKpi('PENDING',   M(I.pending_till_date), 'COB ' + today,       '#C9A850', 'revenue')
+    + flatKpi('EXPECTED',  M(I.exp_total),          'Near-term incoming',  '#16A34A', 'revenue')
+    + flatKpi('FLOAT',     M(B.float),              'In transit',          '#D97706', 'liquidity')
+    + flatKpi('EXPENSES',  M(E.totalToday),         'Paid out today',      '#DC2626', 'expenses')
     + '</div>';
 
-  // Entity bars
   var ents = [
-    {n:'Graana',v:I.entity_graana,c:'#DC2626'},
-    {n:'Agency 21',v:I.entity_a21,c:'#22C55E'},
-    {n:'IMARAT',v:I.entity_imarat,c:'#166534'}
+    {n:'Graana',    v:I.entity_graana, c:'#DC2626'},
+    {n:'Agency 21', v:I.entity_a21,    c:'#22C55E'},
+    {n:'IMARAT',    v:I.entity_imarat, c:'#166534'}
   ];
   var entBars = '';
-  for(var i=0;i<ents.length;i++){
-    var e=ents[i], w=(e.v/tot*100).toFixed(1);
-    entBars += '<div class="ent-row" data-tab="receivables" data-ent="'+e.n+'" onclick="handleClick(this)">'
-      +'<div class="ent-top"><div class="ent-name"><span class="dot-sq" style="background:'+e.c+'"></span>'+e.n+' <span class="arr-sm">→</span></div>'
-      +'<div class="ent-right"><span class="ent-val">'+M(e.v)+'</span><span class="ent-pct">'+w+'%</span></div></div>'
-      +'<div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:'+e.c+'"></div></div>'
-      +'</div>';
+  for (var i = 0; i < ents.length; i++) {
+    var e = ents[i], w = (e.v / tot * 100).toFixed(1);
+    entBars += '<div class="ent-row" data-tab="receivables" data-ent="' + e.n + '" onclick="handleClick(this)">'
+      + '<div class="ent-top"><div class="ent-name"><span class="dot-sq" style="background:' + e.c + '"></span>' + e.n + ' <span class="arr-sm">&rarr;</span></div>'
+      + '<div class="ent-right"><span class="ent-val">' + M(e.v) + '</span><span class="ent-pct">' + w + '%</span></div></div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + e.c + '"></div></div>'
+      + '</div>';
   }
 
-  // Pipeline
   var pip = '<div class="pipeline">'
-    +'<div class="pip-box"><div class="pip-val" style="color:#D97706">'+PKR(I.overall_pending)+'</div><div class="pip-lbl">OVERALL PENDING</div></div>'
-    +'<div class="pip-conn">→</div>'
-    +'<div class="pip-box"><div class="pip-val" style="color:#16A34A">'+PKR(I.cleared_from_pending)+'</div><div class="pip-lbl">CLEARED</div></div>'
-    +'<div class="pip-conn">=</div>'
-    +'<div class="pip-box hi"><div class="pip-val" style="color:#A8862E">'+PKR(I.pending_till_date)+'</div><div class="pip-lbl">PENDING TILL DATE</div></div>'
-    +'</div>'
-    +'<div class="pip-note">New sales: '+PKR(I.new_sales)+' · Cleared from new: '+PKR(I.cleared_from_new)+' · Total cleared: '+PKR(I.total_cleared)+'</div>';
+    + '<div class="pip-box"><div class="pip-val" style="color:#D97706">' + PKR(I.overall_pending) + '</div><div class="pip-lbl">OVERALL PENDING</div></div>'
+    + '<div class="pip-conn">&rarr;</div>'
+    + '<div class="pip-box"><div class="pip-val" style="color:#16A34A">' + PKR(I.cleared_from_pending) + '</div><div class="pip-lbl">CLEARED</div></div>'
+    + '<div class="pip-conn">=</div>'
+    + '<div class="pip-box hi"><div class="pip-val" style="color:#A8862E">' + PKR(I.pending_till_date) + '</div><div class="pip-lbl">PENDING TILL DATE</div></div>'
+    + '</div>'
+    + '<div class="pip-note">New sales: ' + PKR(I.new_sales) + ' &middot; Cleared from new: ' + PKR(I.cleared_from_new) + ' &middot; Total cleared: ' + PKR(I.total_cleared) + '</div>';
 
-  // Donut
   var statItems = [
-    {n:'Returned',v:I.returned,c:'#DC2626'},
-    {n:'On Hold',v:I.on_hold,c:'#D97706'},
-    {n:'Postdated',v:I.postdated,c:'#7C3AED'},
-    {n:'Presented',v:I.presented,c:'#16A34A'},
-    {n:'Chq Not Recv',v:I.chq_not_received,c:'#2563EB'},
-    {n:'To Deposit',v:I.to_be_deposited,c:'#8AAB8E'}
-  ].filter(function(x){return x.v>0;});
-  var r=38,cx=55,cy=55,sw=13,C=2*Math.PI*r,off=0,arcs='';
-  for(var i=0;i<statItems.length;i++){
-    var d=(statItems[i].v/tot)*C;
-    arcs+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+statItems[i].c+'" stroke-width="'+sw+'" stroke-dasharray="'+d+' '+C+'" stroke-dashoffset="'+(-(off))+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
-    off+=d;
+    {n:'Returned',      v:I.returned,         c:'#DC2626'},
+    {n:'On Hold',       v:I.on_hold,          c:'#D97706'},
+    {n:'Postdated',     v:I.postdated,        c:'#7C3AED'},
+    {n:'Presented',     v:I.presented,        c:'#16A34A'},
+    {n:'Chq Not Recv',  v:I.chq_not_received, c:'#2563EB'},
+    {n:'To Deposit',    v:I.to_be_deposited,  c:'#8AAB8E'}
+  ].filter(function(x) { return x.v > 0; });
+
+  var r = 38, cx = 55, cy = 55, sw = 13, C = 2 * Math.PI * r, off = 0, arcs = '';
+  for (var i = 0; i < statItems.length; i++) {
+    var d = (statItems[i].v / tot) * C;
+    arcs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + statItems[i].c + '" stroke-width="' + sw + '" stroke-dasharray="' + d + ' ' + C + '" stroke-dashoffset="' + (-off) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+    off += d;
   }
-  var donutSvg='<svg width="110" height="110" viewBox="0 0 110 110">'+arcs
-    +'<text x="55" y="51" text-anchor="middle" font-size="8" fill="#4A6B4E" font-weight="600">PENDING</text>'
-    +'<text x="55" y="63" text-anchor="middle" font-size="10" fill="#132015" font-weight="700" font-family="monospace">'+PKR(tot)+'</text>'
-    +'</svg>';
-  var donutLeg='';
-  for(var i=0;i<statItems.length;i++){
-    var s=statItems[i],pct=(s.v/tot*100).toFixed(1);
-    donutLeg+='<div class="dleg-row" data-tab="receivables" data-st="'+s.n+'" onclick="handleClick(this)">'
-      +'<div class="dleg-l"><span class="dot-sq sm" style="background:'+s.c+'"></span>'+s.n+'</div>'
-      +'<div class="dleg-r"><span class="dleg-amt">'+M(s.v)+'</span><span class="dleg-pct">'+pct+'%</span></div>'
-      +'</div>';
+  var donutSvg = '<svg width="110" height="110" viewBox="0 0 110 110">' + arcs
+    + '<text x="55" y="51" text-anchor="middle" font-size="8" fill="#4A6B4E" font-weight="600">PENDING</text>'
+    + '<text x="55" y="63" text-anchor="middle" font-size="10" fill="#132015" font-weight="700" font-family="monospace">' + PKR(tot) + '</text>'
+    + '</svg>';
+  var donutLeg = '';
+  for (var i = 0; i < statItems.length; i++) {
+    var s = statItems[i], pct = (s.v / tot * 100).toFixed(1);
+    donutLeg += '<div class="dleg-row" data-tab="receivables" data-st="' + s.n + '" onclick="handleClick(this)">'
+      + '<div class="dleg-l"><span class="dot-sq sm" style="background:' + s.c + '"></span>' + s.n + '</div>'
+      + '<div class="dleg-r"><span class="dleg-amt">' + M(s.v) + '</span><span class="dleg-pct">' + pct + '%</span></div>'
+      + '</div>';
   }
 
-  // Clearance grid
   var clr = '<div class="clr-grid">'
-    +'<div class="clr-tile a21" data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)"><div class="clr-name">AGENCY 21</div><div class="clr-val">'+M(I.exp_a21)+'</div></div>'
-    +'<div class="clr-tile graana" data-tab="receivables" data-ent="Graana" onclick="handleClick(this)"><div class="clr-name">GRAANA</div><div class="clr-val">'+M(I.exp_graana)+'</div></div>'
-    +'<div class="clr-tile imarat" data-tab="receivables" data-ent="IMARAT" onclick="handleClick(this)"><div class="clr-name">IMARAT</div><div class="clr-val">'+M(I.exp_imarat)+'</div></div>'
-    +'</div>'
-    +'<div class="clr-total"><span>Total expected incoming</span><span class="clr-total-val">'+M(I.exp_total)+'</span></div>';
+    + '<div class="clr-tile a21"    data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)"><div class="clr-name">AGENCY 21</div><div class="clr-val">' + M(I.exp_a21)    + '</div></div>'
+    + '<div class="clr-tile graana" data-tab="receivables" data-ent="Graana"    onclick="handleClick(this)"><div class="clr-name">GRAANA</div><div class="clr-val">'    + M(I.exp_graana) + '</div></div>'
+    + '<div class="clr-tile imarat" data-tab="receivables" data-ent="IMARAT"    onclick="handleClick(this)"><div class="clr-name">IMARAT</div><div class="clr-val">'    + M(I.exp_imarat) + '</div></div>'
+    + '</div>'
+    + '<div class="clr-total"><span>Total expected incoming</span><span class="clr-total-val">' + M(I.exp_total) + '</span></div>';
 
   ge('ov-body').innerHTML = hero + flatKpis
-    + card('Pending by Entity', bdg(PKR(tot),'gold'),
-        entBars)
-    + card('Revenue Pipeline', bdg('COB '+today,'gray'), pip)
-    + card('Status Breakdown', bdg('6 statuses','gray'),
-        '<div class="donut-wrap">'+donutSvg+'<div class="dleg">'+donutLeg+'</div></div>')
-    + card('Expected Clearance', bdg('3 entities','gray'), clr);
-}
-
-function flatKpi(lbl,val,sub,accent,nav){
-  return '<div class="flat-kpi" style="--ac:'+accent+'" data-tab="'+nav+'" onclick="handleClick(this)">'
-    +'<div class="fk-lbl">'+lbl+'</div>'
-    +'<div class="fk-val">'+val+'</div>'
-    +'<div class="fk-sub">'+sub+'</div>'
-    +'<div class="fk-bar"></div>'
-    +'</div>';
-}
-
-function card(title, badge, body){
-  return '<div class="card"><div class="ch"><span class="ct">'+title+'</span>'+badge+'</div><div class="cb">'+body+'</div></div>';
-}
-
-function bdg(txt,type){
-  return '<span class="bdg bdg-'+type+'">'+txt+'</span>';
+    + card('Pending by Entity',  bdg(PKR(tot), 'gold'), entBars)
+    + card('Revenue Pipeline',   bdg('COB ' + today, 'gray'), pip)
+    + card('Status Breakdown',   bdg('6 statuses', 'gray'), '<div class="donut-wrap">' + donutSvg + '<div class="dleg">' + donutLeg + '</div></div>')
+    + card('Expected Clearance', bdg('3 entities', 'gray'), clr);
 }
 
 // ════════════════════════════════════════════════════════════
 // BANK LIQUIDITY
 // ════════════════════════════════════════════════════════════
 var BANK_CLR = {
-  MCB:{bg:'#22C55E',tx:'#fff'},
-  ASKARI:{bg:'#6B7280',tx:'#fff'},
-  UBL:{bg:'#2563EB',tx:'#fff'},
-  JAZZ:{bg:'#DC2626',tx:'#fff'},
-  UBANK:{bg:'#EA7820',tx:'#fff'},
-  SCB:{bg:'#0D9488',tx:'#fff'}
+  MCB:    {bg:'#22C55E', tx:'#fff'},
+  ASKARI: {bg:'#6B7280', tx:'#fff'},
+  UBL:    {bg:'#2563EB', tx:'#fff'},
+  JAZZ:   {bg:'#DC2626', tx:'#fff'},
+  UBANK:  {bg:'#EA7820', tx:'#fff'},
+  SCB:    {bg:'#0D9488', tx:'#fff'}
 };
-var BANK_ABBRV = {MCB:'MCB',ASKARI:'AKBL',UBL:'UBL',JAZZ:'JAZZ',UBANK:'UBNK',SCB:'SCB'};
+var BANK_ABBRV = {MCB:'MCB', ASKARI:'AKBL', UBL:'UBL', JAZZ:'JAZZ', UBANK:'UBNK', SCB:'SCB'};
 
 function rLQ() {
+  if (!D || !D.B) { ge('lq-body').innerHTML = noDataCard('Bank Liquidity', D); return; }
   var B = D.B;
 
-  // Hero
   var hero = '<div class="hero-card" data-tab="liquidity" onclick="handleClick(this)">'
-    + '<div class="hero-icon">🏦</div>'
+    + '<div class="hero-icon">&#127981;</div>'
     + '<div class="hero-lbl">BANK BALANCE</div>'
-    + '<div class="hero-val">'+M(B.currentBalance)+'</div>'
-    + '<div class="hero-sub">'+B.accounts.filter(function(a){return a.working>0;}).length+' banks &middot; '+B.accounts.length+' accounts <span class="hero-arr">→</span></div>'
+    + '<div class="hero-val">' + M(B.currentBalance) + '</div>'
+    + '<div class="hero-sub">' + B.accounts.filter(function(a) { return a.working > 0; }).length + ' banks &middot; ' + B.accounts.length + ' accounts <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
-  // Cash & Float KPIs
   var kpis = '<div class="flat-grid">'
     + flatKpi('CASH IN HAND', M(B.cashInHand), '4 locations', '#16A34A', 'liquidity')
-    + flatKpi('FLOAT / HOLD', M(B.float), 'In transit', '#D97706', 'liquidity')
+    + flatKpi('FLOAT / HOLD', M(B.float),      'In transit',  '#D97706', 'liquidity')
     + '</div>';
 
-  // Entity filter pills
   var pills = '<div class="pill-row">'
     + '<div class="epill active" onclick="filterAccEnt(\'\',this)">All accounts</div>'
     + '<div class="epill" onclick="filterAccEnt(\'IMARAT\',this)"><span class="dot-sm" style="background:#166534"></span>IMARAT</div>'
@@ -891,40 +900,46 @@ function rLQ() {
     + '<div class="epill" onclick="filterAccEnt(\'Agency 21\',this)"><span class="dot-sm" style="background:#22C55E"></span>Agency 21</div>'
     + '</div>';
 
-  // Group accounts by bank
   var groups = {};
-  for(var i=0;i<B.accounts.length;i++){
-    var a=B.accounts[i], bn=a.bank||'Other';
-    if(!groups[bn]) groups[bn]={tot:0,fl:0,accs:[]};
-    groups[bn].tot+=a.working;
-    groups[bn].fl+=a.float||0;
+  for (var i = 0; i < B.accounts.length; i++) {
+    var a = B.accounts[i], bn = a.bank || 'Other';
+    if (!groups[bn]) groups[bn] = {tot:0, fl:0, accs:[]};
+    groups[bn].tot += a.working;
+    groups[bn].fl  += a.float || 0;
     groups[bn].accs.push(a);
   }
-  var sorted = Object.keys(groups).sort(function(a,b){return groups[b].tot-groups[a].tot;});
+  var sorted = Object.keys(groups).sort(function(a, b) { return groups[b].tot - groups[a].tot; });
 
-  var accsHtml = '<div class="sec-hdr"><span>BANK ACCOUNTS</span><span>'+M(B.currentBalance)+'</span></div>';
+  var accsHtml = '<div class="sec-hdr"><span>BANK ACCOUNTS</span><span>' + M(B.currentBalance) + '</span></div>';
   accsHtml += '<div id="acc-groups">';
-  for(var g=0;g<sorted.length;g++){
-    var bn=sorted[g], grp=groups[bn];
-    var clr=BANK_CLR[bn]||{bg:'#4A6B4E',tx:'#fff'};
-    var abbr=BANK_ABBRV[bn]||bn.substr(0,4);
-    var acRows='';
-    for(var k=0;k<grp.accs.length;k++){
-      var a=grp.accs[k];
-      if(a.working===0) continue;
-      var ec=ECOL[a.entity]||'#4A6B4E';
-      acRows+='<div class="acc-row"><div class="acc-left"><span class="dot-sm" style="background:'+ec+'"></span><div><div class="acc-code">'+a.code+'</div><div class="acc-ent">'+a.entity+'</div></div></div>'
-        +'<div class="acc-right"><div class="acc-amt">'+M(a.working)+'</div>'+(a.float>0?'<div class="acc-float">FLOAT '+M(a.float)+'</div>':'')+'</div></div>';
+  for (var g = 0; g < sorted.length; g++) {
+    var bn = sorted[g], grp = groups[bn];
+    var clr = BANK_CLR[bn] || {bg:'#4A6B4E', tx:'#fff'};
+    var abbr = BANK_ABBRV[bn] || bn.substr(0, 4);
+    var acRows = '';
+    for (var k = 0; k < grp.accs.length; k++) {
+      var a = grp.accs[k];
+      if (a.working === 0) continue;
+      var ec = ECOL[a.entity] || '#4A6B4E';
+      acRows += '<div class="acc-row">'
+        + '<div class="acc-left"><span class="dot-sm" style="background:' + ec + '"></span>'
+        + '<div><div class="acc-code">' + a.code + '</div><div class="acc-ent">' + a.entity + '</div></div></div>'
+        + '<div class="acc-right"><div class="acc-amt">' + M(a.working) + '</div>'
+        + (a.float > 0 ? '<div class="acc-float">FLOAT ' + M(a.float) + '</div>' : '')
+        + '</div></div>';
     }
-    if(!acRows) continue;
-    accsHtml += '<div class="bank-group" data-bank="'+bn+'">'
-      +'<div class="bank-hdr">'
-      +'<div class="bank-hdr-l"><div class="bank-logo" style="background:'+clr.bg+';color:'+clr.tx+'">'+abbr+'</div>'
-      +'<div><div class="bank-name">'+bn+'</div><div class="bank-sub">'+grp.accs.filter(function(x){return x.working>0;}).length+' accounts'+(grp.fl>0?' · Float '+M(grp.fl):'')+'</div></div></div>'
-      +'<div class="bank-hdr-r"><div class="bank-tot">'+M(grp.tot)+'</div><div class="bank-status">WORKING</div></div>'
-      +'</div>'
-      +acRows
-      +'</div>';
+    if (!acRows) continue;
+    accsHtml += '<div class="bank-group" data-bank="' + bn + '">'
+      + '<div class="bank-hdr">'
+      + '<div class="bank-hdr-l"><div class="bank-logo" style="background:' + clr.bg + ';color:' + clr.tx + '">' + abbr + '</div>'
+      + '<div><div class="bank-name">' + bn + '</div><div class="bank-sub">'
+      + grp.accs.filter(function(x) { return x.working > 0; }).length + ' accounts'
+      + (grp.fl > 0 ? ' &middot; Float ' + M(grp.fl) : '')
+      + '</div></div></div>'
+      + '<div class="bank-hdr-r"><div class="bank-tot">' + M(grp.tot) + '</div><div class="bank-status">WORKING</div></div>'
+      + '</div>'
+      + acRows
+      + '</div>';
   }
   accsHtml += '</div>';
 
@@ -933,16 +948,16 @@ function rLQ() {
 
 function filterAccEnt(ent, el) {
   var pills = document.querySelectorAll('.epill');
-  for(var i=0;i<pills.length;i++) pills[i].classList.remove('active');
-  el.classList.add('active');
+  for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
+  if (el) el.classList.add('active');
   var groups = document.querySelectorAll('.bank-group');
-  for(var i=0;i<groups.length;i++){
-    if(!ent){ groups[i].style.display=''; continue; }
+  for (var i = 0; i < groups.length; i++) {
+    if (!ent) { groups[i].style.display = ''; continue; }
     var rows = groups[i].querySelectorAll('.acc-row');
     var show = false;
-    for(var j=0;j<rows.length;j++){
+    for (var j = 0; j < rows.length; j++) {
       var entEl = rows[j].querySelector('.acc-ent');
-      if(entEl && entEl.textContent===ent){ show=true; break; }
+      if (entEl && entEl.textContent === ent) { show = true; break; }
     }
     groups[i].style.display = show ? '' : 'none';
   }
@@ -952,278 +967,264 @@ function filterAccEnt(ent, el) {
 // REVENUE
 // ════════════════════════════════════════════════════════════
 function rRV() {
+  if (!D || !D.I) { ge('rv-body').innerHTML = noDataCard('Revenue', D); return; }
   var I = D.I;
-  var ns=I.new_sales||0, cfn=I.cleared_from_new||0, pfn=I.pending_from_new||0;
-  var conv=ns>0?(cfn/ns*100):0;
-  var today=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-  var tot=I.pending_till_date||1;
+  var ns = I.new_sales || 0, cfn = I.cleared_from_new || 0, pfn = I.pending_from_new || 0;
+  var conv = ns > 0 ? (cfn / ns * 100) : 0;
+  var today = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+  var tot = I.pending_till_date || 1;
 
+  // FIX: use HTML entity for apostrophe in hero label (was ASCII ' causing syntax error)
   var hero = '<div class="hero-card">'
-    + '<div class="hero-icon">💰</div>'
-    + '<div class="hero-lbl">TODAY'S NEW SALES</div>'
-    + '<div class="hero-val">'+M(ns)+'</div>'
-    + '<div class="hero-sub">Across 3 entities &middot; bookings today <span class="hero-arr">→</span></div>'
+    + '<div class="hero-icon">&#128176;</div>'
+    + '<div class="hero-lbl">TODAY&#8217;S NEW SALES</div>'
+    + '<div class="hero-val">' + M(ns) + '</div>'
+    + '<div class="hero-sub">Across 3 entities &middot; bookings today <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
   var kpis = '<div class="flat-grid">'
-    + flatKpi('CLEARED', M(cfn), conv.toFixed(1)+'% of booked', '#16A34A', 'revenue')
-    + flatKpi('OUTSTANDING', M(pfn), (ns>0?(pfn/ns*100):0).toFixed(1)+'% awaiting clearance', '#D97706', 'revenue')
+    + flatKpi('CLEARED',     M(cfn), conv.toFixed(1) + '% of booked',           '#16A34A', 'revenue')
+    + flatKpi('OUTSTANDING', M(pfn), (ns > 0 ? (pfn/ns*100) : 0).toFixed(1) + '% awaiting', '#D97706', 'revenue')
     + '</div>';
 
   var salesFlow = '<div class="pipeline">'
-    +'<div class="pip-box"><div class="pip-val" style="color:#D97706">'+PKR(ns)+'</div><div class="pip-lbl">BOOKED</div></div>'
-    +'<div class="pip-conn">→</div>'
-    +'<div class="pip-box hi"><div class="pip-val" style="color:#16A34A">'+PKR(cfn)+'</div><div class="pip-lbl">CLEARED</div></div>'
-    +'<div class="pip-conn">=</div>'
-    +'<div class="pip-box"><div class="pip-val" style="color:#D97706">'+PKR(pfn)+'</div><div class="pip-lbl">OUTSTANDING</div></div>'
-    +'</div>'
-    +'<div class="pip-note">Conversion '+conv.toFixed(1)+'% &middot; Updated '+new Date().toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"})+'</div>';
+    + '<div class="pip-box"><div class="pip-val" style="color:#D97706">' + PKR(ns)  + '</div><div class="pip-lbl">BOOKED</div></div>'
+    + '<div class="pip-conn">&rarr;</div>'
+    + '<div class="pip-box hi"><div class="pip-val" style="color:#16A34A">' + PKR(cfn) + '</div><div class="pip-lbl">CLEARED</div></div>'
+    + '<div class="pip-conn">=</div>'
+    + '<div class="pip-box"><div class="pip-val" style="color:#D97706">' + PKR(pfn) + '</div><div class="pip-lbl">OUTSTANDING</div></div>'
+    + '</div>'
+    + '<div class="pip-note">Conversion ' + conv.toFixed(1) + '% &middot; Updated ' + new Date().toLocaleTimeString('en-PK', {hour:'2-digit', minute:'2-digit'}) + '</div>';
 
-  // Entity bars for new sales
   var ents = [
-    {n:'Graana',v:I.entity_graana,c:'#DC2626'},
-    {n:'Agency 21',v:I.entity_a21,c:'#22C55E'},
-    {n:'IMARAT',v:I.entity_imarat,c:'#166534'}
+    {n:'Graana',    v:I.entity_graana, c:'#DC2626'},
+    {n:'Agency 21', v:I.entity_a21,    c:'#22C55E'},
+    {n:'IMARAT',    v:I.entity_imarat, c:'#166534'}
   ];
   var entBars = '';
-  for(var i=0;i<ents.length;i++){
-    var e=ents[i], w=(e.v/tot*100).toFixed(1);
-    entBars += '<div class="ent-row" data-tab="receivables" data-ent="'+e.n+'" onclick="handleClick(this)">'
-      +'<div class="ent-top"><div class="ent-name"><span class="dot-sq" style="background:'+e.c+'"></span>'+e.n+' <span class="arr-sm">→</span></div>'
-      +'<div class="ent-right"><span class="ent-val">'+M(e.v)+'</span><span class="ent-pct">'+w+'%</span></div></div>'
-      +'<div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:'+e.c+'"></div></div>'
-      +'</div>';
+  for (var i = 0; i < ents.length; i++) {
+    var e = ents[i], w = (e.v / tot * 100).toFixed(1);
+    entBars += '<div class="ent-row" data-tab="receivables" data-ent="' + e.n + '" onclick="handleClick(this)">'
+      + '<div class="ent-top"><div class="ent-name"><span class="dot-sq" style="background:' + e.c + '"></span>' + e.n + ' <span class="arr-sm">&rarr;</span></div>'
+      + '<div class="ent-right"><span class="ent-val">' + M(e.v) + '</span><span class="ent-pct">' + w + '%</span></div></div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + e.c + '"></div></div>'
+      + '</div>';
   }
 
-  // Pending detail as activity feed
   var rows = D.pendingDetail || [];
-  var recent = rows.slice(0,6);
+  var recent = rows.slice(0, 6);
   var actHtml = '';
-  var stColors={'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
-  for(var i=0;i<recent.length;i++){
-    var r=recent[i], sc=stColors[r.status]||'#8AAB8E';
-    var ec=ECOL[r.company]||'#4A6B4E';
-    actHtml+='<div class="act-row">'
-      +'<div class="act-left"><span class="act-bar" style="background:'+ec+'"></span>'
-      +'<div><div class="act-name">'+(r.customer||r.company||'—')+'</div>'
-      +'<div class="act-ent"><span class="dot-sm" style="background:'+ec+'"></span>'+r.company+'</div></div></div>'
-      +'<div class="act-right"><div class="act-amt">'+M(r.amount)+'</div>'
-      +'<div class="act-status" style="background:'+sc+'20;color:'+sc+'">'+r.status+'</div></div>'
-      +'</div>';
+  var stColors = {'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
+  for (var i = 0; i < recent.length; i++) {
+    var row = recent[i], sc = stColors[row.status] || '#8AAB8E';
+    var ec = ECOL[row.company] || '#4A6B4E';
+    actHtml += '<div class="act-row">'
+      + '<div class="act-left"><span class="act-bar" style="background:' + ec + '"></span>'
+      + '<div><div class="act-name">' + (row.customer || row.company || '\u2014') + '</div>'
+      + '<div class="act-ent"><span class="dot-sm" style="background:' + ec + '"></span>' + row.company + '</div></div></div>'
+      + '<div class="act-right"><div class="act-amt">' + M(row.amount) + '</div>'
+      + '<div class="act-status" style="background:' + sc + '20;color:' + sc + '">' + row.status + '</div></div>'
+      + '</div>';
   }
 
-  // Cleared Today breakdown
   var clearedHtml = '<div class="cleared-bar-wrap">'
-    +'<div class="cleared-bar"><div class="cleared-seg" style="width:'+(ns>0?cfn/I.total_cleared*30:0).toFixed(0)+'%;background:#C9A850"></div><div class="cleared-seg" style="flex:1;background:#16A34A"></div></div>'
-    +'</div>'
-    +'<div class="cleared-rows">'
-    +'<div class="cleared-row"><span class="dot-sm" style="background:#C9A850"></span>From new sales today<span class="cleared-amt">'+M(cfn)+'</span></div>'
-    +'<div class="cleared-row"><span class="dot-sm" style="background:#16A34A"></span>From earlier pending<span class="cleared-amt">'+M(I.cleared_from_pending)+'</span></div>'
-    +'</div>';
+    + '<div class="cleared-bar">'
+    + '<div class="cleared-seg" style="width:' + (ns > 0 ? (cfn / (I.total_cleared || 1) * 30) : 0).toFixed(0) + '%;background:#C9A850"></div>'
+    + '<div class="cleared-seg" style="flex:1;background:#16A34A"></div>'
+    + '</div></div>'
+    + '<div class="cleared-rows">'
+    + '<div class="cleared-row"><span class="dot-sm" style="background:#C9A850"></span>From new sales today<span class="cleared-amt">' + M(cfn) + '</span></div>'
+    + '<div class="cleared-row"><span class="dot-sm" style="background:#16A34A"></span>From earlier pending<span class="cleared-amt">' + M(I.cleared_from_pending) + '</span></div>'
+    + '</div>';
 
-  // Clearance grid
   var clr = '<div class="clr-grid">'
-    +'<div class="clr-tile a21" data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)"><div class="clr-name">AGENCY 21</div><div class="clr-val">'+M(I.exp_a21)+'</div></div>'
-    +'<div class="clr-tile graana" data-tab="receivables" data-ent="Graana" onclick="handleClick(this)"><div class="clr-name">GRAANA</div><div class="clr-val">'+M(I.exp_graana)+'</div></div>'
-    +'<div class="clr-tile imarat" data-tab="receivables" data-ent="IMARAT" onclick="handleClick(this)"><div class="clr-name">IMARAT</div><div class="clr-val">'+M(I.exp_imarat)+'</div></div>'
-    +'</div>'
-    +'<div class="clr-total"><span>Total expected incoming</span><span class="clr-total-val">'+M(I.exp_total)+'</span></div>';
+    + '<div class="clr-tile a21"    data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)"><div class="clr-name">AGENCY 21</div><div class="clr-val">' + M(I.exp_a21)    + '</div></div>'
+    + '<div class="clr-tile graana" data-tab="receivables" data-ent="Graana"    onclick="handleClick(this)"><div class="clr-name">GRAANA</div><div class="clr-val">'    + M(I.exp_graana) + '</div></div>'
+    + '<div class="clr-tile imarat" data-tab="receivables" data-ent="IMARAT"    onclick="handleClick(this)"><div class="clr-name">IMARAT</div><div class="clr-val">'    + M(I.exp_imarat) + '</div></div>'
+    + '</div>'
+    + '<div class="clr-total"><span>Total expected incoming</span><span class="clr-total-val">' + M(I.exp_total) + '</span></div>';
 
+  // FIX: card titles with apostrophes now use unicode escape \u2019 (right single quote)
   ge('rv-body').innerHTML = hero + kpis
-    + card('Sales Flow', bdg('Today','gray'), salesFlow)
-    + card('Today's Sales by Entity', bdg(M(ns),'gold'), entBars)
-    + card('Today's Activity', bdg('Last '+recent.length,'gray'), actHtml || '<div class="empty-sm">No activity data</div>')
-    + card('Cleared Today', bdg(M(I.total_cleared),'gold'), clearedHtml)
-    + card('Expected Clearance', bdg('3 entities','gray'), clr);
+    + card('Sales Flow',                       bdg('Today', 'gray'),        salesFlow)
+    + card('Today\u2019s Sales by Entity',     bdg(M(ns), 'gold'),          entBars)
+    + card('Today\u2019s Activity',            bdg('Last ' + recent.length, 'gray'), actHtml || '<div class="empty-sm">No activity data</div>')
+    + card('Cleared Today',                    bdg(M(I.total_cleared), 'gold'), clearedHtml)
+    + card('Expected Clearance',               bdg('3 entities', 'gray'),   clr);
 }
 
 // ════════════════════════════════════════════════════════════
 // RECEIVABLES
 // ════════════════════════════════════════════════════════════
-var _rxFilter = {ent:'', st:'', rf:''};
+var _rxFilter = {ent: '', st: ''};
 
 function rRX() {
+  if (!D) { ge('rx-body').innerHTML = noDataCard('Receivables', D); return; }
   var rows = D.pendingDetail || [];
-  var tot=0, hr=0, esc=0, mon=0;
-  for(var i=0;i<rows.length;i++){
-    tot+=rows[i].amount;
-    var rf=(rows[i].riskFlag||'').toUpperCase();
-    if(rf.indexOf('HIGH RISK')>=0) hr+=rows[i].amount;
-    else if(rf==='ESCALATE') esc+=rows[i].amount;
-    else mon+=rows[i].amount;
+  var tot = 0, hr = 0, esc = 0, mon = 0;
+  for (var i = 0; i < rows.length; i++) {
+    tot += rows[i].amount;
+    var rf = (rows[i].riskFlag || '').toUpperCase();
+    if (rf.indexOf('HIGH RISK') >= 0) hr  += rows[i].amount;
+    else if (rf === 'ESCALATE')        esc += rows[i].amount;
+    else                               mon += rows[i].amount;
   }
-  var hrCnt=rows.filter(function(r){return (r.riskFlag||'').toUpperCase().indexOf('HIGH RISK')>=0;}).length;
-  var escCnt=rows.filter(function(r){return (r.riskFlag||'').toUpperCase()==='ESCALATE';}).length;
-  var monCnt=rows.filter(function(r){var rf=(r.riskFlag||'').toUpperCase();return rf!=='ESCALATE'&&rf.indexOf('HIGH RISK')<0;}).length;
+  var hrCnt  = rows.filter(function(r) { return (r.riskFlag||'').toUpperCase().indexOf('HIGH RISK') >= 0; }).length;
+  var escCnt = rows.filter(function(r) { return (r.riskFlag||'').toUpperCase() === 'ESCALATE'; }).length;
+  var monCnt = rows.filter(function(r) { var rf=(r.riskFlag||'').toUpperCase(); return rf !== 'ESCALATE' && rf.indexOf('HIGH RISK') < 0; }).length;
 
   var hero = '<div class="hero-card">'
-    + '<div class="hero-icon">📊</div>'
+    + '<div class="hero-icon">&#128202;</div>'
     + '<div class="hero-lbl">PENDING TILL DATE</div>'
-    + '<div class="hero-val">'+M(tot)+'</div>'
-    + '<div class="hero-sub">'+rows.length+' receivables &middot; '+hrCnt+' high risk <span class="hero-arr">→</span></div>'
+    + '<div class="hero-val">' + M(tot) + '</div>'
+    + '<div class="hero-sub">' + rows.length + ' receivables &middot; ' + hrCnt + ' high risk <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
   var riskCards = '<div class="risk-grid">'
-    +'<div class="risk-card red"><div class="risk-icon">⚠</div><div class="risk-cnt">'+hrCnt+'</div><div class="risk-lbl">HIGH RISK</div><div class="risk-amt">'+M(hr)+'</div></div>'
-    +'<div class="risk-card amber"><div class="risk-icon">↑</div><div class="risk-cnt">'+escCnt+'</div><div class="risk-lbl">ESCALATE</div><div class="risk-amt">'+M(esc)+'</div></div>'
-    +'<div class="risk-card green"><div class="risk-icon">●</div><div class="risk-cnt">'+monCnt+'</div><div class="risk-lbl">MONITOR</div><div class="risk-amt">'+M(mon)+'</div></div>'
-    +'</div>';
+    + '<div class="risk-card red"><div class="risk-icon">&#9888;</div><div class="risk-cnt">' + hrCnt  + '</div><div class="risk-lbl">HIGH RISK</div><div class="risk-amt">' + M(hr)  + '</div></div>'
+    + '<div class="risk-card amber"><div class="risk-icon">&#8593;</div><div class="risk-cnt">' + escCnt + '</div><div class="risk-lbl">ESCALATE</div><div class="risk-amt">'  + M(esc) + '</div></div>'
+    + '<div class="risk-card green"><div class="risk-icon">&#9679;</div><div class="risk-cnt">' + monCnt + '</div><div class="risk-lbl">MONITOR</div><div class="risk-amt">'   + M(mon) + '</div></div>'
+    + '</div>';
 
   var pills = '<div class="pill-row">'
-    +'<div class="epill'+((!_rxFilter.ent)?' active':'')+'" onclick="rxEnt(\'\',this)">All entities</div>'
-    +'<div class="epill'+((_rxFilter.ent==='IMARAT')?' active':'')+'" onclick="rxEnt(\'IMARAT\',this)"><span class="dot-sm" style="background:#166534"></span>IMARAT</div>'
-    +'<div class="epill'+((_rxFilter.ent==='Graana')?' active':'')+'" onclick="rxEnt(\'Graana\',this)"><span class="dot-sm" style="background:#DC2626"></span>Graana</div>'
-    +'<div class="epill'+((_rxFilter.ent==='Agency 21')?' active':'')+'" onclick="rxEnt(\'Agency 21\',this)"><span class="dot-sm" style="background:#22C55E"></span>Agency 21</div>'
-    +'</div>';
+    + '<div class="epill' + (!_rxFilter.ent ? ' active' : '') + '" onclick="rxEnt(\'\',this)">All entities</div>'
+    + '<div class="epill' + (_rxFilter.ent==='IMARAT'    ? ' active' : '') + '" onclick="rxEnt(\'IMARAT\',this)"><span class="dot-sm" style="background:#166534"></span>IMARAT</div>'
+    + '<div class="epill' + (_rxFilter.ent==='Graana'    ? ' active' : '') + '" onclick="rxEnt(\'Graana\',this)"><span class="dot-sm" style="background:#DC2626"></span>Graana</div>'
+    + '<div class="epill' + (_rxFilter.ent==='Agency 21' ? ' active' : '') + '" onclick="rxEnt(\'Agency 21\',this)"><span class="dot-sm" style="background:#22C55E"></span>Agency 21</div>'
+    + '</div>';
 
   ge('rx-body').innerHTML = hero + riskCards + pills
-    + '<div class="sec-hdr rx-hdr"><span id="rx-sec-lbl">ALL RECEIVABLES</span><span id="rx-cnt-lbl">'+rows.length+' of '+rows.length+'</span></div>'
+    + '<div class="sec-hdr rx-hdr"><span id="rx-sec-lbl">ALL RECEIVABLES</span><span id="rx-cnt-lbl">' + rows.length + ' of ' + rows.length + '</span></div>'
     + '<div id="rx-cards"></div>'
-    + '<div class="rx-footer" id="rx-footer"><span class="rx-footer-l">Total pending</span><span class="rx-footer-r" id="rx-footer-amt">'+M(tot)+'</span></div>';
+    + '<div class="rx-footer" id="rx-footer"><span class="rx-footer-l">Total pending</span><span class="rx-footer-r" id="rx-footer-amt">' + M(tot) + '</span></div>';
 
   renderRxCards(rows);
 }
 
 function renderRxCards(rows) {
-  var stColors={'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
-  var stBg={'Returned':'#FEE2E2','On Hold':'#FEF3C7','Postdated':'#EDE9FE','Presented':'#DCFCE7','Chq not received':'#DBEAFE','To Be Deposited':'#F1F5F1'};
-  var h='';
-  var t=0;
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i];
-    var ec=ECOL[r.company]||'#4A6B4E';
-    var sc=stColors[r.status]||'#8AAB8E';
-    var sbg=stBg[r.status]||'#F1F5F1';
-    var rf=(r.riskFlag||'').toUpperCase();
-    var riskBadge=rf.indexOf('HIGH RISK')>=0
-      ?'<span class="risk-badge hr">⚠ HIGH RISK</span>'
-      :rf==='ESCALATE'
-        ?'<span class="risk-badge esc">↑ ESCALATE</span>'
-        :'<span class="risk-badge mon">● MONITOR</span>';
-    var agCol=r.daysAging>20?'#DC2626':r.daysAging>10?'#D97706':'#4A6B4E';
-    t+=r.amount;
-    h+='<div class="tx-card">'
-      +'<div class="tx-top">'
-      +'<div class="tx-tl"><div class="tx-name">'+(r.customer||'—')+'</div>'
-      +'<div class="tx-meta"><span class="dot-sm" style="background:'+ec+'"></span>'+r.company
-      +(r.daysAging?'<span class="age-pill" style="color:'+agCol+';border-color:'+agCol+'20;background:'+agCol+'10">'+r.daysAging+'d</span>':'')
-      +'</div></div>'
-      +'<div class="tx-tr"><div class="tx-amt">'+M(r.amount)+'</div>'+riskBadge+'</div>'
-      +'</div>'
-      +'<div class="tx-status-bar" style="background:'+sbg+'"><span class="tx-st-dot" style="background:'+sc+'"></span><span style="color:'+sc+';font-size:10px;font-weight:600;">'+r.status+'</span></div>'
-      +'</div>';
+  var stColors = {'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
+  var stBg     = {'Returned':'#FEE2E2','On Hold':'#FEF3C7','Postdated':'#EDE9FE','Presented':'#DCFCE7','Chq not received':'#DBEAFE','To Be Deposited':'#F1F5F1'};
+  var h = '', t = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var ec   = ECOL[row.company] || '#4A6B4E';
+    var sc   = stColors[row.status] || '#8AAB8E';
+    var sbg  = stBg[row.status]    || '#F1F5F1';
+    var rf   = (row.riskFlag || '').toUpperCase();
+    var riskBadge = rf.indexOf('HIGH RISK') >= 0
+      ? '<span class="risk-badge hr">&#9888; HIGH RISK</span>'
+      : rf === 'ESCALATE'
+        ? '<span class="risk-badge esc">&#8593; ESCALATE</span>'
+        : '<span class="risk-badge mon">&#9679; MONITOR</span>';
+    var agCol = row.daysAging > 20 ? '#DC2626' : row.daysAging > 10 ? '#D97706' : '#4A6B4E';
+    t += row.amount;
+    h += '<div class="tx-card">'
+      + '<div class="tx-top">'
+      + '<div class="tx-tl"><div class="tx-name">' + (row.customer || '\u2014') + '</div>'
+      + '<div class="tx-meta"><span class="dot-sm" style="background:' + ec + '"></span>' + row.company
+      + (row.daysAging ? '<span class="age-pill" style="color:' + agCol + ';border-color:' + agCol + '20;background:' + agCol + '10">' + row.daysAging + 'd</span>' : '')
+      + '</div></div>'
+      + '<div class="tx-tr"><div class="tx-amt">' + M(row.amount) + '</div>' + riskBadge + '</div>'
+      + '</div>'
+      + '<div class="tx-status-bar" style="background:' + sbg + '"><span class="tx-st-dot" style="background:' + sc + '"></span><span style="color:' + sc + ';font-size:10px;font-weight:600;">' + row.status + '</span></div>'
+      + '</div>';
   }
-  var el=ge('rx-cards');
-  if(el) el.innerHTML=h||'<div class="empty-sm">No records</div>';
-  var cnt=ge('rx-cnt-lbl');
-  if(cnt) cnt.textContent=rows.length+' of '+(D.pendingDetail||[]).length;
-  var fa=ge('rx-footer-amt');
-  if(fa) fa.textContent=M(t);
+  var el = ge('rx-cards');
+  if (el) el.innerHTML = h || '<div class="empty-sm">No records</div>';
+  var cnt = ge('rx-cnt-lbl');
+  if (cnt) cnt.textContent = rows.length + ' of ' + (D.pendingDetail || []).length;
+  var fa = ge('rx-footer-amt');
+  if (fa) fa.textContent = M(t);
 }
 
-function rxEnt(ent, el){
-  _rxFilter.ent=ent;
-  var pills=document.querySelectorAll('.epill');
-  for(var i=0;i<pills.length;i++) pills[i].classList.remove('active');
-  el.classList.add('active');
-  var rows=(D.pendingDetail||[]).filter(function(r){return !ent||r.company===ent;});
+function rxEnt(ent, el) {
+  _rxFilter.ent = ent;
+  var pills = document.querySelectorAll('.epill');
+  for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  // Re-activate correct pill when called programmatically without el
+  if (!el && ent) {
+    var allPills = document.querySelectorAll('.epill');
+    for (var p = 0; p < allPills.length; p++) {
+      if (allPills[p].textContent.trim().indexOf(ent) >= 0) { allPills[p].classList.add('active'); break; }
+    }
+  }
+  if (!el && !ent) {
+    var firstPill = document.querySelector('.epill');
+    if (firstPill) firstPill.classList.add('active');
+  }
+  var rows = (D.pendingDetail || []).filter(function(r) { return !ent || r.company === ent; });
   renderRxCards(rows);
-  var lbl=ge('rx-sec-lbl');
-  if(lbl) lbl.textContent=ent?'ALL RECEIVABLES · '+ent:'ALL RECEIVABLES';
+  var lbl = ge('rx-sec-lbl');
+  if (lbl) lbl.textContent = ent ? 'ALL RECEIVABLES \u00b7 ' + ent : 'ALL RECEIVABLES';
+}
+
+// Filter by status (used by navTo from donut/legend clicks)
+function rxSt(status) {
+  _rxFilter.st = status;
+  var rows = (D.pendingDetail || []).filter(function(r) { return !status || r.status === status; });
+  renderRxCards(rows);
+  var lbl = ge('rx-sec-lbl');
+  if (lbl) lbl.textContent = status ? 'STATUS \u00b7 ' + status : 'ALL RECEIVABLES';
 }
 
 // ════════════════════════════════════════════════════════════
 // EXPENSES
 // ════════════════════════════════════════════════════════════
-var EXP_COLORS=['#C9A850','#2563EB','#EA7820','#EA7820','#DC2626','#C9A850','#6B7280','#7C3AED','#0D9488','#EC4899','#1E40AF','#06B6D4','#84CC16'];
+var EXP_COLORS = ['#C9A850','#2563EB','#EA7820','#EA7820','#DC2626','#C9A850','#6B7280','#7C3AED','#0D9488','#EC4899','#1E40AF','#06B6D4','#84CC16'];
 
 function rEX() {
+  if (!D || !D.E || !D.E.expenses) { ge('ex-body').innerHTML = noDataCard('Expenses', D); return; }
   var E = D.E;
-  var today=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  var today = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
 
   var hero = '<div class="hero-card">'
-    + '<div class="hero-icon">📋</div>'
+    + '<div class="hero-icon">&#128203;</div>'
     + '<div class="hero-lbl">MTD TOTAL</div>'
-    + '<div class="hero-val">'+M(E.totalMTD)+'</div>'
-    + '<div class="hero-sub">'+E.expenses.filter(function(x){return x.mtd>0;}).length+' categories &middot; May 2026 <span class="hero-arr">→</span></div>'
+    + '<div class="hero-val">' + M(E.totalMTD) + '</div>'
+    + '<div class="hero-sub">' + E.expenses.filter(function(x) { return x.mtd > 0; }).length + ' categories &middot; May 2026 <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
-  // Today spend + top card
-  var tsrt=E.expenses.filter(function(x){return x.today>0;}).sort(function(a,b){return b.today-a.today;});
-  var top=tsrt.length?tsrt[0]:null;
-  var todayCard='<div class="split-card">'
-    +'<div class="split-l"><div class="split-lbl">TODAY'S SPEND</div><div class="split-val">'+M(E.totalToday)+'</div><div class="split-sub">'+(E.totalMTD>0?(E.totalToday/E.totalMTD*100).toFixed(1):'0')+'% of MTD &middot; '+today+'</div></div>'
-    +(top?'<div class="split-r"><div class="split-lbl">TOP TODAY</div><div class="top-star">⭐ '+top.head+'</div><div class="top-amt">'+M(top.today)+'</div></div>':'')
-    +'</div>';
+  var tsrt = E.expenses.filter(function(x) { return x.today > 0; }).sort(function(a, b) { return b.today - a.today; });
+  var top  = tsrt.length ? tsrt[0] : null;
 
-  // Category rows - today
-  var todayRows=buildCatRows(tsrt,'today');
-  var msrt=E.expenses.filter(function(x){return x.mtd>0;}).sort(function(a,b){return b.mtd-a.mtd;});
-  var mtdRows=buildCatRows(msrt,'mtd');
+  // FIX: apostrophe in "TODAY'S SPEND" — use HTML entity &#8217;
+  var todayCard = '<div class="split-card">'
+    + '<div class="split-l"><div class="split-lbl">TODAY&#8217;S SPEND</div>'
+    + '<div class="split-val">' + M(E.totalToday) + '</div>'
+    + '<div class="split-sub">' + (E.totalMTD > 0 ? (E.totalToday/E.totalMTD*100).toFixed(1) : '0') + '% of MTD &middot; ' + today + '</div></div>'
+    + (top ? '<div class="split-r"><div class="split-lbl">TOP TODAY</div><div class="top-star">&#11088; ' + top.head + '</div><div class="top-amt">' + M(top.today) + '</div></div>' : '')
+    + '</div>';
+
+  var msrt    = E.expenses.filter(function(x) { return x.mtd > 0; }).sort(function(a, b) { return b.mtd - a.mtd; });
+  var todayRows = buildCatRows(tsrt, 'today');
+  var mtdRows   = buildCatRows(msrt, 'mtd');
 
   ge('ex-body').innerHTML = hero + todayCard
-    +'<div class="sec-hdr"><span>TODAY BY CATEGORY</span><span>'+tsrt.length+' cats &nbsp;'+M(E.totalToday)+'</span></div>'
-    +'<div class="card"><div class="cb cat-list">'+todayRows+'</div></div>'
-    +'<div class="sec-hdr"><span>MTD BY CATEGORY</span><span>'+msrt.length+' cats &nbsp;'+M(E.totalMTD)+'</span></div>'
-    +'<div class="card"><div class="cb cat-list">'+mtdRows+'</div></div>';
+    + '<div class="sec-hdr"><span>TODAY BY CATEGORY</span><span>' + tsrt.length + ' cats &nbsp;' + M(E.totalToday) + '</span></div>'
+    + '<div class="card"><div class="cb cat-list">' + todayRows + '</div></div>'
+    + '<div class="sec-hdr"><span>MTD BY CATEGORY</span><span>' + msrt.length + ' cats &nbsp;' + M(E.totalMTD) + '</span></div>'
+    + '<div class="card"><div class="cb cat-list">' + mtdRows + '</div></div>';
 }
 
 function buildCatRows(items, field) {
-  if(!items.length) return '<div class="empty-sm">No data</div>';
-  var max=items[0][field];
-  var h='';
-  for(var i=0;i<items.length;i++){
-    var e=items[i], w=(e[field]/max*100).toFixed(1);
-    var c=EXP_COLORS[i%EXP_COLORS.length];
-    h+='<div class="cat-row">'
-      +'<div class="cat-name">'+(i===0?'⭐ ':'')+e.head+'</div>'
-      +'<div class="cat-bar-wrap"><div class="cat-bar" style="width:'+w+'%;background:'+c+'"></div></div>'
-      +'<div class="cat-amt">'+M(e[field])+'</div>'
-      +'</div>';
-  }
-  return h;
-}
-
-// ════════════════════════════════════════════════════════════
-// SHARED HELPERS
-// ════════════════════════════════════════════════════════════
-function pip3(v1,c1,l1, v2,c2,l2, v3,c3,l3, hi) {
-  return '<div class="pp"><div class="ppv" style="color:'+c1+'">'+PKR(v1)+'</div><div class="ppl">'+l1+'</div></div><div class="po">→</div><div class="pp"><div class="ppv" style="color:'+c2+'">'+PKR(v2)+'</div><div class="ppl">'+l2+'</div></div><div class="po">=</div><div class="pp'+(hi?' hi':'')+'"><div class="ppv" style="color:'+c3+'">'+PKR(v3)+'</div><div class="ppl">'+l3+'</div></div>';
-}
-function entityBars(ents, tot) {
+  if (!items.length) return '<div class="empty-sm">No data</div>';
+  var max = items[0][field];
   var h = '';
-  for (var i = 0; i < ents.length; i++) {
-    var e = ents[i], w = (e.v/tot*100);
-    h += '<div class="eb" data-tab="receivables" data-ent="'+e.n+'" onclick="handleClick(this)" title="View '+e.n+'"><div class="ebh"><div class="ebn"><span class="dot dot-sq" style="background:'+e.c+'"></span>'+e.n+'<span class="ar-sml">→</span></div><div class="ebs"><span class="ebv">'+M(e.v)+'</span><span class="ebp">'+w.toFixed(1)+'%</span></div></div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%;background:'+e.c+'"></div></div></div>';
+  for (var i = 0; i < items.length; i++) {
+    var e = items[i], w = (e[field] / max * 100).toFixed(1);
+    var c = EXP_COLORS[i % EXP_COLORS.length];
+    h += '<div class="cat-row">'
+      + '<div class="cat-name">' + (i === 0 ? '&#11088; ' : '') + e.head + '</div>'
+      + '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + w + '%;background:' + c + '"></div></div>'
+      + '<div class="cat-amt">' + M(e[field]) + '</div>'
+      + '</div>';
   }
   return h;
 }
-function clrGrid(a21, graana, imarat) {
-  return '<div class="ci clickable" data-tab="receivables" data-ent="Agency 21" onclick="handleClick(this)" title="View Agency 21"><div class="cn">Agency 21</div><div class="cv">'+M(a21)+'</div></div><div class="ci clickable" data-tab="receivables" data-ent="Graana" onclick="handleClick(this)" title="View Graana"><div class="cn">Graana</div><div class="cv">'+M(graana)+'</div></div><div class="ci clickable" data-tab="receivables" data-ent="IMARAT" onclick="handleClick(this)" title="View IMARAT"><div class="cn">IMARAT</div><div class="cv">'+M(imarat)+'</div></div>';
-}
-function buildDonut(svgId, legId, I, tot) {
-  var items = [
-    {n:'Returned',v:I.returned,c:'#DC2626'},{n:'On Hold',v:I.on_hold,c:'#D97706'},
-    {n:'Postdated',v:I.postdated,c:'#7C3AED'},{n:'Presented',v:I.presented,c:'#16A34A'},
-    {n:'Chq Not Recv',v:I.chq_not_received,c:'#2563EB'},{n:'To Deposit',v:I.to_be_deposited,c:'#8AAB8E'}
-  ].filter(function(x){ return x.v > 0; });
-  var r=38,cx=55,cy=55,sw=14,C=2*Math.PI*r,off=0,arcs='';
-  for (var i = 0; i < items.length; i++) {
-    var dash = (items[i].v/tot)*C;
-    arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+items[i].c+'" stroke-width="'+sw+'" stroke-dasharray="'+dash+' '+C+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90,'+cx+','+cy+')"/>';
-    off += dash;
-  }
-  arcs += '<text x="'+cx+'" y="'+(cy-5)+'" text-anchor="middle" font-size="9" fill="var(--t2)" font-weight="600">PENDING</text><text x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-size="10" fill="var(--t1)" font-weight="700">'+PKR(tot)+'</text>';
-  ge(svgId).innerHTML = arcs;
-  var lh = '';
-  for (var i = 0; i < items.length; i++) {
-    lh += '<div class="dli" data-tab="receivables" data-st="'+items[i].n+'" onclick="handleClick(this)"><div class="dll"><span class="dot dot-sq" style="background:'+items[i].c+'"></span>'+items[i].n+'</div><span class="dlp"><span class="dlp-amt">'+M(items[i].v)+'</span><span class="dlp-pct">'+(items[i].v/tot*100).toFixed(1)+'%</span></span></div>';
-  }
-  ge(legId).innerHTML = lh;
-}
 
 // ════════════════════════════════════════════════════════════
-// PWA SERVICE WORKER
+// PWA SERVICE WORKER — registered once
 // ════════════════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/imarat-sap/sw.js')
@@ -1231,18 +1232,8 @@ if ('serviceWorker' in navigator) {
     .catch(function(err) { console.warn('SW registration failed:', err); });
 }
 
-// ── Init date ───────────────────────────────────────────────
-ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-
-
-
-// PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/imarat-sap/sw.js')
-    .then(function(r){ console.log('SW:', r.scope); })
-    .catch(function(e){ console.warn('SW fail:', e); });
-}
-ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+// Init date display
+ge('hdate').textContent = new Date().toLocaleDateString('en-PK', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
 </script>
 </body>
 </html>
