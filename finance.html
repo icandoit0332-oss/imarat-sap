@@ -627,7 +627,7 @@ table.ept tr:last-child td{border-bottom:none;}
 <!-- OVERVIEW -->
 <div class="pane on" id="pane-overview">
   <div id="ov-empty" class="empty"><span>📊</span><p>Authenticating and loading data…</p></div>
-  <div id="ov-body" style="display:none;">
+  <div id="ov-body">
     <div class="g5" id="ov-kpis"></div>
     <div class="g23">
       <div>
@@ -668,7 +668,7 @@ table.ept tr:last-child td{border-bottom:none;}
 <!-- BANK LIQUIDITY -->
 <div class="pane" id="pane-liquidity">
   <div id="lq-empty" class="empty"><span>🏦</span><p>Loading…</p></div>
-  <div id="lq-body" style="display:none;">
+  <div id="lq-body">
     <div class="g5" id="lq-kpis"></div>
     <div class="g2" style="grid-template-columns:1fr 2fr;">
       <div class="card">
@@ -702,7 +702,7 @@ table.ept tr:last-child td{border-bottom:none;}
 <!-- REVENUE -->
 <div class="pane" id="pane-revenue">
   <div id="rv-empty" class="empty"><span>💰</span><p>Loading…</p></div>
-  <div id="rv-body" style="display:none;">
+  <div id="rv-body">
     <div class="g3" style="margin-bottom:16px;">
       <div class="am"><div class="aml">New Sales</div><div class="amv" id="rv-ns">—</div><div class="ams" id="rv-ns-s">—</div></div>
       <div class="am gr"><div class="aml">Cleared from New Sales</div><div class="amv" id="rv-cfn">—</div><div class="ams" id="rv-cfn-s">—</div></div>
@@ -766,7 +766,7 @@ table.ept tr:last-child td{border-bottom:none;}
 <!-- RECEIVABLES (uses PENIDNG REV detail data) -->
 <div class="pane" id="pane-receivables">
   <div id="rx-empty" class="empty"><span>📄</span><p>Loading…</p></div>
-  <div id="rx-body" style="display:none;">
+  <div id="rx-body">
     <!-- Summary KPI row -->
     <div class="g4" style="margin-bottom:16px;" id="rx-kpis"></div>
     <!-- Risk summary -->
@@ -814,7 +814,7 @@ table.ept tr:last-child td{border-bottom:none;}
 <!-- EXPENSES -->
 <div class="pane" id="pane-expenses">
   <div id="ex-empty" class="empty"><span>📋</span><p>Loading…</p></div>
-  <div id="ex-body" style="display:none;">
+  <div id="ex-body">
     <div class="g2" style="margin-bottom:16px;" id="ex-sum"></div>
     <div class="g2">
       <div class="card">
@@ -1167,13 +1167,12 @@ function render() {
 function rOV() {
   var I = D.I, B = D.B, E = D.E;
   ge('ov-empty').style.display = 'none';
-  ge('ov-body').style.display = 'block';
   var kpis = [
-    { l:'Working Balance', v:M(B.totalWorking), sub:'Bank + Cash', cls:'green', ico:'💰' },
-    { l:'Float / Hold',    v:M(B.float),        sub:'In transit',  cls:'amber', ico:'⏳' },
-    { l:'Pending Till Date',v:M(I.pending_till_date), sub:'COB ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), cls:'gold', ico:'📊' },
-    { l:'Expected Clearance',v:M(I.exp_total),  sub:'Near-term incoming', cls:'green', ico:'✅' },
-    { l:"Today's Expenses", v:M(E.totalToday),  sub:'Paid out today', cls:'red', ico:'📋' }
+    { l:'Working Balance',   v:M(B.totalWorking),      sub:'Bank + Cash',       cls:'green', ico:'💰', nav:'liquidity'   },
+    { l:'Float / Hold',      v:M(B.float),             sub:'In transit',         cls:'amber', ico:'⏳', nav:'liquidity'   },
+    { l:'Pending Till Date', v:M(I.pending_till_date), sub:'COB '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), cls:'gold', ico:'📊', nav:'revenue' },
+    { l:'Expected Clearance',v:M(I.exp_total),         sub:'Near-term incoming', cls:'green', ico:'✅', nav:'revenue'     },
+    { l:"Today's Expenses",  v:M(E.totalToday),        sub:'Paid out today',     cls:'red',   ico:'📋', nav:'expenses'    }
   ];
   var kh = '';
   for (var i = 0; i < kpis.length; i++) {
@@ -1200,7 +1199,6 @@ function rOV() {
 function rLQ() {
   var B = D.B;
   ge('lq-empty').style.display = 'none';
-  ge('lq-body').style.display = 'block';
   var active = B.accounts.filter(function(a){ return a.working > 0; });
   var zeros  = B.accounts.filter(function(a){ return a.working === 0; });
   var lkpis = [
@@ -1288,7 +1286,6 @@ function rRV() {
   var ns = I.new_sales||0, cfn = I.cleared_from_new||0, pfn = I.pending_from_new||0;
   var conv = ns > 0 ? (cfn/ns*100) : 0;
   ge('rv-empty').style.display = 'none';
-  ge('rv-body').style.display = 'block';
   st('rv-ns', M(ns)); st('rv-ns-s', 'Total value of transactions booked today');
   st('rv-cfn', M(cfn)); st('rv-cfn-s', conv.toFixed(1)+'% of new sales cleared');
   st('rv-pfn', M(pfn)); st('rv-pfn-s', (ns>0?(pfn/ns*100):0).toFixed(1)+'% of new sales outstanding');
@@ -1343,7 +1340,6 @@ function rRV() {
 function rRX() {
   var rows = D.pendingDetail || [];
   ge('rx-empty').style.display = 'none';
-  ge('rx-body').style.display = 'block';
   allRx = rows;
 
   // KPIs
@@ -1430,7 +1426,6 @@ function filterRx() {
 function rEX() {
   var E = D.E;
   ge('ex-empty').style.display = 'none';
-  ge('ex-body').style.display = 'block';
   ge('ex-sum').innerHTML = '<div class="kpi red" style="margin-bottom:0;"><div class="kpi-ico" style="background:var(--rbg)">📋</div><div class="kpi-lbl">Today\'s Total</div><div class="kpi-val">'+M(E.totalToday)+'</div><div class="kpi-sub">'+E.expenses.filter(function(x){return x.today>0;}).length+' categories</div></div><div class="kpi amber" style="margin-bottom:0;"><div class="kpi-ico" style="background:var(--abg)">📊</div><div class="kpi-lbl">MTD Total</div><div class="kpi-val">'+M(E.totalMTD)+'</div><div class="kpi-sub">'+E.expenses.filter(function(x){return x.mtd>0;}).length+' active categories</div></div>';
   var cats = {H:'var(--blue)',I:'var(--red)',P:'var(--amber)',T:'var(--green)',A:'var(--pur)',M:'var(--t3)'};
   var tsrt = E.expenses.filter(function(x){return x.today>0;}).sort(function(a,b){return b.today-a.today;});
