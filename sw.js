@@ -1,7 +1,7 @@
 // IMARAT Finance Dashboard — Service Worker v10
 // Cache-busting version: does NOT cache finance.html to ensure updates are always live
 
-var CACHE_NAME = 'imarat-finance-v10';
+var CACHE_NAME = 'imarat-finance-v12';
 
 // Install: skip waiting immediately
 self.addEventListener('install', function(e) {
