@@ -365,6 +365,7 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
   <div class="hdr-r">
     <div class="live-pill" id="hpill">&#9679; Loading&hellip;</div>
     <div class="hdr-date" id="hdate"></div>
+    <span id="refresh-status"></span>
     <button class="hdr-btn" onclick="manualRefresh()">&#8635;</button>
     <span class="hdr-user" id="hdr-user-email"></span>
     <button class="hdr-btn" id="logout-btn" onclick="doLogout()">Sign out</button>
@@ -525,7 +526,7 @@ function loadData() {
       hideLoading();
       hideStaleBanner();
       updateHpill(json.at);
-      ge('refresh-status').textContent = 'Updated ' + fmtTime(new Date());
+      var rsEl = ge('refresh-status'); if (rsEl) rsEl.textContent = 'Updated ' + fmtTime(new Date());
       render();
     })
     .catch(function(err) {
@@ -541,7 +542,7 @@ function loadFromCache() {
     if (saved) {
       D = JSON.parse(saved);
       showStaleBanner(D.at);
-      ge('refresh-status').textContent = 'Offline \u2014 cached ' + fmtTime(new Date(D.at));
+      var rsEl = ge('refresh-status'); if (rsEl) rsEl.textContent = 'Offline \u2014 cached ' + fmtTime(new Date(D.at));
       render();
     } else {
       console.warn('No cached data available.');
