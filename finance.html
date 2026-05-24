@@ -32,7 +32,7 @@
   --sh:0 1px 6px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06);
   --sh2:0 4px 16px rgba(0,0,0,.18);
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-  --mono:"SF Mono","Cascadia Code",ui-monospace,monospace;
+  --mono:ui-monospace,monospace;
   --r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -808,7 +808,7 @@ function rOV() {
   }
   var donutSvg='<svg width="110" height="110" viewBox="0 0 110 110">'+arcs
     +'<text x="55" y="51" text-anchor="middle" font-size="8" fill="#4A6B4E" font-weight="600">PENDING</text>'
-    +'<text x="55" y="63" text-anchor="middle" font-size="10" fill="#132015" font-weight="700" font-family="'SF Mono',monospace">'+PKR(tot)+'</text>'
+    +'<text x="55" y="63" text-anchor="middle" font-size="10" fill="#132015" font-weight="700" font-family="monospace">'+PKR(tot)+'</text>'
     +'</svg>';
   var donutLeg='';
   for(var i=0;i<statItems.length;i++){
