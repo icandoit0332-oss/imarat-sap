@@ -1,7 +1,7 @@
-// IMARAT Finance Dashboard — Service Worker v10
-// Cache-busting version: does NOT cache finance.html to ensure updates are always live
+// IMARAT Finance Dashboard — Service Worker v18
+// Cache-busting: does NOT cache finance.html to ensure updates are always live
 
-var CACHE_NAME = 'imarat-finance-v17';
+var CACHE_NAME = 'imarat-finance-v18';
 
 // Install: skip waiting immediately
 self.addEventListener('install', function(e) {
@@ -18,22 +18,22 @@ self.addEventListener('activate', function(e) {
   self.clients.claim();
 });
 
-// Fetch: ALWAYS go to network for finance.html and sw.js
-// Only cache static assets like Firebase SDK
+// Fetch: ALWAYS go to network for app files and dynamic endpoints
+// Only cache static assets like the Firebase SDK
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
-  
-  // Never cache the main app files — always fetch fresh
+
+  // Never cache — always fetch fresh from network
   if (url.indexOf('finance.html') >= 0 ||
       url.indexOf('sw.js') >= 0 ||
       url.indexOf('manifest.json') >= 0 ||
       url.indexOf('script.google.com') >= 0 ||
       url.indexOf('firebaseapp.com') >= 0 ||
       url.indexOf('googleapis.com') >= 0) {
-    return; // Always fetch from network
+    return;
   }
-  
-  // For everything else (Firebase SDK etc), use cache
+
+  // Everything else (Firebase SDK CDN files etc) — serve from cache if available
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       return cached || fetch(e.request);
