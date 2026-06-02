@@ -274,6 +274,21 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 .cat-bar{height:6px;border-radius:99px;transition:width .8s}
 .cat-amt{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t1);min-width:62px;text-align:right}
 
+/* ── GROUPED STATUS SECTIONS ─────────────────────────── */
+.rx-group{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:10px}
+.rx-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #F0F5F0}
+.rx-group-lbl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--t1)}
+.rx-group-right{display:flex;align-items:center;gap:10px}
+.rx-group-cnt{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.rx-group-tot{font-family:var(--mono);font-size:13px;font-weight:700}
+.rx-col-hdr{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;padding:7px 15px;background:#F7FBF7;border-bottom:.5px solid #E8F0E9}
+.rx-col-hdr span{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+.rx-col-hdr span:last-child{text-align:right}
+.rx-grp-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;padding:10px 15px;border-bottom:.5px solid #F0F5F0;align-items:center}
+.rx-grp-row:last-child{border-bottom:none}
+.rx-grp-cell{font-size:11px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rx-grp-amt{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--t1);text-align:right;white-space:nowrap}
+
 /* ── EMPTY ───────────────────────────────────────────── */
 .empty-sm{text-align:center;padding:20px;color:var(--t3);font-size:12px}
 
@@ -409,6 +424,11 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 'use strict';
 
 // ════════════════════════════════════════════════════════════
+// GLOBALS — set during render, used by filter functions
+// ════════════════════════════════════════════════════════════
+var _allPresented = [];
+
+// ════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════
 var FIREBASE_CONFIG = {
@@ -517,9 +537,6 @@ function loadData() {
       return r.json();
     })
     .then(function(json) {
-      console.log('[IMARAT] Apps Script raw response keys:', Object.keys(json));
-      console.log('[IMARAT] status:', json.status, '| at:', json.at);
-      if (json.data) console.log('[IMARAT] data keys:', Object.keys(json.data));
       if (json.status !== 'ok') throw new Error(json.message || 'Server error: status=' + json.status);
       D = mapResponse(json);
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(D)); } catch(x){}
@@ -690,17 +707,11 @@ function navTo(tabName, filters) {
 
 function render() {
   if (!D) return;
-  // Debug: log data structure so any issues can be identified in console
-  console.log('[IMARAT] D keys:', Object.keys(D));
-  console.log('[IMARAT] D.I:', D.I ? Object.keys(D.I) : 'MISSING');
-  console.log('[IMARAT] D.E:', D.E ? (D.E.expenses ? 'ok ('+D.E.expenses.length+' items)' : Object.keys(D.E)) : 'MISSING');
-  console.log('[IMARAT] D.B:', D.B ? (D.B.accounts ? 'ok ('+D.B.accounts.length+' accounts)' : Object.keys(D.B)) : 'MISSING');
-  console.log('[IMARAT] pendingDetail:', (D.pendingDetail||[]).length, 'rows');
-  try { rOV(); } catch(e) { console.error('[IMARAT] rOV error:', e); showPaneError('ov-body', e); }
-  try { rLQ(); } catch(e) { console.error('[IMARAT] rLQ error:', e); showPaneError('lq-body', e); }
-  try { rRV(); } catch(e) { console.error('[IMARAT] rRV error:', e); showPaneError('rv-body', e); }
-  try { rRX(); } catch(e) { console.error('[IMARAT] rRX error:', e); showPaneError('rx-body', e); }
-  try { rEX(); } catch(e) { console.error('[IMARAT] rEX error:', e); showPaneError('ex-body', e); }
+  try { rOV(); } catch(e) { showPaneError('ov-body', e); }
+  try { rLQ(); } catch(e) { showPaneError('lq-body', e); }
+  try { rRV(); } catch(e) { showPaneError('rv-body', e); }
+  try { rRX(); } catch(e) { showPaneError('rx-body', e); }
+  try { rEX(); } catch(e) { showPaneError('ex-body', e); }
 }
 
 function showPaneError(paneId, err) {
@@ -1012,21 +1023,23 @@ function rRV() {
       + '</div>';
   }
 
-  var rows = D.pendingDetail || [];
-  var recent = rows.slice(0, 6);
-  var actHtml = '';
-  var stColors = {'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
-  for (var i = 0; i < recent.length; i++) {
-    var row = recent[i], sc = stColors[row.status] || '#8AAB8E';
-    var ec = ECOL[row.company] || '#4A6B4E';
-    actHtml += '<div class="act-row">'
-      + '<div class="act-left"><span class="act-bar" style="background:' + ec + '"></span>'
-      + '<div><div class="act-name">' + (row.customer || row.company || '\u2014') + '</div>'
-      + '<div class="act-ent"><span class="dot-sm" style="background:' + ec + '"></span>' + row.company + '</div></div></div>'
-      + '<div class="act-right"><div class="act-amt">' + M(row.amount) + '</div>'
-      + '<div class="act-status" style="background:' + sc + '20;color:' + sc + '">' + row.status + '</div></div>'
-      + '</div>';
-  }
+
+  // Presented cheques — store globally so pvEnt can access after rRV() completes
+  _allPresented = (D.pendingDetail || []).filter(function(r) { return r.status === 'Presented'; });
+
+
+  var pvPills = '<div class="pill-row" style="padding:8px 15px 0">'
+    + '<div class="epill pv-ep active" onclick="pvEnt(\'\',this)">All entities</div>'
+    + '<div class="epill pv-ep" onclick="pvEnt(\'IMARAT\',this)"><span class="dot-sm" style="background:#166534"></span>IMARAT</div>'
+    + '<div class="epill pv-ep" onclick="pvEnt(\'Graana\',this)"><span class="dot-sm" style="background:#DC2626"></span>Graana</div>'
+    + '<div class="epill pv-ep" onclick="pvEnt(\'Agency 21\',this)"><span class="dot-sm" style="background:#22C55E"></span>Agency 21</div>'
+    + '</div>';
+  var pvBody = '<div id="rv-presented-cards"></div>';
+
+  var presented = _allPresented;
+  var presentedTotal = 0;
+  for (var i = 0; i < presented.length; i++) presentedTotal += presented[i].amount;
+  var actHtml = pvPills + pvBody;
 
   var clearedHtml = '<div class="cleared-bar-wrap">'
     + '<div class="cleared-bar">'
@@ -1049,36 +1062,86 @@ function rRV() {
   ge('rv-body').innerHTML = hero + kpis
     + card('Sales Flow',                       bdg('Today', 'gray'),        salesFlow)
     + card('Today\u2019s Sales by Entity',     bdg(M(ns), 'gold'),          entBars)
-    + card('Today\u2019s Activity',            bdg('Last ' + recent.length, 'gray'), actHtml || '<div class="empty-sm">No activity data</div>')
+    + card('Presented Cheques',                 '<span id="rv-presented-badge" class="bdg bdg-gold">' + presented.length + ' cheques</span>', actHtml)
     + card('Cleared Today',                    bdg(M(I.total_cleared), 'gold'), clearedHtml)
     + card('Expected Clearance',               bdg('3 entities', 'gray'),   clr);
+  buildPresentedHtml('');
+}
+
+// ── Presented cheques entity filter ─────────────────────────
+function pvEnt(ent, el) {
+  var pills = document.querySelectorAll('.pv-ep');
+  for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  buildPresentedHtml(ent);
+}
+
+function buildPresentedHtml(ent) {
+  var filtered = ent ? _allPresented.filter(function(r) { return r.company === ent; }) : _allPresented;
+  var total = 0;
+  var h = '<div class="rx-col-hdr"><span>ADVISOR</span><span>TEAM</span><span>REG. HEAD</span><span style="text-align:right">AMOUNT</span></div>';
+  for (var i = 0; i < filtered.length; i++) {
+    var row = filtered[i];
+    total += row.amount;
+    h += '<div class="rx-grp-row">'
+      + '<div class="rx-grp-cell">' + (row.advisor || '—') + '</div>'
+      + '<div class="rx-grp-cell">' + (row.team    || '—') + '</div>'
+      + '<div class="rx-grp-cell">' + (row.regMgr  || '—') + '</div>'
+      + '<div class="rx-grp-amt">'  + M(row.amount)             + '</div>'
+      + '</div>';
+  }
+  if (filtered.length) {
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 15px 4px;border-top:1.5px solid var(--bdr);margin-top:4px">'
+      + '<span style="font-size:11px;font-weight:700;color:var(--t2)">' + filtered.length + ' cheque' + (filtered.length !== 1 ? 's' : '') + ' presented</span>'
+      + '<span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#16A34A">' + M(total) + '</span>'
+      + '</div>';
+  }
+  var el = ge('rv-presented-cards');
+  if (el) el.innerHTML = h || '<div class="empty-sm">No presented cheques</div>';
+  var badge = ge('rv-presented-badge');
+  if (badge) badge.textContent = filtered.length + ' cheques';
 }
 
 // ════════════════════════════════════════════════════════════
 // RECEIVABLES
 // ════════════════════════════════════════════════════════════
-var _rxFilter = {ent: '', st: ''};
+var SHOW_ST  = ['On Hold', 'Returned', 'Postdated', 'Chq not received'];
+var ST_STYLE = {
+  'On Hold':          {dot:'#D97706', bg:'#FEF3C7', cnt:'#92400E'},
+  'Returned':         {dot:'#DC2626', bg:'#FEE2E2', cnt:'#991B1B'},
+  'Postdated':        {dot:'#7C3AED', bg:'#EDE9FE', cnt:'#5B21B6'},
+  'Chq not received': {dot:'#2563EB', bg:'#DBEAFE', cnt:'#1E40AF'}
+};
+var _rxTeam = '';
 
 function rRX() {
   if (!D) { ge('rx-body').innerHTML = noDataCard('Receivables', D); return; }
-  var rows = D.pendingDetail || [];
+  renderRxFull('');
+}
+
+function renderRxFull(team) {
+  _rxTeam = team;
+  var base = (D.pendingDetail || []).filter(function(r) { return SHOW_ST.indexOf(r.status) >= 0; });
+  var rows = team ? base.filter(function(r) { return (r.team || '') === team; }) : base;
+
   var tot = 0, hr = 0, esc = 0, mon = 0;
   for (var i = 0; i < rows.length; i++) {
     tot += rows[i].amount;
     var rf = (rows[i].riskFlag || '').toUpperCase();
-    if (rf.indexOf('HIGH RISK') >= 0) hr  += rows[i].amount;
-    else if (rf === 'ESCALATE')        esc += rows[i].amount;
-    else                               mon += rows[i].amount;
+    if (rf.indexOf('HIGH RISK') >= 0) hr += rows[i].amount;
+    else if (rf === 'ESCALATE') esc += rows[i].amount;
+    else mon += rows[i].amount;
   }
   var hrCnt  = rows.filter(function(r) { return (r.riskFlag||'').toUpperCase().indexOf('HIGH RISK') >= 0; }).length;
   var escCnt = rows.filter(function(r) { return (r.riskFlag||'').toUpperCase() === 'ESCALATE'; }).length;
   var monCnt = rows.filter(function(r) { var rf=(r.riskFlag||'').toUpperCase(); return rf !== 'ESCALATE' && rf.indexOf('HIGH RISK') < 0; }).length;
 
+  var heroLbl = team ? 'PENDING · ' + team.toUpperCase() : 'PENDING TILL DATE';
   var hero = '<div class="hero-card">'
     + '<div class="hero-icon">&#128202;</div>'
-    + '<div class="hero-lbl">PENDING TILL DATE</div>'
+    + '<div class="hero-lbl">' + heroLbl + '</div>'
     + '<div class="hero-val">' + M(tot) + '</div>'
-    + '<div class="hero-sub">' + rows.length + ' receivables &middot; ' + hrCnt + ' high risk <span class="hero-arr">&rarr;</span></div>'
+    + '<div class="hero-sub">' + rows.length + ' receivables &middot; ' + hrCnt + ' high risk</div>'
     + '</div>';
 
   var riskCards = '<div class="risk-grid">'
@@ -1087,87 +1150,59 @@ function rRX() {
     + '<div class="risk-card green"><div class="risk-icon">&#9679;</div><div class="risk-cnt">' + monCnt + '</div><div class="risk-lbl">MONITOR</div><div class="risk-amt">'   + M(mon) + '</div></div>'
     + '</div>';
 
-  var pills = '<div class="pill-row">'
-    + '<div class="epill' + (!_rxFilter.ent ? ' active' : '') + '" onclick="rxEnt(\'\',this)">All entities</div>'
-    + '<div class="epill' + (_rxFilter.ent==='IMARAT'    ? ' active' : '') + '" onclick="rxEnt(\'IMARAT\',this)"><span class="dot-sm" style="background:#166534"></span>IMARAT</div>'
-    + '<div class="epill' + (_rxFilter.ent==='Graana'    ? ' active' : '') + '" onclick="rxEnt(\'Graana\',this)"><span class="dot-sm" style="background:#DC2626"></span>Graana</div>'
-    + '<div class="epill' + (_rxFilter.ent==='Agency 21' ? ' active' : '') + '" onclick="rxEnt(\'Agency 21\',this)"><span class="dot-sm" style="background:#22C55E"></span>Agency 21</div>'
-    + '</div>';
-
-  ge('rx-body').innerHTML = hero + riskCards + pills
-    + '<div class="sec-hdr rx-hdr"><span id="rx-sec-lbl">ALL RECEIVABLES</span><span id="rx-cnt-lbl">' + rows.length + ' of ' + rows.length + '</span></div>'
-    + '<div id="rx-cards"></div>'
-    + '<div class="rx-footer" id="rx-footer"><span class="rx-footer-l">Total pending</span><span class="rx-footer-r" id="rx-footer-amt">' + M(tot) + '</span></div>';
-
-  renderRxCards(rows);
-}
-
-function renderRxCards(rows) {
-  var stColors = {'Returned':'#DC2626','On Hold':'#D97706','Postdated':'#7C3AED','Presented':'#16A34A','Chq not received':'#2563EB','To Be Deposited':'#8AAB8E'};
-  var stBg     = {'Returned':'#FEE2E2','On Hold':'#FEF3C7','Postdated':'#EDE9FE','Presented':'#DCFCE7','Chq not received':'#DBEAFE','To Be Deposited':'#F1F5F1'};
-  var h = '', t = 0;
-  for (var i = 0; i < rows.length; i++) {
-    var row = rows[i];
-    var ec   = ECOL[row.company] || '#4A6B4E';
-    var sc   = stColors[row.status] || '#8AAB8E';
-    var sbg  = stBg[row.status]    || '#F1F5F1';
-    var rf   = (row.riskFlag || '').toUpperCase();
-    var riskBadge = rf.indexOf('HIGH RISK') >= 0
-      ? '<span class="risk-badge hr">&#9888; HIGH RISK</span>'
-      : rf === 'ESCALATE'
-        ? '<span class="risk-badge esc">&#8593; ESCALATE</span>'
-        : '<span class="risk-badge mon">&#9679; MONITOR</span>';
-    var agCol = row.daysAging > 20 ? '#DC2626' : row.daysAging > 10 ? '#D97706' : '#4A6B4E';
-    t += row.amount;
-    h += '<div class="tx-card">'
-      + '<div class="tx-top">'
-      + '<div class="tx-tl"><div class="tx-name">' + (row.customer || '\u2014') + '</div>'
-      + '<div class="tx-meta"><span class="dot-sm" style="background:' + ec + '"></span>' + row.company
-      + (row.daysAging ? '<span class="age-pill" style="color:' + agCol + ';border-color:' + agCol + '20;background:' + agCol + '10">' + row.daysAging + 'd</span>' : '')
-      + '</div></div>'
-      + '<div class="tx-tr"><div class="tx-amt">' + M(row.amount) + '</div>' + riskBadge + '</div>'
-      + '</div>'
-      + '<div class="tx-status-bar" style="background:' + sbg + '"><span class="tx-st-dot" style="background:' + sc + '"></span><span style="color:' + sc + ';font-size:10px;font-weight:600;">' + row.status + '</span></div>'
-      + '</div>';
+  var teamSet = {};
+  for (var i = 0; i < base.length; i++) { if (base[i].team) teamSet[base[i].team] = true; }
+  var teams = Object.keys(teamSet).sort();
+  var pills = '<div class="pill-row"><div class="epill rx-tp' + (!team ? ' active' : '') + '" onclick="rxTeam(\'\',this)">All Teams</div>';
+  for (var t = 0; t < teams.length; t++) {
+    pills += '<div class="epill rx-tp' + (team === teams[t] ? ' active' : '') + '" onclick="rxTeam(\'' + teams[t] + '\',this)">' + teams[t] + '</div>';
   }
-  var el = ge('rx-cards');
-  if (el) el.innerHTML = h || '<div class="empty-sm">No records</div>';
-  var cnt = ge('rx-cnt-lbl');
-  if (cnt) cnt.textContent = rows.length + ' of ' + (D.pendingDetail || []).length;
-  var fa = ge('rx-footer-amt');
-  if (fa) fa.textContent = M(t);
+  pills += '</div>';
+
+  ge('rx-body').innerHTML = hero + riskCards + pills + renderRxGroups(rows);
 }
 
-function rxEnt(ent, el) {
-  _rxFilter.ent = ent;
-  var pills = document.querySelectorAll('.epill');
+function renderRxGroups(rows) {
+  var html = '';
+  for (var s = 0; s < SHOW_ST.length; s++) {
+    var status = SHOW_ST[s];
+    var grp = rows.filter(function(r) { return r.status === status; });
+    if (!grp.length) continue;
+    var grpTot = 0;
+    for (var i = 0; i < grp.length; i++) grpTot += grp[i].amount;
+    var sc = ST_STYLE[status] || {dot:'#8AAB8E', bg:'#F1F5F1', cnt:'#4A6B4E'};
+    html += '<div class="rx-group">'
+      + '<div class="rx-group-hdr">'
+      + '<div class="rx-group-lbl"><span class="dot-sm" style="background:' + sc.dot + '"></span>' + status + '</div>'
+      + '<div class="rx-group-right">'
+      + '<span class="rx-group-cnt" style="background:' + sc.bg + ';color:' + sc.cnt + '">' + grp.length + '</span>'
+      + '<span class="rx-group-tot" style="color:' + sc.dot + '">' + M(grpTot) + '</span>'
+      + '</div></div>'
+      + '<div class="rx-col-hdr"><span>ADVISOR</span><span>TEAM</span><span>REG. HEAD</span><span style="text-align:right">AMOUNT</span></div>';
+    for (var i = 0; i < grp.length; i++) {
+      var r = grp[i];
+      html += '<div class="rx-grp-row">'
+        + '<div class="rx-grp-cell">' + (r.advisor || '—') + '</div>'
+        + '<div class="rx-grp-cell">' + (r.team    || '—') + '</div>'
+        + '<div class="rx-grp-cell">' + (r.regMgr  || '—') + '</div>'
+        + '<div class="rx-grp-amt">'  + M(r.amount)             + '</div>'
+        + '</div>';
+    }
+    html += '</div>';
+  }
+  return html || '<div class="empty-sm">No receivables</div>';
+}
+
+function rxTeam(team, el) {
+  var pills = document.querySelectorAll('.rx-tp');
   for (var i = 0; i < pills.length; i++) pills[i].classList.remove('active');
   if (el) el.classList.add('active');
-  // Re-activate correct pill when called programmatically without el
-  if (!el && ent) {
-    var allPills = document.querySelectorAll('.epill');
-    for (var p = 0; p < allPills.length; p++) {
-      if (allPills[p].textContent.trim().indexOf(ent) >= 0) { allPills[p].classList.add('active'); break; }
-    }
-  }
-  if (!el && !ent) {
-    var firstPill = document.querySelector('.epill');
-    if (firstPill) firstPill.classList.add('active');
-  }
-  var rows = (D.pendingDetail || []).filter(function(r) { return !ent || r.company === ent; });
-  renderRxCards(rows);
-  var lbl = ge('rx-sec-lbl');
-  if (lbl) lbl.textContent = ent ? 'ALL RECEIVABLES \u00b7 ' + ent : 'ALL RECEIVABLES';
+  renderRxFull(team);
 }
 
-// Filter by status (used by navTo from donut/legend clicks)
-function rxSt(status) {
-  _rxFilter.st = status;
-  var rows = (D.pendingDetail || []).filter(function(r) { return !status || r.status === status; });
-  renderRxCards(rows);
-  var lbl = ge('rx-sec-lbl');
-  if (lbl) lbl.textContent = status ? 'STATUS \u00b7 ' + status : 'ALL RECEIVABLES';
-}
+function rxEnt(ent, el) { renderRxFull(''); }
+function rxSt(status)   { renderRxFull(''); }
+
 
 // ════════════════════════════════════════════════════════════
 // EXPENSES
