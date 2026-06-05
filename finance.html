@@ -289,6 +289,84 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 .rx-grp-cell{font-size:11px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rx-grp-amt{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--t1);text-align:right;white-space:nowrap}
 
+/* ── DAILY CALENDAR ──────────────────────────────────── */
+.dl-hdr{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 12px}
+.dl-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.04em}
+.cal-btn{width:38px;height:38px;border-radius:11px;background:rgba(201,168,80,.18);border:1px solid rgba(201,168,80,.4);color:var(--gold);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.cal-btn:hover{background:rgba(201,168,80,.3)}
+.cal-pop{background:#fff;border-radius:var(--r);box-shadow:var(--sh2);padding:14px;margin-bottom:12px;display:none}
+.cal-pop.open{display:block}
+.cal-pop-hdr{font-size:12px;font-weight:700;color:var(--t1);text-align:center;margin-bottom:10px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:9px;font-weight:600;color:var(--t3);padding:3px 0}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;position:relative;transition:background .12s}
+.cal-cell.empty{pointer-events:none}
+.cal-cell.has-data:hover{background:#F0F5F0}
+.cal-cell.no-data{pointer-events:none;opacity:.3}
+.cal-cell.sel{background:var(--gold)}
+.cal-cell.sel .cal-cell-num{color:#0B2818;font-weight:700}
+.cal-cell-num{font-size:12px;color:var(--t1)}
+.cal-cell-dot{width:5px;height:5px;border-radius:50%;background:#16A34A;margin-top:2px}
+
+.day-card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.day-card-top{background:linear-gradient(135deg,#0B2818,#1A4D30);padding:16px}
+.day-card-date{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.day-card-tot{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;letter-spacing:-.5px}
+.day-card-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.day-rows{padding:6px 14px 12px}
+.day-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid #F0F5F0}
+.day-row:last-child{border-bottom:none}
+.day-code{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;color:#fff}
+.day-head{font-size:12px;color:var(--t1);flex-shrink:0;width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-bar-wrap{flex:1;background:#E4EFE5;border-radius:99px;height:6px;overflow:hidden}
+.day-bar{height:6px;border-radius:99px}
+.day-amt{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t1);min-width:64px;text-align:right}
+
+/* ── TRENDS ──────────────────────────────────────────── */
+.tr-sel{display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:14px 15px;margin-bottom:12px}
+.tr-sel-grp{flex:1}
+.tr-sel-lbl{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.tr-sel select{width:100%;padding:9px 11px;border:1.5px solid var(--bdr);border-radius:9px;font-size:13px;font-weight:600;color:var(--t1);font-family:var(--font);background:#fff;outline:none;cursor:pointer}
+.tr-sel select:focus{border-color:var(--gold)}
+.tr-sel-vs{font-size:11px;font-weight:700;color:var(--t3);padding-top:18px}
+
+.tr-summary{background:linear-gradient(135deg,#0B2818,#14402A);border-radius:var(--r);border:1px solid rgba(201,168,80,.3);padding:16px;margin-bottom:12px}
+.tr-sum-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.tr-sum-lbl{font-size:11px;color:rgba(245,232,190,.7)}
+.tr-sum-val{font-family:var(--mono);font-size:15px;font-weight:700;color:#fff}
+.tr-sum-delta{font-family:var(--mono);font-size:13px;font-weight:700}
+.tr-sum-insights{border-top:1px solid rgba(201,168,80,.2);margin-top:10px;padding-top:10px;font-size:11px;color:rgba(245,232,190,.75);line-height:1.6}
+
+.tr-grp-row{padding:10px 0;border-bottom:.5px solid var(--bdr)}
+.tr-grp-row:last-child{border-bottom:none}
+.tr-grp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tr-grp-name{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--t1)}
+.tr-grp-code{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+.tr-grp-delta{font-family:var(--mono);font-size:11px;font-weight:700}
+.tr-bars{display:flex;flex-direction:column;gap:3px}
+.tr-bar-line{display:flex;align-items:center;gap:8px}
+.tr-bar-tag{font-size:9px;color:var(--t3);width:42px;flex-shrink:0}
+.tr-bar-track{flex:1;background:#EDF3ED;border-radius:99px;height:9px;overflow:hidden}
+.tr-bar-fill{height:9px;border-radius:99px}
+.tr-bar-val{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--t2);min-width:60px;text-align:right}
+
+.tr-head-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid #F0F5F0}
+.tr-head-row:last-child{border-bottom:none}
+.tr-head-info{flex:1;min-width:0}
+.tr-head-name{font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-head-vals{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:2px}
+.tr-spark{width:64px;height:24px;flex-shrink:0}
+.tr-head-delta{font-family:var(--mono);font-size:11px;font-weight:700;min-width:56px;text-align:right;flex-shrink:0}
+.tr-up{color:#DC2626}
+.tr-down{color:#16A34A}
+.tr-flat{color:var(--t3)}
+
+.tr-mover{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid #F0F5F0}
+.tr-mover:last-child{border-bottom:none}
+.tr-mover-l{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t1)}
+.tr-mover-rank{width:18px;height:18px;border-radius:50%;background:#F0F5F0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--t2);flex-shrink:0}
+.tr-mover-r{font-family:var(--mono);font-size:11px;font-weight:700}
+
 /* ── EMPTY ───────────────────────────────────────────── */
 .empty-sm{text-align:center;padding:20px;color:var(--t3);font-size:12px}
 
@@ -409,6 +487,14 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
     Expenses
   </button>
+  <button class="nt" onclick="goTab('daily',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Daily
+  </button>
+  <button class="nt" onclick="goTab('trends',this)">
+    <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+    Trends
+  </button>
 </nav>
 
 <!-- MAIN -->
@@ -418,6 +504,8 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
   <div class="pane" id="pane-revenue"><div id="rv-body"></div></div>
   <div class="pane" id="pane-receivables"><div id="rx-body"></div></div>
   <div class="pane" id="pane-expenses"><div id="ex-body"></div></div>
+  <div class="pane" id="pane-daily"><div id="dl-body"></div></div>
+  <div class="pane" id="pane-trends"><div id="tr-body"></div></div>
 </div>
 
 <script>
@@ -580,6 +668,8 @@ function mapResponse(json) {
     E:             expenses,
     B:             attachEntities(balances),
     pendingDetail: d.pendingDetail || [],
+    historical:    d.historical || {periods:[], rows:[]},
+    currentMTD:    d.currentMTD || {periods:[], rows:[]},
     at:            json.at
   };
 }
@@ -665,6 +755,8 @@ function goTab(name, btn) {
       else if (name === 'revenue')     rRV();
       else if (name === 'receivables') rRX();
       else if (name === 'expenses')    rEX();
+      else if (name === 'daily')       rDL();
+      else if (name === 'trends')      rTR();
     } catch(e) { console.error('goTab render:', e); }
   }
 }
@@ -712,6 +804,8 @@ function render() {
   try { rRV(); } catch(e) { showPaneError('rv-body', e); }
   try { rRX(); } catch(e) { showPaneError('rx-body', e); }
   try { rEX(); } catch(e) { showPaneError('ex-body', e); }
+  try { rDL(); } catch(e) { showPaneError('dl-body', e); }
+  try { rTR(); } catch(e) { showPaneError('tr-body', e); }
 }
 
 function showPaneError(paneId, err) {
@@ -1258,6 +1352,322 @@ function buildCatRows(items, field) {
   }
   return h;
 }
+
+
+// ════════════════════════════════════════════════════════════
+// CATEGORY CODE STYLING (shared by Daily + Trends)
+// ════════════════════════════════════════════════════════════
+var CODE_COLOR = {
+  'H':'#166534', 'I':'#DC2626', 'P':'#C9A850',
+  'T':'#7C3AED', 'A':'#2563EB', 'M':'#0D9488'
+};
+function codeColor(c) { return CODE_COLOR[c] || '#6B7280'; }
+
+// ════════════════════════════════════════════════════════════
+// DAILY CALENDAR
+// ════════════════════════════════════════════════════════════
+var _dlSelected = '';
+
+function rDL() {
+  if (!D || !D.currentMTD || !D.currentMTD.periods.length) {
+    ge('dl-body').innerHTML = '<div class="card" style="margin-top:12px"><div class="cb"><div class="empty-sm">No daily data available yet. Add the Current month MTD tab in the sheet.</div></div></div>';
+    return;
+  }
+  var periods = D.currentMTD.periods;
+  // Default: latest day that has any non-zero data
+  if (!_dlSelected || periods.indexOf(_dlSelected) < 0) {
+    _dlSelected = latestDayWithData(periods);
+  }
+
+  var dlHtml = '<div class="dl-hdr">'
+    + '<div class="dl-title">DAILY EXPENSES</div>'
+    + '<button class="cal-btn" onclick="toggleCal()">&#128197;</button>'
+    + '</div>'
+    + '<div class="cal-pop" id="cal-pop">' + buildCalPop(periods) + '</div>'
+    + '<div id="day-detail">' + buildDayDetail(_dlSelected) + '</div>';
+
+  ge('dl-body').innerHTML = dlHtml;
+}
+
+function latestDayWithData(periods) {
+  for (var i = periods.length - 1; i >= 0; i--) {
+    var tot = dayTotal(periods[i]);
+    if (tot > 0) return periods[i];
+  }
+  return periods[periods.length - 1];
+}
+
+function dayTotal(period) {
+  var rows = D.currentMTD.rows, t = 0;
+  for (var i = 0; i < rows.length; i++) t += (rows[i].values[period] || 0);
+  return t;
+}
+
+function buildCalPop(periods) {
+  // Parse first period to determine month/year
+  var first = parseDateLabel(periods[0]);
+  if (!first) return '<div class="empty-sm">Calendar unavailable</div>';
+  var year = first.year, month = first.month;
+  var monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][month];
+
+  // Map day-of-month → period label (only days present in data)
+  var dayMap = {};
+  for (var i = 0; i < periods.length; i++) {
+    var d = parseDateLabel(periods[i]);
+    if (d) dayMap[d.day] = periods[i];
+  }
+
+  var firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  // Convert to Mon-first: Mon=0..Sun=6
+  var lead = (firstDow === 0) ? 6 : firstDow - 1;
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  var html = '<div class="cal-pop-hdr">' + monthName + ' ' + year + '</div><div class="cal-grid">';
+  var dows = ['M','T','W','T','F','S','S'];
+  for (var d = 0; d < 7; d++) html += '<div class="cal-dow">' + dows[d] + '</div>';
+  for (var l = 0; l < lead; l++) html += '<div class="cal-cell empty"></div>';
+  for (var day = 1; day <= daysInMonth; day++) {
+    var period = dayMap[day];
+    var hasData = period && dayTotal(period) > 0;
+    var cls = 'cal-cell';
+    if (!period) cls += ' no-data';
+    else if (!hasData) cls += ' no-data';
+    else cls += ' has-data';
+    if (period === _dlSelected) cls += ' sel';
+    var click = (period && hasData) ? ' onclick="selectDay(\'' + period + '\')"' : '';
+    html += '<div class="' + cls + '"' + click + '><span class="cal-cell-num">' + day + '</span>'
+      + (hasData ? '<span class="cal-cell-dot"></span>' : '') + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function buildDayDetail(period) {
+  if (!period) return '';
+  var rows = D.currentMTD.rows;
+  var items = [];
+  var total = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var v = rows[i].values[period] || 0;
+    if (v > 0) { items.push({code:rows[i].code, head:rows[i].head, amount:v}); total += v; }
+  }
+  items.sort(function(a,b){ return b.amount - a.amount; });
+  var max = items.length ? items[0].amount : 1;
+
+  var d = parseDateLabel(period);
+  var dateLbl = d ? (d.day + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.month] + ' ' + d.year) : period;
+  var dowName = d ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(d.year,d.month,d.day).getDay()] : '';
+
+  var rowsHtml = '';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i], w = (it.amount / max * 100).toFixed(1);
+    var c = codeColor(it.code);
+    rowsHtml += '<div class="day-row">'
+      + '<div class="day-code" style="background:' + c + '">' + it.code + '</div>'
+      + '<div class="day-head">' + it.head + '</div>'
+      + '<div class="day-bar-wrap"><div class="day-bar" style="width:' + w + '%;background:' + c + '"></div></div>'
+      + '<div class="day-amt">' + M(it.amount) + '</div>'
+      + '</div>';
+  }
+
+  return '<div class="day-card">'
+    + '<div class="day-card-top">'
+    + '<div class="day-card-date">' + dateLbl + '</div>'
+    + '<div class="day-card-tot">' + M(total) + '</div>'
+    + '<div class="day-card-sub">' + dowName + ' &middot; ' + items.length + ' categories</div>'
+    + '</div>'
+    + '<div class="day-rows">' + (rowsHtml || '<div class="empty-sm">No expenses recorded</div>') + '</div>'
+    + '</div>';
+}
+
+function toggleCal() {
+  var pop = ge('cal-pop');
+  if (pop) pop.classList.toggle('open');
+}
+
+function selectDay(period) {
+  _dlSelected = period;
+  var dd = ge('day-detail');
+  if (dd) dd.innerHTML = buildDayDetail(period);
+  var pop = ge('cal-pop');
+  if (pop) { pop.innerHTML = buildCalPop(D.currentMTD.periods); pop.classList.remove('open'); }
+}
+
+// Parse "1-Jun-2026" or "Jun-25" style labels
+function parseDateLabel(label) {
+  var months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  var s = String(label).trim();
+  // Format: d-MMM-yyyy (e.g. 1-Jun-2026)
+  var m = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m) {
+    var mo = months[m[2].toLowerCase()];
+    if (mo !== undefined) return {day: parseInt(m[1],10), month: mo, year: parseInt(m[3],10)};
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
+// TRENDS
+// ════════════════════════════════════════════════════════════
+var CODE_GROUP = {
+  'H':'Employee Costs', 'I':'Incentives & Refunds', 'P':'Project & Capital',
+  'T':'Tax & Finance', 'A':'Administrative', 'M':'Miscellaneous'
+};
+var _trA = '', _trB = '';
+
+function rTR() {
+  if (!D || !D.historical || !D.historical.periods.length) {
+    ge('tr-body').innerHTML = '<div class="card" style="margin-top:12px"><div class="cb"><div class="empty-sm">No historical data yet. Add the MTD HISTORICAL tab in the sheet.</div></div></div>';
+    return;
+  }
+  var periods = D.historical.periods;
+  // Default: last two months
+  if (!_trA || periods.indexOf(_trA) < 0) _trA = periods[periods.length >= 2 ? periods.length - 2 : 0];
+  if (!_trB || periods.indexOf(_trB) < 0) _trB = periods[periods.length - 1];
+
+  var optsA = '', optsB = '';
+  for (var i = 0; i < periods.length; i++) {
+    optsA += '<option value="' + periods[i] + '"' + (periods[i] === _trA ? ' selected' : '') + '>' + periods[i] + '</option>';
+    optsB += '<option value="' + periods[i] + '"' + (periods[i] === _trB ? ' selected' : '') + '>' + periods[i] + '</option>';
+  }
+
+  var selector = '<div class="tr-sel">'
+    + '<div class="tr-sel-grp"><div class="tr-sel-lbl">Month A</div><select onchange="trSet(\'A\',this.value)">' + optsA + '</select></div>'
+    + '<div class="tr-sel-vs">vs</div>'
+    + '<div class="tr-sel-grp"><div class="tr-sel-lbl">Month B</div><select onchange="trSet(\'B\',this.value)">' + optsB + '</select></div>'
+    + '</div>';
+
+  ge('tr-body').innerHTML = selector + '<div id="tr-content">' + buildTrendContent(_trA, _trB) + '</div>';
+}
+
+function trSet(which, val) {
+  if (which === 'A') _trA = val; else _trB = val;
+  var c = ge('tr-content');
+  if (c) c.innerHTML = buildTrendContent(_trA, _trB);
+}
+
+function buildTrendContent(mA, mB) {
+  var rows = D.historical.rows;
+  var totA = 0, totB = 0, up = 0, down = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var a = rows[i].values[mA] || 0, b = rows[i].values[mB] || 0;
+    totA += a; totB += b;
+    if (b > a) up++; else if (b < a) down++;
+  }
+  var totDelta = totA ? ((totB - totA) / totA * 100) : 0;
+
+  // Find biggest movers (by % change, require meaningful base)
+  var movers = [];
+  for (var i = 0; i < rows.length; i++) {
+    var a = rows[i].values[mA] || 0, b = rows[i].values[mB] || 0;
+    var pct = a ? ((b - a) / a * 100) : (b > 0 ? 100 : 0);
+    movers.push({head: rows[i].head, code: rows[i].code, a: a, b: b, pct: pct, abs: b - a});
+  }
+  var incs = movers.slice().filter(function(m){return m.b>m.a;}).sort(function(x,y){return y.abs-x.abs;}).slice(0,3);
+  var decs = movers.slice().filter(function(m){return m.b<m.a;}).sort(function(x,y){return x.abs-y.abs;}).slice(0,3);
+
+  var biggestJump = incs.length ? incs[0] : null;
+  var biggestDrop = decs.length ? decs[0] : null;
+
+  // ── Summary ──
+  var deltaColor = totDelta > 0 ? '#F87171' : totDelta < 0 ? '#4ADE80' : 'rgba(245,232,190,.7)';
+  var deltaArrow = totDelta > 0 ? '\u25b2' : totDelta < 0 ? '\u25bc' : '';
+  var summary = '<div class="tr-summary">'
+    + '<div class="tr-sum-row"><span class="tr-sum-lbl">' + mA + ' Total</span><span class="tr-sum-val">' + M(totA) + '</span></div>'
+    + '<div class="tr-sum-row"><span class="tr-sum-lbl">' + mB + ' Total</span><span class="tr-sum-val">' + M(totB) + ' <span class="tr-sum-delta" style="color:' + deltaColor + '">' + deltaArrow + ' ' + Math.abs(totDelta).toFixed(1) + '%</span></span></div>'
+    + '<div class="tr-sum-insights">'
+    + up + ' categories increased &middot; ' + down + ' decreased<br>'
+    + (biggestJump ? 'Biggest rise: <b>' + biggestJump.head + '</b> ' + (biggestJump.a ? '+' + biggestJump.pct.toFixed(0) + '%' : 'new') : '')
+    + (biggestDrop ? '<br>Biggest drop: <b>' + biggestDrop.head + '</b> ' + biggestDrop.pct.toFixed(0) + '%' : '')
+    + '</div></div>';
+
+  // ── Category groups ──
+  var groupOrder = ['H','I','P','T','A','M'];
+  var grpTotals = {};
+  for (var g = 0; g < groupOrder.length; g++) grpTotals[groupOrder[g]] = {a:0, b:0};
+  for (var i = 0; i < rows.length; i++) {
+    var code = rows[i].code;
+    if (!grpTotals[code]) grpTotals[code] = {a:0, b:0};
+    grpTotals[code].a += rows[i].values[mA] || 0;
+    grpTotals[code].b += rows[i].values[mB] || 0;
+  }
+  var grpMax = 1;
+  for (var g = 0; g < groupOrder.length; g++) {
+    grpMax = Math.max(grpMax, grpTotals[groupOrder[g]].a, grpTotals[groupOrder[g]].b);
+  }
+  var grpHtml = '';
+  for (var g = 0; g < groupOrder.length; g++) {
+    var code = groupOrder[g], gt = grpTotals[code];
+    if (gt.a === 0 && gt.b === 0) continue;
+    var gpct = gt.a ? ((gt.b - gt.a) / gt.a * 100) : 0;
+    var gcol = gpct > 0 ? 'tr-up' : gpct < 0 ? 'tr-down' : 'tr-flat';
+    var garr = gpct > 0 ? '\u25b2' : gpct < 0 ? '\u25bc' : '';
+    var c = codeColor(code);
+    grpHtml += '<div class="tr-grp-row">'
+      + '<div class="tr-grp-top">'
+      + '<div class="tr-grp-name"><span class="tr-grp-code" style="background:' + c + '">' + code + '</span>' + CODE_GROUP[code] + '</div>'
+      + '<span class="tr-grp-delta ' + gcol + '">' + garr + ' ' + Math.abs(gpct).toFixed(1) + '%</span>'
+      + '</div>'
+      + '<div class="tr-bars">'
+      + '<div class="tr-bar-line"><span class="tr-bar-tag">' + mA + '</span><div class="tr-bar-track"><div class="tr-bar-fill" style="width:' + (gt.a/grpMax*100).toFixed(1) + '%;background:' + c + '99"></div></div><span class="tr-bar-val">' + M(gt.a) + '</span></div>'
+      + '<div class="tr-bar-line"><span class="tr-bar-tag">' + mB + '</span><div class="tr-bar-track"><div class="tr-bar-fill" style="width:' + (gt.b/grpMax*100).toFixed(1) + '%;background:' + c + '"></div></div><span class="tr-bar-val">' + M(gt.b) + '</span></div>'
+      + '</div></div>';
+  }
+
+  // ── All 18 heads with sparkline ──
+  var allPeriods = D.historical.periods;
+  var headsHtml = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var a = r.values[mA] || 0, b = r.values[mB] || 0;
+    var pct = a ? ((b - a) / a * 100) : (b > 0 ? 100 : 0);
+    var cls = b > a ? 'tr-up' : b < a ? 'tr-down' : 'tr-flat';
+    var arr = b > a ? '\u25b2' : b < a ? '\u25bc' : '\u2014';
+    var series = [];
+    for (var p = 0; p < allPeriods.length; p++) series.push(r.values[allPeriods[p]] || 0);
+    headsHtml += '<div class="tr-head-row">'
+      + '<div class="tr-head-info"><div class="tr-head-name"><span style="color:' + codeColor(r.code) + ';font-weight:800">' + r.code + '</span> ' + r.head + '</div>'
+      + '<div class="tr-head-vals">' + M(a) + ' \u2192 ' + M(b) + '</div></div>'
+      + '<div class="tr-spark">' + sparkline(series, codeColor(r.code)) + '</div>'
+      + '<div class="tr-head-delta ' + cls + '">' + arr + ' ' + Math.abs(pct).toFixed(0) + '%</div>'
+      + '</div>';
+  }
+
+  // ── Top movers ──
+  var moversHtml = '<div style="font-size:10px;font-weight:700;color:#16A34A;letter-spacing:.06em;margin-bottom:6px">\u25b2 TOP INCREASES</div>';
+  for (var i = 0; i < incs.length; i++) {
+    moversHtml += '<div class="tr-mover"><div class="tr-mover-l"><span class="tr-mover-rank">' + (i+1) + '</span>' + incs[i].head + '</div>'
+      + '<span class="tr-mover-r tr-up">+' + M(incs[i].abs) + '</span></div>';
+  }
+  moversHtml += '<div style="font-size:10px;font-weight:700;color:#DC2626;letter-spacing:.06em;margin:12px 0 6px">\u25bc TOP DECREASES</div>';
+  for (var i = 0; i < decs.length; i++) {
+    moversHtml += '<div class="tr-mover"><div class="tr-mover-l"><span class="tr-mover-rank">' + (i+1) + '</span>' + decs[i].head + '</div>'
+      + '<span class="tr-mover-r tr-down">' + M(decs[i].abs) + '</span></div>';
+  }
+
+  return summary
+    + card('Category Groups', bdg('6 groups', 'gray'), grpHtml)
+    + card('All Heads &middot; ' + mA + ' vs ' + mB, bdg(rows.length + ' heads', 'gold'), headsHtml)
+    + card('Top Movers', bdg('biggest changes', 'gray'), moversHtml);
+}
+
+// Mini SVG sparkline
+function sparkline(values, color) {
+  if (!values.length) return '';
+  var w = 64, h = 24, pad = 2;
+  var max = Math.max.apply(null, values), min = Math.min.apply(null, values);
+  var range = (max - min) || 1;
+  var pts = [];
+  for (var i = 0; i < values.length; i++) {
+    var x = pad + (i / (values.length - 1 || 1)) * (w - 2*pad);
+    var y = h - pad - ((values[i] - min) / range) * (h - 2*pad);
+    pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+  }
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">'
+    + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
+}
+
 
 // ════════════════════════════════════════════════════════════
 // PWA SERVICE WORKER — registered once
