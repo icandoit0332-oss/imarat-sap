@@ -13,6 +13,7 @@
 <link rel="manifest" href="/imarat-sap/manifest.json">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════
    IMARAT FINANCE — Design System v2.1 (bug-fixed)
@@ -367,6 +368,155 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 .tr-mover-rank{width:18px;height:18px;border-radius:50%;background:#F0F5F0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--t2);flex-shrink:0}
 .tr-mover-r{font-family:var(--mono);font-size:11px;font-weight:700}
 
+/* ── RENTALS & ADVANCES ──────────────────────────────── */
+.ra-toggle{display:flex;gap:6px;margin-bottom:12px;background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:10px}
+.ra-tgl{flex:1;padding:8px;border-radius:9px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;color:var(--t3);background:transparent;border:none;font-family:var(--font);transition:all .2s}
+.ra-tgl.active{background:#166534;color:#fff}
+.ra-proj-row{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;border-bottom:.5px solid #F0F5F0}
+.ra-proj-row:last-child{border-bottom:none}
+.ra-proj-l{display:flex;align-items:center;gap:10px}
+.ra-proj-code{width:44px;text-align:center;font-size:10px;font-weight:800;padding:3px 6px;border-radius:6px;background:#F0F5F0;color:var(--t2);flex-shrink:0}
+.ra-proj-name{font-size:12px;font-weight:600;color:var(--t1)}
+.ra-proj-r{text-align:right}
+.ra-proj-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--t1)}
+.ra-proj-sub{font-size:10px;margin-top:2px}
+.ra-proj-sub.up{color:#16A34A}.ra-proj-sub.down{color:#DC2626}.ra-proj-sub.flat{color:var(--t3)}
+.ra-resale-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--bdr)}
+.ra-resale-row:last-child{border-bottom:none}
+.ra-resale-l{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t1)}
+.ra-resale-r{font-family:var(--mono);font-size:12px;font-weight:700;color:#DC2626}
+.cum-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:.5px solid #F0F5F0}
+.cum-row:last-child{border-bottom:none}
+.cum-name{font-size:12px;color:var(--t1);flex:1;padding-right:10px}
+.cum-bar-wrap{width:80px;background:#E4EFE5;border-radius:99px;height:5px;margin:0 10px;flex-shrink:0}
+.cum-bar{height:5px;border-radius:99px;background:#166534}
+.cum-amt{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t1);min-width:72px;text-align:right}
+
+/* ── MALL OPS & IBU CHARTS ───────────────────────────────── */
+.mo-sel{display:flex;gap:8px;margin-bottom:12px}
+.mo-btn{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;border:2px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--font);transition:all .2s}
+.mo-btn.active{background:#166534;color:#fff;border-color:#166534}
+.chart-card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:15px;margin-bottom:12px}
+.chart-title{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.chart-sub{font-size:10px;color:var(--t3);margin-bottom:12px}
+.chart-wrap{position:relative;width:100%;height:180px}
+.chart-wrap-tall{position:relative;width:100%;height:220px}
+.ibu-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.ibu-table th{background:#F0F5F0;padding:7px 10px;text-align:right;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t2);border-bottom:1.5px solid var(--bdr)}
+.ibu-table th:first-child{text-align:left}
+.ibu-table td{padding:9px 10px;border-bottom:.5px solid #F0F5F0;color:var(--t1);text-align:right;font-family:var(--mono);font-size:11px}
+.ibu-table td:first-child{text-align:left;font-family:var(--font);font-weight:600;font-size:11px}
+.ibu-table tr:hover td{background:#F7FBF7}
+.ibu-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px}
+.ibu-up{color:#16A34A;background:#DCFCE7}
+.ibu-down{color:#DC2626;background:#FEE2E2}
+.mo-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mo-kpi{background:#fff;border-radius:11px;box-shadow:var(--sh);padding:12px 14px}
+.mo-kpi-lbl{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.mo-kpi-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--t1)}
+.mo-kpi-sub{font-size:10px;margin-top:2px}
+.ibu-month-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ibu-mp{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--font);transition:all .15s}
+.ibu-mp.active{background:#166534;color:#fff;border-color:#166534}
+/* ── BUSINESS INTELLIGENCE SECTION ──────────────────── */
+.bi-section{margin-top:18px}
+.bi-section-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:10px;padding:0 2px;display:flex;align-items:center;gap:8px}
+.bi-section-label::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
+.bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.bi-full{grid-column:1/-1}
+.bi-card{border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;box-shadow:0 4px 18px rgba(0,0,0,.18)}
+.bi-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.bi-card-inner{padding:14px 15px 15px}
+.bi-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px}
+.bi-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.bi-title-wrap{flex:1;margin-left:10px}
+.bi-title{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.bi-period{font-size:9px;margin-top:2px;opacity:.65}
+.bi-arr{font-size:18px;opacity:.5;margin-top:6px}
+.bi-divider{height:1px;background:rgba(255,255,255,.1);margin-bottom:13px}
+.bi-kpis{display:grid;gap:0}
+.bi-kpis-3{grid-template-columns:1fr 1fr 1fr}
+.bi-kpis-2{grid-template-columns:1fr 1fr}
+.bi-kpi{text-align:center;padding:0 2px}
+.bi-kpi-val{font-family:var(--mono);font-weight:700;line-height:1.1}
+.bi-kpi-val-lg{font-size:15px}
+.bi-kpi-val-sm{font-size:13px}
+.bi-kpi-lbl{font-size:8px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:3px;opacity:.6}
+.bi-kpi+.bi-kpi{border-left:1px solid rgba(255,255,255,.12)}
+
+/* ── INTRO ANIMATION ────────────────────────────────── */
+#intro{position:fixed;inset:0;background:radial-gradient(ellipse at center,#13321F 0%,#0B2818 45%,#081710 100%);z-index:2000;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:0;
+  transition:opacity .8s ease}
+#intro.gone{opacity:0;pointer-events:none}
+.intro-logo{opacity:0;transform:translateY(8px) scale(.9);margin-bottom:-6px;
+  animation:logoIn 1s cubic-bezier(.34,1.56,.64,1) forwards .3s}
+@keyframes logoIn{to{opacity:1;transform:translateY(0) scale(1)}}
+.intro-logo svg{filter:drop-shadow(0 0 24px rgba(201,168,80,.35))}
+.intro-text{text-align:center;opacity:0;animation:textIn .8s ease forwards 1.0s}
+@keyframes textIn{to{opacity:1}}
+.intro-word{font-family:Georgia,'Times New Roman',serif;font-size:40px;font-weight:400;
+  color:#F5F2E8;letter-spacing:.5px;line-height:1}
+.intro-sub{font-size:9px;font-weight:600;letter-spacing:6px;text-transform:uppercase;
+  color:rgba(201,168,80,.8);margin-top:8px;padding-left:6px}
+.intro-line{width:0;height:1.5px;background:rgba(201,168,80,.5);margin:14px auto 0;
+  animation:lineGrow .8s ease forwards 1.4s;border-radius:2px}
+@keyframes lineGrow{to{width:50px}}
+
+/* ── HOME LAUNCHER ──────────────────────────────────── */
+#home-screen{display:none;min-height:100vh;background:var(--bg);padding-bottom:40px}
+#home-screen.active{display:block}
+body.on-home nav{display:none!important}
+body.on-home .main{display:none!important}
+.h-top{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:flex-start;max-width:560px;margin:0 auto}
+.h-brand{display:flex;align-items:center;gap:12px}
+.h-badge{width:44px;height:44px;background:var(--gold);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#0B2818;flex-shrink:0}
+.h-brand-txt .l1{font-size:15px;font-weight:700;color:#fff;letter-spacing:.5px}
+.h-brand-txt .l1 span{color:var(--gold)}
+.h-brand-txt .l2{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:2px}
+.h-time{text-align:right}
+.h-time .t1{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);font-family:var(--mono)}
+.h-time .t2{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px}
+.h-greet{max-width:540px;margin:0 auto;padding:34px 16px 18px}
+.h-greet-hi{font-size:15px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:.2px;margin-bottom:10px}
+.h-greet-q{font-size:33px;line-height:1.12;font-weight:800;color:#fff;letter-spacing:-.5px}
+.h-greet-q span{color:var(--gold)}
+.h-cards{padding:0 16px;display:flex;flex-direction:column;gap:12px;max-width:540px;margin:0 auto}
+.lcard{position:relative;border-radius:18px;overflow:hidden;cursor:pointer;
+  background:linear-gradient(135deg,#0E2A1A 0%,#16432A 55%,#0F3320 100%);
+  border:1px solid rgba(201,168,80,.18);
+  transition:transform .22s cubic-bezier(.34,1.3,.64,1),border-color .22s,box-shadow .22s;
+  opacity:0;transform:translateY(16px);animation:cardUp .5s ease forwards}
+.lcard:active{transform:scale(.985)}
+.lcard:hover{border-color:rgba(201,168,80,.45);box-shadow:0 10px 32px rgba(0,0,0,.35);transform:translateY(-2px)}
+@keyframes cardUp{to{opacity:1;transform:translateY(0)}}
+.lcard:nth-child(1){animation-delay:.05s}
+.lcard:nth-child(2){animation-delay:.12s}
+.lcard:nth-child(3){animation-delay:.19s}
+.lcard:nth-child(4){animation-delay:.26s}
+.lcard:nth-child(5){animation-delay:.33s}
+.lcard-glow{position:absolute;top:-40%;right:-10%;width:55%;height:180%;background:radial-gradient(circle,rgba(201,168,80,.13),transparent 70%);pointer-events:none}
+.lcard-inner{position:relative;padding:19px 19px;display:flex;align-items:center;gap:15px}
+.lcard-icon{width:50px;height:50px;border-radius:14px;flex-shrink:0;background:rgba(201,168,80,.13);border:1px solid rgba(201,168,80,.25);display:flex;align-items:center;justify-content:center;font-size:23px}
+.lcard-body{flex:1;min-width:0}
+.lcard-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:5px}
+.lcard-metric{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:5px}
+.lcard-metric .sk{display:inline-block;width:90px;height:16px;background:rgba(201,168,80,.15);border-radius:4px;animation:shim 1.4s infinite}
+@keyframes shim{0%,100%{opacity:.4}50%{opacity:.9}}
+.lcard-sub{font-size:11px;color:rgba(255,255,255,.42);line-height:1.45}
+.lcard-arr{font-size:20px;color:rgba(201,168,80,.5);flex-shrink:0;transition:transform .22s,color .22s}
+.lcard:hover .lcard-arr{transform:translateX(4px);color:var(--gold)}
+.h-foot{text-align:center;padding:24px 20px 10px;font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.5px}
+
+/* ── SCOPED NAV — Home button ──────────────────────── */
+.nt-home{padding:0 14px;height:42px;display:flex;align-items:center;gap:6px;
+  border-radius:0;border:none;background:transparent;cursor:pointer;
+  font-size:11px;font-weight:700;color:var(--gold);font-family:var(--font);
+  letter-spacing:.02em;white-space:nowrap;flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.08)}
+.nt-home:hover{background:rgba(201,168,80,.1)}
+.nt[data-hidden="1"]{display:none!important}
+
 /* ── EMPTY ───────────────────────────────────────────── */
 .empty-sm{text-align:center;padding:20px;color:var(--t3);font-size:12px}
 
@@ -383,6 +533,9 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
   .cat-name{width:100px}
   .split-card{grid-template-columns:1fr auto}
   .split-r{min-width:100px}
+  .h-greet{padding:26px 16px 14px}
+  .h-greet-q{font-size:26px}
+  .h-greet-hi{font-size:14px}
 }
 
 /* ── DESKTOP ─────────────────────────────────────────── */
@@ -440,7 +593,7 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 
 <!-- HEADER -->
 <header class="hdr">
-  <div class="hdr-l">
+  <div class="hdr-l" onclick="goHomeScreen()" style="cursor:pointer" title="Back to Home">
     <div class="logo-box">
       <svg width="22" height="22" viewBox="0 0 22 22">
         <rect x="2" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
@@ -452,7 +605,7 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
     </div>
     <div>
       <div class="brand-en">IMARAT <span style="color:var(--gold);font-weight:400">Finance</span></div>
-      <div class="brand-sub">Command Centre</div>
+      <div class="brand-sub" id="hdr-sub-label">Command Centre</div>
     </div>
   </div>
   <div class="hdr-r">
@@ -467,6 +620,7 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 
 <!-- NAV -->
 <nav class="nav">
+  <button class="nt-home" onclick="goHomeScreen()">&#8962; Home</button>
   <button class="nt on" onclick="goTab('overview',this)">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Overview
@@ -495,7 +649,120 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
     <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
     Trends
   </button>
+  <button class="nt" onclick="goTab('rentals',this)">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Rentals
+  </button>
+  <button class="nt" onclick="goTab('mallops',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+    Mall Ops
+  </button>
+  <button class="nt" onclick="goTab('ibu',this)">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    IBU P&L
+  </button>
+  <button class="nt" onclick="goTab('products',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+    Product Data
+  </button>
+  <button class="nt" onclick="goTab('productdetail',this)">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Product Detail
+  </button>
+  <button class="nt" onclick="goTab('appreciation',this)">
+    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Appreciation
+  </button>
 </nav>
+
+<!-- INTRO ANIMATION -->
+<div id="intro">
+  <div class="intro-logo">
+    <svg viewBox="0 0 130 80" width="120" height="74" xmlns="http://www.w3.org/2000/svg">
+      <g fill="#D9B860">
+        <rect x="40" y="34" width="2.6" height="30"/>
+        <rect x="48" y="26" width="2.6" height="38"/>
+        <rect x="56" y="18" width="2.6" height="46"/>
+        <rect x="64" y="12" width="2.6" height="52"/>
+        <rect x="72" y="18" width="2.6" height="46"/>
+        <rect x="80" y="26" width="2.6" height="38"/>
+        <rect x="88" y="34" width="2.6" height="30"/>
+        <rect x="38" y="67" width="54" height="2.6" rx="1"/>
+      </g>
+    </svg>
+  </div>
+  <div class="intro-text">
+    <div class="intro-word">Imarat</div>
+    <div class="intro-sub">Group of Companies</div>
+    <div class="intro-line"></div>
+  </div>
+</div>
+
+<!-- HOME LAUNCHER -->
+<div id="home-screen">
+  <div class="h-greet">
+    <div class="h-greet-hi" id="home-greet-hi">Good afternoon</div>
+    <div class="h-greet-q">What would you like<br>to <span>review?</span></div>
+  </div>
+  <div class="h-cards">
+    <div class="lcard" onclick="openGroup('sales')">
+      <div class="lcard-glow"></div>
+      <div class="lcard-inner">
+        <div class="lcard-icon">&#128202;</div>
+        <div class="lcard-body">
+          <div class="lcard-name">IMARAT Sales &amp; Cashflow</div>
+          <div class="lcard-sub">Overview &middot; Banking &middot; Revenue &middot; Receivables &middot; Expenses &middot; Daily &middot; Trends</div>
+        </div>
+        <div class="lcard-arr">&#8594;</div>
+      </div>
+    </div>
+    <div class="lcard" onclick="openGroup('malls')">
+      <div class="lcard-glow"></div>
+      <div class="lcard-inner">
+        <div class="lcard-icon">&#127981;</div>
+        <div class="lcard-body">
+          <div class="lcard-name">Malls Profit &amp; Loss</div>
+          <div class="lcard-sub">AOM &amp; IBM &middot; occupancy, revenue, rental yield</div>
+        </div>
+        <div class="lcard-arr">&#8594;</div>
+      </div>
+    </div>
+    <div class="lcard" onclick="openGroup('ibu')">
+      <div class="lcard-glow"></div>
+      <div class="lcard-inner">
+        <div class="lcard-icon">&#128200;</div>
+        <div class="lcard-body">
+          <div class="lcard-name">IBUs Profit &amp; Loss</div>
+          <div class="lcard-sub">12 business units &middot; budget vs actual</div>
+        </div>
+        <div class="lcard-arr">&#8594;</div>
+      </div>
+    </div>
+    <div class="lcard" onclick="openGroup('rental')">
+      <div class="lcard-glow"></div>
+      <div class="lcard-inner">
+        <div class="lcard-icon">&#127968;</div>
+        <div class="lcard-body">
+          <div class="lcard-name">Customer Rental</div>
+          <div class="lcard-sub">Net rent &middot; gross, WHT, deductions by project</div>
+        </div>
+        <div class="lcard-arr">&#8594;</div>
+      </div>
+    </div>
+    <div class="lcard" onclick="openGroup('products')">
+      <div class="lcard-glow"></div>
+      <div class="lcard-inner">
+        <div class="lcard-icon">&#127758;</div>
+        <div class="lcard-body">
+          <div class="lcard-name">Products &amp; Appreciation</div>
+          <div class="lcard-sub">Advances, payment mix &middot; appreciation paid</div>
+        </div>
+        <div class="lcard-arr">&#8594;</div>
+      </div>
+    </div>
+  </div>
+  <div class="h-foot">IMARAT Group &middot; Finance Command Centre</div>
+</div>
 
 <!-- MAIN -->
 <div class="main">
@@ -506,6 +773,12 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
   <div class="pane" id="pane-expenses"><div id="ex-body"></div></div>
   <div class="pane" id="pane-daily"><div id="dl-body"></div></div>
   <div class="pane" id="pane-trends"><div id="tr-body"></div></div>
+  <div class="pane" id="pane-rentals"><div id="ra-body"></div></div>
+  <div class="pane" id="pane-mallops"><div id="mo-body"></div></div>
+  <div class="pane" id="pane-ibu"><div id="ibu-body"></div></div>
+  <div class="pane" id="pane-products"><div id="pw-body"></div></div>
+  <div class="pane" id="pane-productdetail"><div id="pd-body"></div></div>
+  <div class="pane" id="pane-appreciation"><div id="app-body"></div></div>
 </div>
 
 <script>
@@ -566,6 +839,12 @@ auth.onAuthStateChanged(function(user) {
     ge('hdr-user-email').textContent  = user.email;
     ge('logout-btn').style.display    = '';
     ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    // Remove 'on' from all panes so no content shows behind home
+    var panes = document.querySelectorAll('.pane');
+    for (var pi=0; pi<panes.length; pi++) panes[pi].classList.remove('on');
+    // Play intro animation once, then reveal home launcher
+    playIntro();
+    showHomeScreen();
     loadData();
     startAutoRefresh();
   } else {
@@ -670,6 +949,12 @@ function mapResponse(json) {
     pendingDetail: d.pendingDetail || [],
     historical:    d.historical || {periods:[], rows:[]},
     currentMTD:    d.currentMTD || {periods:[], rows:[]},
+    RA:            d.rentalAdvances || {monthly:[], latestMonth:null, cumulative:[], grandTotal:0},
+    MO:            d.mallOps       || {rows:[], months:[], malls:['AOM','IBM']},
+    IBU:           d.ibuPL         || {rows:[], months:[], ibus:[]},
+    PW:            d.productData   || {rows:[], months:[], products:[]},
+    PD:            d.productDetail || {rows:[], months:[], products:[], frequencies:[], paymentTypes:[]},
+    APP:           d.appreciation  || {rows:[], months:[], projects:[]},
     at:            json.at
   };
 }
@@ -734,6 +1019,12 @@ function fmtTime(d) {
 }
 
 function goTab(name, btn) {
+  // Always hide home screen when a tab is activated
+  if (_homeVisible) {
+    _homeVisible = false;
+    ge('home-screen').classList.remove('active');
+    document.body.classList.remove('on-home');
+  }
   var panes = document.querySelectorAll('.pane');
   for (var i = 0; i < panes.length; i++) panes[i].classList.remove('on');
   var tabs = document.querySelectorAll('.nt');
@@ -757,6 +1048,12 @@ function goTab(name, btn) {
       else if (name === 'expenses')    rEX();
       else if (name === 'daily')       rDL();
       else if (name === 'trends')      rTR();
+      else if (name === 'rentals')     rRA();
+      else if (name === 'mallops')     rMO();
+      else if (name === 'ibu')         rIBU();
+      else if (name === 'products')    rPW();
+      else if (name === 'productdetail')rPD();
+      else if (name === 'appreciation')rAPP();
     } catch(e) { console.error('goTab render:', e); }
   }
 }
@@ -806,6 +1103,12 @@ function render() {
   try { rEX(); } catch(e) { showPaneError('ex-body', e); }
   try { rDL(); } catch(e) { showPaneError('dl-body', e); }
   try { rTR(); } catch(e) { showPaneError('tr-body', e); }
+  try { rRA();  } catch(e) { showPaneError('ra-body',  e); }
+  try { rMO();  } catch(e) { showPaneError('mo-body',  e); }
+  try { rIBU(); } catch(e) { showPaneError('ibu-body', e); }
+  try { rPW();  } catch(e) { showPaneError('pw-body',  e); }
+  try { rPD();  } catch(e) { showPaneError('pd-body',  e); }
+  try { rAPP(); } catch(e) { showPaneError('app-body', e); }
 }
 
 function showPaneError(paneId, err) {
@@ -876,6 +1179,158 @@ function card(title, badge, body) {
 
 function bdg(txt, type) {
   return '<span class="bdg bdg-' + type + '">' + txt + '</span>';
+}
+
+
+// ════════════════════════════════════════════════════════════
+// HOME LAUNCHER + SCOPED NAVIGATION
+// ════════════════════════════════════════════════════════════
+var _homeVisible = false;
+var _currentGroup = null;
+
+// Group → which nav tabs are visible
+var TAB_GROUPS = {
+  sales:    ['overview','liquidity','revenue','receivables','expenses','daily','trends'],
+  malls:    ['mallops'],
+  ibu:      ['ibu'],
+  rental:   ['rentals'],
+  products: ['products','productdetail','appreciation']
+};
+var GROUP_LABELS = {
+  sales:'Sales & Cashflow', malls:'Malls P&L', ibu:'IBUs P&L',
+  rental:'Customer Rental', products:'Products & Appreciation'
+};
+
+var _introPlayed = false;
+function playIntro() {
+  if (_introPlayed) { var iv=ge('intro'); if(iv) iv.classList.add('gone'); return; }
+  _introPlayed = true;
+  var iv = ge('intro');
+  if (!iv) return;
+  iv.style.display = 'flex';
+  iv.classList.remove('gone');
+  setTimeout(function(){ iv.classList.add('gone'); }, 2600);
+  setTimeout(function(){ if(iv) iv.style.display='none'; }, 3500);
+}
+
+function setHomeGreeting() {
+  var el = ge('home-greet-hi');
+  if (!el) return;
+  var h = new Date().getHours();
+  var g = 'Good evening';
+  if (h < 12) g = 'Good morning';
+  else if (h < 17) g = 'Good afternoon';
+  el.textContent = g;
+}
+
+function resetHomeHeader() {
+  var subLbl = ge('hdr-sub-label');
+  if (subLbl) subLbl.textContent = 'Command Centre';
+}
+
+function showHomeScreen() {
+  _homeVisible = true;
+  _currentGroup = null;
+  ge('home-screen').classList.add('active');
+  document.body.classList.add('on-home');
+  resetHomeHeader();
+  setHomeGreeting();
+  updateHomeClock();
+  updateHomeTiles();
+}
+
+function goHomeScreen() {
+  _homeVisible = true;
+  _currentGroup = null;
+  ge('home-screen').classList.add('active');
+  document.body.classList.add('on-home');
+  resetHomeHeader();
+  setHomeGreeting();
+  var navBtns = document.querySelectorAll('.nt');
+  for (var i=0;i<navBtns.length;i++) navBtns[i].classList.remove('act');
+  updateHomeTiles();
+}
+
+// Open a group: filter nav to only that group's tabs, show first tab
+function openGroup(groupId) {
+  _currentGroup = groupId;
+  _homeVisible = false;
+  ge('home-screen').classList.remove('active');
+  document.body.classList.remove('on-home');
+
+  var allowed = TAB_GROUPS[groupId] || [];
+  // Update brand sub-label
+  var subLbl = ge('hdr-sub-label');
+  if (subLbl) subLbl.textContent = (GROUP_LABELS[groupId] || 'COMMAND CENTRE').toUpperCase();
+
+  // Show/hide nav tabs based on group
+  var navBtns = document.querySelectorAll('.nt');
+  var firstBtn = null;
+  for (var i=0;i<navBtns.length;i++) {
+    var oc = navBtns[i].getAttribute('onclick') || '';
+    var match = oc.match(/goTab\('(\w+)'/);
+    var tabId = match ? match[1] : '';
+    if (allowed.indexOf(tabId) >= 0) {
+      navBtns[i].setAttribute('data-hidden','0');
+      if (!firstBtn) firstBtn = navBtns[i];
+    } else {
+      navBtns[i].setAttribute('data-hidden','1');
+    }
+  }
+  // Open first tab of the group
+  if (firstBtn) {
+    var oc = firstBtn.getAttribute('onclick') || '';
+    var m = oc.match(/goTab\('(\w+)'/);
+    if (m) goTab(m[1], firstBtn);
+  }
+  window.scrollTo(0,0);
+}
+
+function updateHomeClock() {
+  // Header date/time is handled by the main app header (hdate + live pill).
+  // Home screen no longer has its own clock — this is a safe no-op kept for compatibility.
+  return;
+}
+
+function updateHomeTiles() {
+  if (!D) return;
+  // 1. Sales & Cashflow → working balance
+  var mSales = ge('m-sales');
+  if (mSales && D.B) mSales.textContent = M(D.B.totalWorking) + ' working balance';
+  // 2. Malls → occupancy + P&L
+  var mMalls = ge('m-malls');
+  if (mMalls && D.MO && D.MO.rows.length) {
+    var aom = D.MO.rows.filter(function(r){return r.mall==='AOM';});
+    var ibm = D.MO.rows.filter(function(r){return r.mall==='IBM';});
+    var aL = aom.length?aom[aom.length-1]:null;
+    var bL = ibm.length?ibm[ibm.length-1]:null;
+    var combinedNOI = (aL?aL.noi:0) + (bL?bL.noi:0);
+    mMalls.textContent = (aL?aL.occupancy.toFixed(0):'0') + '% occupied \u00B7 ' + M(combinedNOI) + ' P&L';
+  }
+  // 3. IBU → group inflows
+  var mIbu = ge('m-ibu');
+  if (mIbu && D.IBU && D.IBU.rows.length) {
+    var iLM = D.IBU.months[D.IBU.months.length-1];
+    var iRows = D.IBU.rows.filter(function(r){return r.month===iLM;});
+    var iTI = 0; for(var i=0;i<iRows.length;i++) iTI += iRows[i].totalInflows;
+    mIbu.textContent = M(iTI) + ' inflows';
+  }
+  // 4. Rental → net rent
+  var mRental = ge('m-rental');
+  if (mRental && D.RA && D.RA.latestMonth) {
+    var raMD = null;
+    for(var i=0;i<D.RA.monthly.length;i++){if(D.RA.monthly[i].month===D.RA.latestMonth){raMD=D.RA.monthly[i].projects;break;}}
+    var raNR = 0; if(raMD) for(var i=0;i<raMD.length;i++) raNR += raMD[i].netRent;
+    mRental.textContent = M(raNR) + ' net rent';
+  }
+  // 5. Products → portfolio total
+  var mProd = ge('m-products');
+  if (mProd && D.PW && D.PW.rows.length) {
+    var pLM = D.PW.months[D.PW.months.length-1];
+    var pRows = D.PW.rows.filter(function(r){return r.month===pLM;});
+    var pTot = 0; for(var i=0;i<pRows.length;i++) pTot += pRows[i].total;
+    mProd.textContent = M(pTot) + ' portfolio';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -963,8 +1418,9 @@ function rOV() {
     + '</div>'
     + '<div class="clr-total"><span>Total expected incoming</span><span class="clr-total-val">' + M(I.exp_total) + '</span></div>';
 
+  // ── Render Overview (classic layout) ─────────────────────────────
   ge('ov-body').innerHTML = hero + flatKpis
-    + card('Pending by Entity',  bdg(PKR(tot), 'gold'), entBars)
+    + card('Pending by Entity',  bdg(M(I.overall_pending), 'gold'), entBars)
     + card('Revenue Pipeline',   bdg('COB ' + today, 'gray'), pip)
     + card('Status Breakdown',   bdg('6 statuses', 'gray'), '<div class="donut-wrap">' + donutSvg + '<div class="dleg">' + donutLeg + '</div></div>')
     + card('Expected Clearance', bdg('3 entities', 'gray'), clr);
@@ -1306,33 +1762,28 @@ var EXP_COLORS = ['#C9A850','#2563EB','#EA7820','#EA7820','#DC2626','#C9A850','#
 function rEX() {
   if (!D || !D.E || !D.E.expenses) { ge('ex-body').innerHTML = noDataCard('Expenses', D); return; }
   var E = D.E;
-  var today = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+
+  var msrt = E.expenses.filter(function(x) { return x.mtd > 0; }).sort(function(a, b) { return b.mtd - a.mtd; });
+  var topMtd = msrt.length ? msrt[0] : null;
 
   var hero = '<div class="hero-card">'
     + '<div class="hero-icon">&#128203;</div>'
-    + '<div class="hero-lbl">MTD TOTAL</div>'
+    + '<div class="hero-lbl">MONTH TO DATE</div>'
     + '<div class="hero-val">' + M(E.totalMTD) + '</div>'
-    + '<div class="hero-sub">' + E.expenses.filter(function(x) { return x.mtd > 0; }).length + ' categories &middot; May 2026 <span class="hero-arr">&rarr;</span></div>'
+    + '<div class="hero-sub">' + msrt.length + ' categories &middot; May 2026 <span class="hero-arr">&rarr;</span></div>'
     + '</div>';
 
-  var tsrt = E.expenses.filter(function(x) { return x.today > 0; }).sort(function(a, b) { return b.today - a.today; });
-  var top  = tsrt.length ? tsrt[0] : null;
+  // Top category summary card (MTD)
+  var topCard = topMtd ? '<div class="split-card">'
+    + '<div class="split-l"><div class="split-lbl">LARGEST CATEGORY</div>'
+    + '<div class="split-val" style="font-size:20px">' + topMtd.head + '</div>'
+    + '<div class="split-sub">' + (E.totalMTD > 0 ? (topMtd.mtd/E.totalMTD*100).toFixed(1) : '0') + '% of total MTD spend</div></div>'
+    + '<div class="split-r"><div class="split-lbl">AMOUNT</div><div class="top-star">&#11088;</div><div class="top-amt">' + M(topMtd.mtd) + '</div></div>'
+    + '</div>' : '';
 
-  // FIX: apostrophe in "TODAY'S SPEND" — use HTML entity &#8217;
-  var todayCard = '<div class="split-card">'
-    + '<div class="split-l"><div class="split-lbl">TODAY&#8217;S SPEND</div>'
-    + '<div class="split-val">' + M(E.totalToday) + '</div>'
-    + '<div class="split-sub">' + (E.totalMTD > 0 ? (E.totalToday/E.totalMTD*100).toFixed(1) : '0') + '% of MTD &middot; ' + today + '</div></div>'
-    + (top ? '<div class="split-r"><div class="split-lbl">TOP TODAY</div><div class="top-star">&#11088; ' + top.head + '</div><div class="top-amt">' + M(top.today) + '</div></div>' : '')
-    + '</div>';
+  var mtdRows = buildCatRows(msrt, 'mtd');
 
-  var msrt    = E.expenses.filter(function(x) { return x.mtd > 0; }).sort(function(a, b) { return b.mtd - a.mtd; });
-  var todayRows = buildCatRows(tsrt, 'today');
-  var mtdRows   = buildCatRows(msrt, 'mtd');
-
-  ge('ex-body').innerHTML = hero + todayCard
-    + '<div class="sec-hdr"><span>TODAY BY CATEGORY</span><span>' + tsrt.length + ' cats &nbsp;' + M(E.totalToday) + '</span></div>'
-    + '<div class="card"><div class="cb cat-list">' + todayRows + '</div></div>'
+  ge('ex-body').innerHTML = hero + topCard
     + '<div class="sec-hdr"><span>MTD BY CATEGORY</span><span>' + msrt.length + ' cats &nbsp;' + M(E.totalMTD) + '</span></div>'
     + '<div class="card"><div class="cb cat-list">' + mtdRows + '</div></div>';
 }
@@ -1666,6 +2117,1003 @@ function sparkline(values, color) {
   return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">'
     + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
     + '</svg>';
+}
+
+
+
+// ════════════════════════════════════════════════════════════
+// RENTALS & ADVANCES
+// ════════════════════════════════════════════════════════════
+var _raView = 'advances'; // 'advances' | 'rentals' | 'customers'
+
+function rRA() {
+  if (!D || !D.RA || !D.RA.latestMonth) {
+    ge('ra-body').innerHTML = noDataCard('Customer Rental', D);
+    return;
+  }
+  var RA = D.RA;
+  var lm = RA.latestMonth;
+  var latest = null;
+  for (var i = 0; i < RA.monthly.length; i++) {
+    if (RA.monthly[i].month === lm) { latest = RA.monthly[i].projects; break; }
+  }
+  if (!latest) { ge('ra-body').innerHTML = noDataCard('Customer Rental', D); return; }
+
+  // ── Rental totals ─────────────────────────────────────────
+  var totCount = 0, totGross = 0, totWHT = 0, totDed = 0, totNet = 0;
+  for (var i = 0; i < latest.length; i++) {
+    var p = latest[i];
+    totCount += p.count;
+    totGross += p.gross;
+    totWHT   += p.wht;
+    totDed   += p.deduction;
+    totNet   += p.netRent;
+  }
+
+  // Hero — Net Rent (the processed rental)
+  var hero = '<div class="hero-card">'
+    + '<div class="hero-icon">&#127968;</div>'
+    + '<div class="hero-lbl">NET RENT PROCESSED</div>'
+    + '<div class="hero-val">' + M(totNet) + '</div>'
+    + '<div class="hero-sub">' + totCount.toLocaleString() + ' customers &middot; ' + lm + ' &middot; ' + latest.length + ' projects <span class="hero-arr">&rarr;</span></div>'
+    + '</div>';
+
+  // 5 KPI cards: Count, Gross, WHT, Deductions, Net
+  var kpis = '<div class="flat-grid">'
+    + flatKpi('CUSTOMERS',   totCount.toLocaleString(), 'Rent recipients',   '#166534', 'rentals')
+    + flatKpi('GROSS RENT',  M(totGross),               'Before deductions', '#C9A850', 'rentals')
+    + flatKpi('WHT',         M(totWHT),                 'Withholding tax',   '#D97706', 'rentals')
+    + flatKpi('DEDUCTIONS',  M(totDed),                 'Adjustments',       '#DC2626', 'rentals')
+    + '</div>'
+    + '<div class="flat-grid" style="grid-template-columns:1fr">'
+    + flatKpi('NET RENT',    M(totNet),  (totGross>0?(totNet/totGross*100).toFixed(1):'0') + '% of gross paid out', '#166534', 'rentals')
+    + '</div>';
+
+  // ── Per-Project rental breakdown ──────────────────────────
+  var sorted = latest.slice().sort(function(a,b){ return b.netRent - a.netRent; });
+  var maxNet = sorted.length ? sorted[0].netRent : 1;
+  var projRows = '';
+  for (var i = 0; i < sorted.length; i++) {
+    var p = sorted[i];
+    var w = maxNet > 0 ? (p.netRent/maxNet*100).toFixed(1) : 0;
+    projRows += '<div class="cum-row">'
+      + '<div class="cum-name"><span class="ra-proj-code">' + p.code + '</span></div>'
+      + '<div class="cum-bar-wrap"><div class="cum-bar" style="width:' + w + '%"></div></div>'
+      + '<div class="cum-amt">' + M(p.netRent) + '</div></div>'
+      + '<div style="display:flex;justify-content:space-between;padding:0 0 8px;margin-top:-4px">'
+      + '<span style="font-size:9px;color:var(--t3)">' + p.count.toLocaleString() + ' customers</span>'
+      + '<span style="font-size:9px;color:var(--t3)">Gross ' + M(p.gross) + ' &middot; WHT ' + M(p.wht) + '</span>'
+      + '</div>';
+  }
+  var projTotal = '<div style="display:flex;justify-content:space-between;padding:10px 0 2px;border-top:1.5px solid var(--bdr);margin-top:4px">'
+    + '<span style="font-size:11px;font-weight:700;color:var(--t2)">' + totCount.toLocaleString() + ' customers</span>'
+    + '<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#166534">' + M(totNet) + '</span>'
+    + '</div>';
+  var projCard = card('Net Rent by Project', bdg(latest.length + ' projects', 'gray'), projRows + projTotal);
+
+  // ── Full rental table ─────────────────────────────────────
+  var tbl = '<div class="card"><div class="ch"><span class="ct">Rental Detail &middot; ' + lm + '</span>'
+    + bdg(totCount.toLocaleString() + ' customers', 'gold') + '</div><div class="cb" style="padding:0">'
+    + '<table class="ibu-table"><thead><tr>'
+    + '<th>Project</th><th>Customers</th><th>Gross Rent</th><th>WHT</th><th>Deductions</th><th>Net Rent</th>'
+    + '</tr></thead><tbody>';
+  for (var i = 0; i < sorted.length; i++) {
+    var p = sorted[i];
+    tbl += '<tr>'
+      + '<td style="font-weight:700">' + p.code + '</td>'
+      + '<td>' + p.count.toLocaleString() + '</td>'
+      + '<td>' + M(p.gross) + '</td>'
+      + '<td style="color:#D97706">' + M(p.wht) + '</td>'
+      + '<td style="color:#DC2626">' + M(p.deduction) + '</td>'
+      + '<td style="font-weight:700;color:#166534">' + M(p.netRent) + '</td>'
+      + '</tr>';
+  }
+  tbl += '</tbody></table></div></div>';
+
+  ge('ra-body').innerHTML = hero + kpis + projCard + tbl;
+}
+function buildRaRows(projects, prev, view) {
+  var sorted = projects.slice().sort(function(a,b) {
+    var av = view==='advances' ? a.caClose : view==='rentals' ? a.netRent : a.ccClose;
+    var bv = view==='advances' ? b.caClose : view==='rentals' ? b.netRent : b.ccClose;
+    return bv - av;
+  });
+  var h = '';
+  for (var i = 0; i < sorted.length; i++) {
+    var p = sorted[i];
+    var val = view==='advances' ? p.caClose : view==='rentals' ? p.netRent : p.ccClose;
+    var netChange = view==='advances' ? p.caNet : view==='rentals' ? (p.netRent - (prev && prev[p.code] ? prev[p.code].netRent : p.netRent)) : p.ccNet;
+    var subCls = netChange > 0 ? 'up' : netChange < 0 ? 'down' : 'flat';
+    var subArr = netChange > 0 ? '\u25b2' : netChange < 0 ? '\u25bc' : '\u2014';
+    var subTxt = view==='customers'
+      ? subArr + ' ' + Math.abs(netChange) + ' this month'
+      : subArr + ' ' + M(Math.abs(netChange)) + ' net change';
+    h += '<div class="ra-proj-row">'
+      + '<div class="ra-proj-l"><span class="ra-proj-code">' + p.code + '</span>'
+      + '<div><div class="ra-proj-name">' + p.name + '</div></div></div>'
+      + '<div class="ra-proj-r"><div class="ra-proj-val">'
+      + (view==='customers' ? val.toLocaleString() : M(val))
+      + '</div><div class="ra-proj-sub ' + subCls + '">' + subTxt + '</div></div>'
+      + '</div>';
+  }
+  return h || '<div class="empty-sm">No data</div>';
+}
+
+function raView(view, el) {
+  _raView = view;
+  var btns = document.querySelectorAll('.ra-tgl');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  var pr = ge('ra-body');
+  if (!pr || !D || !D.RA) return;
+  // Rebuild just the project rows area
+  var RA = D.RA;
+  var latest = null;
+  for (var i = 0; i < RA.monthly.length; i++) {
+    if (RA.monthly[i].month === RA.latestMonth) { latest = RA.monthly[i].projects; break; }
+  }
+  var prev = null;
+  if (RA.monthly.length >= 2) {
+    var pm = RA.monthly[RA.monthly.length - 2];
+    prev = {};
+    for (var i = 0; i < pm.projects.length; i++) prev[pm.projects[i].code] = pm.projects[i];
+  }
+  if (!latest) return;
+  var projEl = pr.querySelector('.card .cb[style*="padding:0"]');
+  if (projEl) projEl.innerHTML = buildRaRows(latest, prev, view);
+}
+
+
+
+// ════════════════════════════════════════════════════════════
+// MALL OPERATIONS
+// ════════════════════════════════════════════════════════════
+var _moMall = 'AOM';
+
+function rMO() {
+  if (!D || !D.MO || !D.MO.rows.length) {
+    ge('mo-body').innerHTML = noDataCard('Mall Operations', D); return;
+  }
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+
+function buildMOHtml() {
+  var sel = '<div class="mo-sel">'
+    + '<button class="mo-btn' + (_moMall==='AOM'?' active':'') + '" onclick="moSel(\'AOM\',this)">AOM — Amazon Outlet Mall</button>'
+    + '<button class="mo-btn' + (_moMall==='IBM'?' active':'') + '" onclick="moSel(\'IBM\',this)">IBM — IMARAT Builders Mall</button>'
+    + '</div>';
+  var rows = D.MO.rows.filter(function(r){return r.mall===_moMall;});
+  if (!rows.length) return sel + '<div class="card"><div class="cb"><div class="empty-sm">No data for ' + _moMall + '</div></div></div>';
+  var latest = rows[rows.length-1];
+
+  var kpis = '<div class="mo-kpi-grid">'
+    + moKpi('OCCUPANCY',      latest.occupancy.toFixed(1) + '%', latest.leasedSqFt.toLocaleString() + ' of ' + latest.totalSqFt.toLocaleString() + ' sqft', latest.occupancy >= 70 ? '#16A34A' : '#DC2626')
+    + moKpi('RENTAL INCOME',  M(latest.rentalIncome), 'Monthly tenant rent', '#166534')
+    + moKpi('P & L',  M(latest.noi), latest.noi >= 0 ? '&#9679; Positive' : '&#9888; Loss', latest.noi >= 0 ? '#16A34A' : '#DC2626')
+    + moKpi('RATE / SQFT',    'Rs ' + latest.ratePSQFT, 'Avg per leased sqft', '#C9A850')
+    + '</div>';
+
+  var charts =
+    '<div class="chart-card"><div class="chart-title">Revenue vs Expenses</div>'
+    + '<div class="chart-sub">Monthly trend — ' + _moMall + '</div>'
+    + '<div class="chart-wrap"><canvas id="mo-chart-1"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Op Expenses vs CAM Recovery</div>'
+    + '<div class="chart-sub">Gap shows the deficit — CAM should cover expenses</div>'
+    + '<div class="chart-wrap"><canvas id="mo-chart-2"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Rate per SqFt Trend</div>'
+    + '<div class="chart-sub">Rs / leased sqft by month</div>'
+    + '<div class="chart-wrap"><canvas id="mo-chart-3"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Occupancy</div>'
+    + '<div class="chart-sub">Area breakdown — ' + latest.month + '</div>'
+    + '<div style="max-width:220px;margin:0 auto"><div class="chart-wrap"><canvas id="mo-chart-4"></canvas></div></div></div>';
+
+  // Rental yield analysis section
+  var yieldSection = buildYieldAnalysis(rows);
+
+  return sel + kpis + charts + yieldSection;
+}
+
+function moKpi(lbl, val, sub, color) {
+  return '<div class="mo-kpi">'
+    + '<div class="mo-kpi-lbl">' + lbl + '</div>'
+    + '<div class="mo-kpi-val" style="color:' + color + '">' + val + '</div>'
+    + '<div class="mo-kpi-sub" style="color:' + color + '">' + sub + '</div>'
+    + '</div>';
+}
+
+function moSel(mall, el) {
+  _moMall = mall;
+  var btns = document.querySelectorAll('.mo-btn');
+  for (var i=0;i<btns.length;i++) btns[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+
+function initMOCharts() {
+  var rows = D.MO.rows.filter(function(r){return r.mall===_moMall;});
+  if (!rows.length) return;
+  var labels = rows.map(function(r){return r.month;});
+  var C1 = ge('mo-chart-1'), C2 = ge('mo-chart-2'), C3 = ge('mo-chart-3'), C4 = ge('mo-chart-4');
+  // Draw each chart independently — don't bail if one canvas is missing
+
+  // Chart 1: Revenue vs Expenses
+  if (C1) mkChart('mo-chart-1', { type:'line', data:{
+    labels: labels,
+    datasets:[
+      {label:'Rental Income', data:rows.map(function(r){return r.rentalIncome;}),
+       borderColor:'#166534',backgroundColor:'#16653420',tension:.4,fill:true},
+      {label:'Op Expenses', data:rows.map(function(r){return r.opExp;}),
+       borderColor:'#DC2626',backgroundColor:'#DC262620',tension:.4,fill:true},
+      {label:'Net Op Income', data:rows.map(function(r){return r.noi;}),
+       borderColor:'#C9A850',backgroundColor:'transparent',tension:.4,borderDash:[4,3]}
+    ]}, options:chartOpts('number')});
+
+  // Chart 2: Op Expenses vs CAM Recovery (gap analysis)
+  if (C2) mkChart('mo-chart-2', { type:'bar', data:{
+    labels: labels,
+    datasets:[
+      {label:'Op Expenses',   data:rows.map(function(r){return r.opExp;}),
+       backgroundColor:'#DC262699', borderRadius:4},
+      {label:'CAM Recovery',  data:rows.map(function(r){return r.cam;}),
+       backgroundColor:'#16653499', borderRadius:4},
+      {label:'Deficit (Gap)', data:rows.map(function(r){return r.opExp - r.cam;}),
+       type:'line', borderColor:'#C9A850', backgroundColor:'transparent',
+       tension:.4, borderDash:[5,3], pointRadius:4}
+    ]}, options:chartOpts('number',true)});
+
+  // Chart 3: Rate PSQFT
+  if (C3) mkChart('mo-chart-3', { type:'line', data:{
+    labels: labels,
+    datasets:[{label:'Rate PSQFT (Rs)', data:rows.map(function(r){return r.ratePSQFT;}),
+      borderColor:'#C9A850',backgroundColor:'#C9A85020',tension:.4,fill:true}]
+  }, options:chartOpts('plain')});
+
+  // Chart 4: Occupancy donut
+  if (C4) { var lat = rows[rows.length-1];
+  var vacant = lat.totalSqFt - lat.leasedSqFt;
+  mkChart('mo-chart-4', { type:'doughnut', data:{
+    labels:['Leased','Vacant'],
+    datasets:[{data:[lat.leasedSqFt, vacant],
+      backgroundColor:['#166534','#FEE2E2'],
+      borderWidth:2}]
+  }, options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}}});
+  }
+  initYieldChart(rows, labels);
+}
+
+// ── Rental Yield Analysis ────────────────────────────────────────
+function buildYieldAnalysis(rows) {
+  if (!rows.length || !rows[0].propValuation) return '';
+  var latest = rows[rows.length-1];
+  var hasYield = latest.propValuation > 0;
+  if (!hasYield) return '';
+
+  var achPct = latest.targetMonthlyRent > 0
+    ? (latest.rentalIncome / latest.targetMonthlyRent * 100).toFixed(1)
+    : 0;
+  var barW = Math.min(parseFloat(achPct), 100);
+  var barColor = barW >= 80 ? '#166534' : barW >= 50 ? '#C9A850' : '#DC2626';
+
+  var html = '<div class="chart-card">'
+    + '<div class="chart-title">Rental Yield Analysis</div>'
+    + '<div class="chart-sub">5% annual target vs actual performance — ' + latest.mall + ' · ' + latest.month + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+    // Left: Property value and targets
+    + '<div>'
+    + '<div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:6px">Property Value</div>'
+    + '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#166534">' + M(latest.propValuation) + '</div>'
+    + '<div style="margin-top:10px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:4px">Target Monthly (5% p.a.)</div>'
+    + '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:#4A6B4E">' + M(latest.targetMonthlyRent) + '</div>'
+    + '</div>'
+    // Right: Actual and gap
+    + '<div>'
+    + '<div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:6px">Actual Monthly</div>'
+    + '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:' + barColor + '">' + M(latest.rentalIncome) + '</div>'
+    + '<div style="margin-top:10px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:4px">Actual Yield</div>'
+    + '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:' + barColor + '">' + latest.actualYieldPct + '% <span style="font-size:11px;color:#8AAB8E">vs 5% target</span></div>'
+    + '</div>'
+    + '</div>'
+    // Achievement bar
+    + '<div style="margin-bottom:14px">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+    + '<span style="font-size:10px;font-weight:600;color:#4A6B4E">Achievement</span>'
+    + '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + barColor + '">' + achPct + '%</span>'
+    + '</div>'
+    + '<div style="background:#E4EFE5;border-radius:99px;height:10px;overflow:hidden">'
+    + '<div style="width:' + barW + '%;height:10px;border-radius:99px;background:' + barColor + ';transition:width .6s"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:4px">'
+    + '<span style="font-size:9px;color:#8AAB8E">Rs 0</span>'
+    + '<span style="font-size:9px;color:#8AAB8E">Target ' + M(latest.targetMonthlyRent) + '</span>'
+    + '</div>'
+    + '</div>'
+    // Trend chart
+    + '<div class="chart-sub" style="margin-bottom:8px">Actual vs Target — monthly trend</div>'
+    + '<div class="chart-wrap"><canvas id="mo-chart-5"></canvas></div>'
+    + '</div>';
+  return html;
+}
+
+function initYieldChart(rows, labels) {
+  var C5 = ge('mo-chart-5');
+  if (!C5 || !rows.length || !rows[0].propValuation) return;
+  mkChart('mo-chart-5', { type:'bar', data:{
+    labels: labels,
+    datasets:[
+      {label:'Actual Rental',
+       data:rows.map(function(r){return r.rentalIncome;}),
+       backgroundColor:'#166534BB', borderRadius:4},
+      {label:'Target Monthly (5% p.a.)',
+       data:rows.map(function(r){return r.targetMonthlyRent;}),
+       type:'line', borderColor:'#C9A850', backgroundColor:'transparent',
+       tension:0, borderWidth:2, borderDash:[6,3], pointRadius:4,
+       pointBackgroundColor:'#C9A850'}
+    ]}, options:chartOpts('number')});
+}
+
+// ════════════════════════════════════════════════════════════
+// IBU P&L
+// ════════════════════════════════════════════════════════════
+var _ibuMonth = '';
+
+function rIBU() {
+  if (!D || !D.IBU || !D.IBU.rows.length) {
+    ge('ibu-body').innerHTML = noDataCard('IBU P&L', D); return;
+  }
+  var months = D.IBU.months;
+  if (!_ibuMonth || months.indexOf(_ibuMonth) < 0) _ibuMonth = months[months.length-1];
+  ge('ibu-body').innerHTML = buildIBUHtml();
+  setTimeout(initIBUCharts, 50);
+}
+
+function buildIBUHtml() {
+  var months = D.IBU.months;
+  var mSel = '<div class="ibu-month-sel">';
+  for (var i=0;i<months.length;i++) {
+    mSel += '<div class="ibu-mp' + (months[i]===_ibuMonth?' active':'') + '" onclick="ibuMonth(\'' + months[i] + '\',this)">' + months[i] + '</div>';
+  }
+  mSel += '</div>';
+
+  var rows = D.IBU.rows.filter(function(r){return r.month===_ibuMonth;});
+  if (!rows.length) return mSel + '<div class="empty-sm">No data for ' + _ibuMonth + '</div>';
+
+  var totInflows=0,totGP=0,totEBITDA=0,totEBT=0,totEmp=0,totExp=0;
+  for (var i=0;i<rows.length;i++) {
+    totInflows+=rows[i].totalInflows; totGP+=rows[i].grossProfit;
+    totEBITDA+=rows[i].ebitda; totEBT+=rows[i].ebt;
+    totEmp+=rows[i].employees; totExp+=rows[i].totalExpenses;
+  }
+  var avgGP = totInflows>0 ? (totGP/totInflows*100).toFixed(1) : 0;
+  var avgEB = totInflows>0 ? (totEBITDA/totInflows*100).toFixed(1) : 0;
+
+  var hero = '<div class="hero-card">'
+    + '<div class="hero-icon">&#128202;</div>'
+    + '<div class="hero-lbl">IBU GROUP PERFORMANCE &middot; ' + _ibuMonth + '</div>'
+    + '<div class="hero-val">' + M(totInflows) + '</div>'
+    + '<div class="hero-sub">Total Inflows &middot; ' + totEmp + ' employees across 12 IBUs</div>'
+    + '</div>';
+
+  var kpis = '<div class="flat-grid">'
+    + flatKpi('GROSS PROFIT', M(totGP), avgGP + '% margin', '#166534', 'ibu')
+    + flatKpi('TOTAL EXPENSES', M(totExp), M(totExp/rows.length) + ' avg/IBU', '#DC2626', 'ibu')
+    + flatKpi('EBITDA', M(totEBITDA), avgEB + '% margin', '#7C3AED', 'ibu')
+    + flatKpi('EBT', M(totEBT), totEBT>=0 ? 'Profitable' : 'Loss position', totEBT>=0?'#16A34A':'#DC2626', 'ibu')
+    + '</div>';
+
+  var charts =
+    '<div class="chart-card"><div class="chart-title">IBU Ranking — Gross Profit</div>'
+    + '<div class="chart-sub">' + _ibuMonth + ' · Sorted by GP</div>'
+    + '<div class="chart-wrap-tall"><canvas id="ibu-chart-1"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Budget vs Actual — Inflows</div>'
+    + '<div class="chart-sub">Actual vs Budget comparison</div>'
+    + '<div class="chart-wrap"><canvas id="ibu-chart-2"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Expense Mix per IBU</div>'
+    + '<div class="chart-sub">Staff · Marketing · Occupancy · Operations</div>'
+    + '<div class="chart-wrap-tall"><canvas id="ibu-chart-3"></canvas></div></div>';
+
+  // Add trend chart only if multiple months
+  if (months.length > 1) {
+    charts += '<div class="chart-card"><div class="chart-title">Group Trend</div>'
+      + '<div class="chart-sub">Inflows · GP · EBITDA by month</div>'
+      + '<div class="chart-wrap"><canvas id="ibu-chart-4"></canvas></div></div>';
+  }
+
+  // Table
+  var sorted = rows.slice().sort(function(a,b){return b.grossProfit-a.grossProfit;});
+  var tbl = '<div class="card"><div class="ch"><span class="ct">All IBUs &middot; ' + _ibuMonth + '</span>'
+    + bdg(rows.length + ' IBUs', 'gray') + '</div><div class="cb" style="padding:0">'
+    + '<table class="ibu-table"><thead><tr>'
+    + '<th>IBU</th><th>Empl.</th><th>Inflows</th><th>Revenue</th>'
+    + '<th>GP</th><th>GP%</th><th>EBITDA</th><th>vs Budget</th>'
+    + '</tr></thead><tbody>';
+  for (var i=0;i<sorted.length;i++) {
+    var r=sorted[i];
+    var vsB = r.budgetGP>0 ? ((r.grossProfit-r.budgetGP)/r.budgetGP*100).toFixed(1) : null;
+    var vsBadge = vsB ? '<span class="ibu-badge ' + (vsB>=0?'ibu-up':'ibu-down') + '">'
+      + (vsB>=0?'+':'') + vsB + '%</span>' : '';
+    tbl += '<tr><td>' + r.ibu + '</td>'
+      + '<td>' + r.employees + '</td>'
+      + '<td>' + M(r.totalInflows) + '</td>'
+      + '<td>' + M(r.revenue) + '</td>'
+      + '<td style="color:#166534;font-weight:700">' + M(r.grossProfit) + '</td>'
+      + '<td>' + (r.gpPct*100).toFixed(1) + '%</td>'
+      + '<td style="color:' + (r.ebitda>=0?'#7C3AED':'#DC2626') + '">' + M(r.ebitda) + '</td>'
+      + '<td>' + vsBadge + '</td></tr>';
+  }
+  tbl += '</tbody></table></div></div>';
+
+  return mSel + hero + kpis + charts + tbl;
+}
+
+function ibuMonth(month, el) {
+  _ibuMonth = month;
+  var pills = document.querySelectorAll('.ibu-mp');
+  for (var i=0;i<pills.length;i++) pills[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  ge('ibu-body').innerHTML = buildIBUHtml();
+  setTimeout(initIBUCharts, 50);
+}
+
+function initIBUCharts() {
+  var rows = D.IBU.rows.filter(function(r){return r.month===_ibuMonth;});
+  if (!rows.length) return;
+  var sorted = rows.slice().sort(function(a,b){return b.grossProfit-a.grossProfit;});
+  var labels = sorted.map(function(r){return r.ibu.replace(' Region','').replace(' Center','');});
+  var C1=ge('ibu-chart-1'),C2=ge('ibu-chart-2'),C3=ge('ibu-chart-3'),C4=ge('ibu-chart-4');
+
+  // Chart 1: IBU Ranking (horizontal bar)
+  if (C1) mkChart('ibu-chart-1',{type:'bar',data:{
+    labels:labels,
+    datasets:[{label:'Gross Profit',
+      data:sorted.map(function(r){return r.grossProfit;}),
+      backgroundColor:sorted.map(function(r){return r.ebitda>=0?'#166534CC':'#DC2626CC'}),
+      borderRadius:4}]
+  },options:Object.assign(chartOpts('number'),{indexAxis:'y'})});
+
+  // Chart 2: Budget vs Actual
+  if (C2) mkChart('ibu-chart-2',{type:'bar',data:{
+    labels:labels,
+    datasets:[
+      {label:'Actual Inflows',data:sorted.map(function(r){return r.totalInflows;}),backgroundColor:'#166534CC',borderRadius:3},
+      {label:'Budget Inflows',data:sorted.map(function(r){return r.budgetInflows;}),backgroundColor:'#C9A85099',borderRadius:3}
+    ]},options:chartOpts('number',true)});
+
+  // Chart 3: Expense mix stacked
+  if (C3) mkChart('ibu-chart-3',{type:'bar',data:{
+    labels:labels,
+    datasets:[
+      {label:'Staff',data:sorted.map(function(r){return r.staffCosts;}),backgroundColor:'#166534CC'},
+      {label:'Marketing',data:sorted.map(function(r){return r.mktgEvents;}),backgroundColor:'#DC2626CC'},
+      {label:'Occupancy',data:sorted.map(function(r){return r.occupancy;}),backgroundColor:'#C9A850CC'},
+      {label:'Operations',data:sorted.map(function(r){return r.operations;}),backgroundColor:'#2563EBCC'}
+    ]},options:Object.assign({},chartOpts('number',true),
+      {scales:Object.assign({},chartOpts('number',true).scales,
+        {x:{stacked:true},y:{stacked:true}})})});
+
+  // Chart 4: Group trend (if multiple months)
+  if (C4 && D.IBU.months.length > 1) {
+    var mLabels = D.IBU.months;
+    var mInflows=[],mGP=[],mEBITDA=[];
+    for (var mi=0;mi<mLabels.length;mi++) {
+      var mRows = D.IBU.rows.filter(function(r){return r.month===mLabels[mi];});
+      var si=0,sg=0,se=0;
+      for(var ri=0;ri<mRows.length;ri++){si+=mRows[ri].totalInflows;sg+=mRows[ri].grossProfit;se+=mRows[ri].ebitda;}
+      mInflows.push(si);mGP.push(sg);mEBITDA.push(se);
+    }
+    mkChart('ibu-chart-4',{type:'line',data:{
+      labels:mLabels,
+      datasets:[
+        {label:'Total Inflows',data:mInflows,borderColor:'#166534',backgroundColor:'#16653415',tension:.4,fill:true},
+        {label:'Gross Profit',data:mGP,borderColor:'#C9A850',backgroundColor:'transparent',tension:.4},
+        {label:'EBITDA',data:mEBITDA,borderColor:'#7C3AED',backgroundColor:'transparent',tension:.4,borderDash:[4,3]}
+      ]},options:chartOpts('number')});
+  }
+}
+
+// Shared Chart.js options factory
+// ── Chart instance registry (prevents canvas pile-up on re-render) ──
+var _chartRegistry = {};
+function mkChart(canvasId, config) {
+  var el = ge(canvasId);
+  if (!el) return null;
+  // Destroy any existing chart bound to this canvas
+  if (_chartRegistry[canvasId]) {
+    try { _chartRegistry[canvasId].destroy(); } catch(e) {}
+    delete _chartRegistry[canvasId];
+  }
+  // Also catch Chart.js internal registry
+  if (typeof Chart !== 'undefined' && Chart.getChart) {
+    var existing = Chart.getChart(el);
+    if (existing) { try { existing.destroy(); } catch(e) {} }
+  }
+  var c = new Chart(el, config);
+  _chartRegistry[canvasId] = c;
+  return c;
+}
+
+function chartOpts(fmt, grouped) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:8}}},
+    scales:{
+      x:{ticks:{font:{size:9},maxRotation:40},grid:{display:false}},
+      y:{ticks:{font:{size:9},callback:function(v){
+        if (fmt==='number') return v>=1000000?'Rs'+(v/1000000).toFixed(1)+'M':v>=1000?'Rs'+(v/1000).toFixed(0)+'K':v;
+        if (fmt==='plain') return v;
+        return v;
+      }},grid:{color:'#E4EFE5'}}
+    }
+  };
+}
+
+
+
+// ════════════════════════════════════════════════════════════
+// PRODUCT-WISE PORTFOLIO
+// ════════════════════════════════════════════════════════════
+var PROD_COLORS = {
+  'Instalment':          {bg:'#2563EB',light:'#DBEAFE'},
+  'Only Appreciation':   {bg:'#C9A850',light:'#FEF3C7'},
+  'Only Rental':         {bg:'#166534',light:'#DCFCE7'},
+  'Rental+Appreciation': {bg:'#7C3AED',light:'#EDE9FE'}
+};
+var _pwMonth = '';
+
+function rPW() {
+  if (!D || !D.PW || !D.PW.rows.length) {
+    ge('pw-body').innerHTML = noDataCard('Product-wise Portfolio', D); return;
+  }
+  var months = D.PW.months;
+  if (!_pwMonth || months.indexOf(_pwMonth) < 0) _pwMonth = months[months.length-1];
+  ge('pw-body').innerHTML = buildPWHtml();
+  setTimeout(initPWCharts, 50);
+}
+
+function buildPWHtml() {
+  var months = D.PW.months;
+  var mSel = '<div class="ibu-month-sel">';
+  for (var i=0;i<months.length;i++) {
+    mSel += '<div class="ibu-mp'+(months[i]===_pwMonth?' active':'')+'" onclick="pwMonth(\''+months[i]+'\',this)">'+months[i]+'</div>';
+  }
+  mSel += '</div>';
+
+  var rows = D.PW.rows.filter(function(r){return r.month===_pwMonth;});
+  if (!rows.length) return mSel + '<div class="empty-sm">No data for ' + _pwMonth + '</div>';
+
+  var grandTotal=0, grandClr=0, grandInp=0, grandPend=0;
+  for(var i=0;i<rows.length;i++){
+    grandTotal+=rows[i].total; grandClr+=rows[i].cleared;
+    grandInp+=rows[i].inProgress; grandPend+=rows[i].pending;
+  }
+
+  var hero = '<div class="hero-card">'
+    + '<div class="hero-icon">&#127758;</div>'
+    + '<div class="hero-lbl">TOTAL ADVANCES &middot; ' + _pwMonth + '</div>'
+    + '<div class="hero-val">' + M(grandTotal) + '</div>'
+    + '<div class="hero-sub">Approved + Cleared &middot; 4 products &middot; realized money <span class="hero-arr">&rarr;</span></div>'
+    + '</div>';
+
+  // Product KPI cards
+  var prodCards = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  for (var i=0;i<rows.length;i++) {
+    var r=rows[i], pc=PROD_COLORS[r.product]||{bg:'#166534',light:'#DCFCE7'};
+    var pct = grandTotal>0?(r.total/grandTotal*100).toFixed(1):0;
+    prodCards += '<div style="background:#fff;border-radius:12px;box-shadow:var(--sh);overflow:hidden">'
+      + '<div style="background:'+pc.bg+';padding:10px 13px">'
+      + '<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.75)">'+r.product+'</div>'
+      + '<div style="font-family:var(--mono);font-size:17px;font-weight:700;color:#fff;margin-top:3px">'+M(r.total)+'</div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">'+pct+'% of portfolio</div>'
+      + '</div>'
+      + '<div style="padding:9px 13px;background:'+pc.light+'">'
+      + '<div style="display:flex;justify-content:space-between;font-size:9px">'
+      + '<span style="color:#4A6B4E">Cleared: <b style=\'font-family:var(--mono)\'>'+M(r.cleared)+'</b></span>'
+      + '<span style="color:#D97706">Pending: <b style=\'font-family:var(--mono)\'>'+M(r.pending)+'</b></span>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+  prodCards += '</div>';
+
+  var charts =
+    '<div class="chart-card"><div class="chart-title">Portfolio Mix</div>'
+    + '<div class="chart-sub">Share of total advances by product type</div>'
+    + '<div style="max-width:260px;margin:0 auto"><div class="chart-wrap"><canvas id="pw-chart-1"></canvas></div></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Status Breakdown by Product</div>'
+    + '<div class="chart-sub">Approved · Cleared · In Progress · Pending</div>'
+    + '<div class="chart-wrap-tall"><canvas id="pw-chart-2"></canvas></div></div>';
+
+  if (months.length > 1) {
+    charts += '<div class="chart-card"><div class="chart-title">Portfolio Growth Trend</div>'
+      + '<div class="chart-sub">Total portfolio value by month</div>'
+      + '<div class="chart-wrap"><canvas id="pw-chart-3"></canvas></div></div>';
+  }
+
+  // Table
+  var tbl = '<div class="card"><div class="ch"><span class="ct">All Products &middot; ' + _pwMonth + '</span>'
+    + bdg('4 products','gold') + '</div><div class="cb" style="padding:0">'
+    + '<table class="ibu-table"><thead><tr>'
+    + '<th>Product</th><th>Total</th><th>Approved</th><th>Cleared</th><th>In Progress</th><th>Pending</th>'
+    + '</tr></thead><tbody>';
+  var sorted = rows.slice().sort(function(a,b){return b.total-a.total;});
+  for(var i=0;i<sorted.length;i++){
+    var r=sorted[i], pc=PROD_COLORS[r.product]||{bg:'#166534',light:'#DCFCE7'};
+    tbl += '<tr>'
+      + '<td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+pc.bg+';margin-right:6px"></span>'+r.product+'</td>'
+      + '<td style="font-weight:700;color:#166534">'+M(r.total)+'</td>'
+      + '<td>'+M(r.approved)+'</td>'
+      + '<td style="color:#16A34A">'+M(r.cleared)+'</td>'
+      + '<td style="color:#D97706">'+M(r.inProgress)+'</td>'
+      + '<td style="color:#DC2626">'+M(r.pending)+'</td>'
+      + '</tr>';
+  }
+  tbl += '</tbody></table></div></div>';
+
+  // ── Project-wise Advances (from RA cumulative) ───────────────────
+  var advCard = '';
+  if (D.RA && D.RA.cumulative && D.RA.cumulative.length) {
+    var cumList = D.RA.cumulative.slice().sort(function(a,b){return b.amount-a.amount;});
+    var cumMax = cumList.length ? cumList[0].amount : 1;
+    var advRows = '';
+    for (var ci=0; ci<cumList.length; ci++) {
+      var cm = cumList[ci], w = cumMax>0?(cm.amount/cumMax*100).toFixed(1):0;
+      advRows += '<div class="cum-row"><div class="cum-name">' + cm.name + '</div>'
+        + '<div class="cum-bar-wrap"><div class="cum-bar" style="width:' + w + '%"></div></div>'
+        + '<div class="cum-amt">' + M(cm.amount) + '</div></div>';
+    }
+    var advTotal = '<div style="display:flex;justify-content:space-between;padding:10px 0 2px;border-top:1.5px solid var(--bdr);margin-top:4px">'
+      + '<span style="font-size:11px;font-weight:700;color:var(--t2)">Grand Total (Approved + Cleared)</span>'
+      + '<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#166534">' + M(D.RA.grandTotal) + '</span>'
+      + '</div>';
+    advCard = card('Advances by Project', bdg((D.RA.cumulativeAsOf||'') + '', 'gold'), advRows + advTotal);
+  }
+
+  return mSel + hero + prodCards + charts + advCard + tbl;
+}
+
+function pwMonth(m, el) {
+  _pwMonth = m;
+  var pills = document.querySelectorAll('.ibu-mp');
+  for(var i=0;i<pills.length;i++) pills[i].classList.remove('active');
+  if(el) el.classList.add('active');
+  ge('pw-body').innerHTML = buildPWHtml();
+  setTimeout(initPWCharts, 50);
+}
+
+function initPWCharts() {
+  var rows = D.PW.rows.filter(function(r){return r.month===_pwMonth;});
+  if (!rows.length) return;
+  var C1=ge('pw-chart-1'), C2=ge('pw-chart-2'), C3=ge('pw-chart-3');
+  var labels = rows.map(function(r){return r.product.replace('Rental+Appreciation','Rental+\nApprec.');});
+  var bgColors = rows.map(function(r){return (PROD_COLORS[r.product]||{bg:'#166534'}).bg;});
+
+  if(C1) mkChart('pw-chart-1', {type:'doughnut', data:{
+    labels: rows.map(function(r){return r.product;}),
+    datasets:[{data:rows.map(function(r){return r.total;}),
+      backgroundColor:bgColors, borderWidth:2, borderColor:'#fff'}]
+  }, options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:8}}}}});
+
+  if(C2) mkChart('pw-chart-2', {type:'bar', data:{
+    labels: labels,
+    datasets:[
+      {label:'Approved', data:rows.map(function(r){return r.approved;}), backgroundColor:'#16653499',borderRadius:3},
+      {label:'Cleared',  data:rows.map(function(r){return r.cleared;}),  backgroundColor:'#16A34ACC',borderRadius:3},
+      {label:'In Progress',data:rows.map(function(r){return r.inProgress;}),backgroundColor:'#D97706CC',borderRadius:3},
+      {label:'Pending',  data:rows.map(function(r){return r.pending;}),  backgroundColor:'#DC2626CC',borderRadius:3}
+    ]}, options:Object.assign({},chartOpts('number',true),
+      {scales:Object.assign({},chartOpts('number',true).scales,{x:{stacked:true},y:{stacked:true}})})});
+
+  if(C3 && D.PW.months.length > 1) {
+    var mLabels=D.PW.months;
+    var mTotals=[];
+    for(var mi=0;mi<mLabels.length;mi++){
+      var mRows=D.PW.rows.filter(function(r){return r.month===mLabels[mi];});
+      var t=0; for(var ri=0;ri<mRows.length;ri++) t+=mRows[ri].total;
+      mTotals.push(t);
+    }
+    mkChart('pw-chart-3',{type:'line',data:{
+      labels:mLabels,
+      datasets:[{label:'Total Portfolio',data:mTotals,
+        borderColor:'#166534',backgroundColor:'#16653415',tension:.4,fill:true}]
+    },options:chartOpts('number')});
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// PRODUCT DETAIL — payment type & frequency analytics
+// ════════════════════════════════════════════════════════════
+var _pdMonth = '';
+var _pdProduct = 'all';
+var PTYPE_COLORS = {
+  'Down Payment':'#166534','Full Payment':'#2563EB','Installment':'#C9A850',
+  'Partial Payment':'#D97706','Token':'#7C3AED','Tax':'#DC2626',
+  'Possession Charges':'#0891B2','Refundable':'#65A30D','Surcharge':'#DB2777','(blank)':'#94A3B8'
+};
+
+function rPD() {
+  if (!D || !D.PD || !D.PD.rows.length) {
+    ge('pd-body').innerHTML = noDataCard('Product Detail', D); return;
+  }
+  var months = D.PD.months;
+  if (!_pdMonth || months.indexOf(_pdMonth) < 0) _pdMonth = months[months.length-1];
+  ge('pd-body').innerHTML = buildPDHtml();
+  setTimeout(initPDCharts, 50);
+}
+
+function buildPDHtml() {
+  var months = D.PD.months;
+  var mSel = '<div class="ibu-month-sel">';
+  for (var i=0;i<months.length;i++) {
+    mSel += '<div class="ibu-mp'+(months[i]===_pdMonth?' active':'')+'" onclick="pdMonth(\''+months[i]+'\',this)">'+months[i]+'</div>';
+  }
+  mSel += '</div>';
+
+  var allRows = D.PD.rows.filter(function(r){return r.month===_pdMonth;});
+  if (!allRows.length) return mSel + '<div class="empty-sm">No detail for ' + _pdMonth + '</div>';
+
+  // Product filter pills
+  var prods = D.PD.products;
+  var pPills = '<div class="ibu-month-sel" style="margin-bottom:12px">';
+  pPills += '<div class="ibu-mp'+(_pdProduct==='all'?' active':'')+'" onclick="pdProduct(\'all\',this)">All Products</div>';
+  for (var i=0;i<prods.length;i++) {
+    pPills += '<div class="ibu-mp'+(prods[i]===_pdProduct?' active':'')+'" onclick="pdProduct(\''+prods[i].replace(/'/g,"\\u2019")+'\',this)">'+prods[i]+'</div>';
+  }
+  pPills += '</div>';
+
+  var rows = _pdProduct==='all' ? allRows : allRows.filter(function(r){return r.product===_pdProduct;});
+
+  // Aggregate by payment type
+  var byType = {}, byFreq = {};
+  var totAmt = 0, totClr = 0;
+  for (var i=0;i<rows.length;i++) {
+    var r = rows[i];
+    byType[r.paymentType] = (byType[r.paymentType]||0) + r.amount;
+    byFreq[r.frequency] = (byFreq[r.frequency]||0) + r.amount;
+    totAmt += r.amount; totClr += r.cleared;
+  }
+
+  var hero = '<div class="hero-card">'
+    + '<div class="hero-icon">&#128202;</div>'
+    + '<div class="hero-lbl">' + (_pdProduct==='all'?'ALL PRODUCTS':_pdProduct.toUpperCase()) + ' &middot; ' + _pdMonth + '</div>'
+    + '<div class="hero-val">' + M(totAmt) + '</div>'
+    + '<div class="hero-sub">Booked &middot; Rs ' + M(totClr) + ' cleared &middot; ' + Object.keys(byType).length + ' payment types</div>'
+    + '</div>';
+
+  // Payment type breakdown bars
+  var typeArr = [];
+  for (var k in byType) typeArr.push({type:k, amt:byType[k]});
+  typeArr.sort(function(a,b){return b.amt-a.amt;});
+  var typeMax = typeArr.length ? typeArr[0].amt : 1;
+  var typeRows = '';
+  for (var i=0;i<typeArr.length;i++) {
+    var t = typeArr[i], w = typeMax>0?(t.amt/typeMax*100).toFixed(1):0;
+    var clr = PTYPE_COLORS[t.type] || '#166534';
+    var pct = totAmt>0?(t.amt/totAmt*100).toFixed(1):0;
+    typeRows += '<div class="cum-row">'
+      + '<div class="cum-name"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+clr+';margin-right:6px"></span>' + t.type + '</div>'
+      + '<div class="cum-bar-wrap"><div class="cum-bar" style="width:'+w+'%;background:'+clr+'"></div></div>'
+      + '<div class="cum-amt">' + M(t.amt) + '</div></div>'
+      + '<div style="text-align:right;font-size:9px;color:var(--t3);margin-top:-4px;margin-bottom:6px">' + pct + '% of total</div>';
+  }
+  var typeCard = card('Payment Type Mix', bdg(typeArr.length + ' types', 'gray'), typeRows);
+
+  // Frequency mix chart + breakdown (only meaningful when freq exists)
+  var freqArr = [];
+  for (var k in byFreq) { if (k !== '\u2014') freqArr.push({freq:k, amt:byFreq[k]}); }
+  freqArr.sort(function(a,b){return b.amt-a.amt;});
+  var freqCard = '';
+  if (freqArr.length) {
+    var freqChart = '<div class="chart-card"><div class="chart-title">Frequency Mix</div>'
+      + '<div class="chart-sub">Annual vs Bi-Annual vs Quarterly appreciation</div>'
+      + '<div style="max-width:260px;margin:0 auto"><div class="chart-wrap"><canvas id="pd-chart-1"></canvas></div></div></div>';
+    freqCard = freqChart;
+  }
+
+  // Payment type donut
+  var typeChart = '<div class="chart-card"><div class="chart-title">Payment Type Distribution</div>'
+    + '<div class="chart-sub">Share of bookings by payment method</div>'
+    + '<div class="chart-wrap-tall"><canvas id="pd-chart-2"></canvas></div></div>';
+
+  // Detail table
+  var tbl = '<div class="card"><div class="ch"><span class="ct">Detail Breakdown &middot; ' + _pdMonth + '</span>'
+    + bdg(rows.length + ' lines', 'gold') + '</div><div class="cb" style="padding:0">'
+    + '<table class="ibu-table"><thead><tr>'
+    + '<th>Product</th><th>Frequency</th><th>Payment Type</th><th>Amount</th><th>Cleared</th>'
+    + '</tr></thead><tbody>';
+  var sortedRows = rows.slice().sort(function(a,b){return b.amount-a.amount;});
+  for (var i=0;i<sortedRows.length;i++) {
+    var r = sortedRows[i];
+    tbl += '<tr>'
+      + '<td style="font-size:10px">' + r.product + '</td>'
+      + '<td style="font-size:10px;color:var(--t2)">' + r.frequency + '</td>'
+      + '<td style="font-size:10px">' + r.paymentType + '</td>'
+      + '<td style="font-weight:700">' + M(r.amount) + '</td>'
+      + '<td style="color:' + (r.cleared>0?'#166534':'#94A3B8') + '">' + M(r.cleared) + '</td>'
+      + '</tr>';
+  }
+  tbl += '</tbody></table></div></div>';
+
+  return mSel + pPills + hero + typeChart + typeCard + freqCard + tbl;
+}
+
+function pdMonth(m, el) {
+  _pdMonth = m;
+  ge('pd-body').innerHTML = buildPDHtml();
+  setTimeout(initPDCharts, 50);
+}
+function pdProduct(p, el) {
+  _pdProduct = p;
+  ge('pd-body').innerHTML = buildPDHtml();
+  setTimeout(initPDCharts, 50);
+}
+
+function initPDCharts() {
+  var allRows = D.PD.rows.filter(function(r){return r.month===_pdMonth;});
+  var rows = _pdProduct==='all' ? allRows : allRows.filter(function(r){return r.product===_pdProduct;});
+  if (!rows.length) return;
+
+  var byType = {}, byFreq = {};
+  for (var i=0;i<rows.length;i++) {
+    byType[rows[i].paymentType] = (byType[rows[i].paymentType]||0) + rows[i].amount;
+    if (rows[i].frequency !== '\u2014') byFreq[rows[i].frequency] = (byFreq[rows[i].frequency]||0) + rows[i].amount;
+  }
+
+  // Frequency donut
+  var freqKeys = Object.keys(byFreq);
+  if (freqKeys.length) {
+    mkChart('pd-chart-1', {type:'doughnut', data:{
+      labels: freqKeys,
+      datasets:[{data:freqKeys.map(function(k){return byFreq[k];}),
+        backgroundColor:['#166534','#C9A850','#2563EB','#7C3AED','#D97706'], borderWidth:2, borderColor:'#fff'}]
+    }, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:8}}}}});
+  }
+
+  // Payment type bar (horizontal)
+  var typeArr = [];
+  for (var k in byType) typeArr.push({type:k, amt:byType[k]});
+  typeArr.sort(function(a,b){return b.amt-a.amt;});
+  mkChart('pd-chart-2', {type:'bar', data:{
+    labels: typeArr.map(function(t){return t.type;}),
+    datasets:[{label:'Amount', data:typeArr.map(function(t){return t.amt;}),
+      backgroundColor: typeArr.map(function(t){return PTYPE_COLORS[t.type]||'#166534';}), borderRadius:4}]
+  }, options:Object.assign({}, chartOpts('number'), {indexAxis:'y',
+    plugins:{legend:{display:false}}})});
+}
+
+
+// ════════════════════════════════════════════════════════════
+// APPRECIATION
+// ════════════════════════════════════════════════════════════
+var _appMonth = '';
+
+function rAPP() {
+  if (!D || !D.APP || !D.APP.rows.length) {
+    ge('app-body').innerHTML = noDataCard('Appreciation', D); return;
+  }
+  var months = D.APP.months;
+  if (!_appMonth || months.indexOf(_appMonth) < 0) _appMonth = months[months.length-1];
+  ge('app-body').innerHTML = buildAPPHtml();
+  setTimeout(initAPPCharts, 50);
+}
+
+function buildAPPHtml() {
+  var months = D.APP.months;
+  var mSel = '<div class="ibu-month-sel">';
+  for(var i=0;i<months.length;i++){
+    mSel += '<div class="ibu-mp'+(months[i]===_appMonth?' active':'')+'" onclick="appMonth(\''+months[i]+'\',this)">'+months[i]+'</div>';
+  }
+  mSel += '</div>';
+
+  var rows = D.APP.rows.filter(function(r){return r.month===_appMonth;});
+  if(!rows.length) return mSel + '<div class="empty-sm">No data for ' + _appMonth + '</div>';
+
+  var totCount=0,totGross=0,totDed=0,totNet=0;
+  for(var i=0;i<rows.length;i++){
+    totCount+=rows[i].count; totGross+=rows[i].gross;
+    totDed+=rows[i].deductions; totNet+=rows[i].net;
+  }
+  var netPct = totGross>0?(totNet/totGross*100).toFixed(1):0;
+
+  var hero = '<div class="hero-card">'
+    + '<div class="hero-icon">&#11088;</div>'
+    + '<div class="hero-lbl">APPRECIATION &middot; ' + _appMonth + '</div>'
+    + '<div class="hero-val">' + M(totNet) + '</div>'
+    + '<div class="hero-sub">' + totCount + ' customers &middot; ' + netPct + '% net of gross &middot; 5 projects</div>'
+    + '</div>';
+
+  var kpis = '<div class="flat-grid">'
+    + flatKpi('CUSTOMERS',    totCount.toLocaleString(), _appMonth + ' appreciations', '#166534', 'appreciation')
+    + flatKpi('GROSS',        M(totGross), 'Before deductions', '#C9A850', 'appreciation')
+    + flatKpi('DEDUCTIONS',   M(totDed),  'Adjustments applied', '#D97706', 'appreciation')
+    + flatKpi('NET PAID',     M(totNet),  netPct + '% of gross', '#166534', 'appreciation')
+    + '</div>';
+
+  var charts =
+    '<div class="chart-card"><div class="chart-title">Net Appreciation by Project</div>'
+    + '<div class="chart-sub">Amount paid after deductions — ' + _appMonth + '</div>'
+    + '<div class="chart-wrap"><canvas id="app-chart-1"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Gross vs Net Comparison</div>'
+    + '<div class="chart-sub">Impact of deductions per project</div>'
+    + '<div class="chart-wrap"><canvas id="app-chart-2"></canvas></div></div>';
+
+  if(months.length > 1) {
+    charts += '<div class="chart-card"><div class="chart-title">Monthly Trend</div>'
+      + '<div class="chart-sub">Net appreciation paid over time</div>'
+      + '<div class="chart-wrap"><canvas id="app-chart-3"></canvas></div></div>';
+  }
+
+  var sorted = rows.slice().sort(function(a,b){return b.net-a.net;});
+  var tbl = '<div class="card"><div class="ch"><span class="ct">All Projects &middot; ' + _appMonth + '</span>'
+    + bdg(totCount+' customers','gold')+'</div><div class="cb" style="padding:0">'
+    + '<table class="ibu-table"><thead><tr>'
+    + '<th>Project</th><th>Customers</th><th>Gross</th><th>Deductions</th><th>Net Paid</th><th>Net %</th>'
+    + '</tr></thead><tbody>';
+  for(var i=0;i<sorted.length;i++){
+    var r=sorted[i];
+    var netCol = r.netPct>=90?'#166534':r.netPct>=70?'#C9A850':'#DC2626';
+    tbl += '<tr>'
+      + '<td style="font-weight:700">'+r.project+'</td>'
+      + '<td>'+r.count+'</td>'
+      + '<td>'+M(r.gross)+'</td>'
+      + '<td style="color:'+(r.deductions>0?'#D97706':'#8AAB8E')+'">'+M(r.deductions)+'</td>'
+      + '<td style="font-weight:700;color:#166534">'+M(r.net)+'</td>'
+      + '<td style="color:'+netCol+'">'+r.netPct+'%</td>'
+      + '</tr>';
+  }
+  tbl += '</tbody></table></div></div>';
+
+  return mSel + hero + kpis + charts + tbl;
+}
+
+function appMonth(m, el) {
+  _appMonth = m;
+  var pills = document.querySelectorAll('.ibu-mp');
+  for(var i=0;i<pills.length;i++) pills[i].classList.remove('active');
+  if(el) el.classList.add('active');
+  ge('app-body').innerHTML = buildAPPHtml();
+  setTimeout(initAPPCharts, 50);
+}
+
+function initAPPCharts() {
+  var rows = D.APP.rows.filter(function(r){return r.month===_appMonth;});
+  if(!rows.length) return;
+  var sorted = rows.slice().sort(function(a,b){return b.net-a.net;});
+  var labels = sorted.map(function(r){return r.project;});
+  var C1=ge('app-chart-1'),C2=ge('app-chart-2'),C3=ge('app-chart-3');
+
+  if(C1) mkChart('app-chart-1',{type:'bar',data:{
+    labels:labels,
+    datasets:[{label:'Net Appreciation',
+      data:sorted.map(function(r){return r.net;}),
+      backgroundColor:'#166534CC',borderRadius:4}]
+  },options:chartOpts('number')});
+
+  if(C2) mkChart('app-chart-2',{type:'bar',data:{
+    labels:labels,
+    datasets:[
+      {label:'Gross',data:sorted.map(function(r){return r.gross;}),backgroundColor:'#C9A85099',borderRadius:3},
+      {label:'Net Paid',data:sorted.map(function(r){return r.net;}),backgroundColor:'#166534CC',borderRadius:3}
+    ]},options:chartOpts('number',true)});
+
+  if(C3 && D.APP.months.length > 1) {
+    var mLabels=D.APP.months;
+    var mNets=[];
+    for(var mi=0;mi<mLabels.length;mi++){
+      var mRows=D.APP.rows.filter(function(r){return r.month===mLabels[mi];});
+      var t=0; for(var ri=0;ri<mRows.length;ri++) t+=mRows[ri].net;
+      mNets.push(t);
+    }
+    mkChart('app-chart-3',{type:'line',data:{
+      labels:mLabels,
+      datasets:[{label:'Net Appreciation',data:mNets,
+        borderColor:'#C9A850',backgroundColor:'#C9A85020',tension:.4,fill:true}]
+    },options:chartOpts('number')});
+  }
 }
 
 
