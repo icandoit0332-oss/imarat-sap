@@ -802,7 +802,7 @@ var FIREBASE_CONFIG = {
 };
 
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykbYka3cqRualsEhfNNef48wnwoHwwhTmQvttt-vjNW4KV9BVFs1rdjHFVfNZY_tTP/exec';
-var CLIENT_KEY      = 'IMARAT_SAP_KEY_2024';
+var CLIENT_KEY      = 'IMARAT_FCC_2026_Xk7Qp9ZmRv4T';
 var CACHE_KEY       = 'im8';
 var REFRESH_MS      = 5 * 60 * 1000;
 
@@ -934,17 +934,56 @@ ge('li-pass').addEventListener('keydown', function(e) {
 // ════════════════════════════════════════════════════════════
 // DATA LOADING
 // ════════════════════════════════════════════════════════════
-function loadData() {
+
+// SECURITY: neutralize HTML-significant characters in every string coming
+// from the sheet, at the single data boundary. Replaces with typographic
+// lookalikes so display and chart labels are unaffected, but no value can
+// ever open a tag or break out of an attribute in any builder.
+function sanitizeDeep(v) {
+  if (typeof v === 'string') {
+    return v.replace(/</g,'\u2039').replace(/>/g,'\u203A')
+            .replace(/"/g,'\u201D').replace(/'/g,'\u2019');
+  }
+  if (v && typeof v === 'object') {
+    if (Object.prototype.toString.call(v) === '[object Array]') {
+      for (var i = 0; i < v.length; i++) v[i] = sanitizeDeep(v[i]);
+    } else {
+      for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) v[k] = sanitizeDeep(v[k]);
+    }
+  }
+  return v;
+}
+
+// Race fetch against a hard timeout so a hung Apps Script call can never
+// leave the user stuck on the loading screen — falls through to cache.
+function fetchWithTimeout(url, ms) {
+  return Promise.race([
+    fetch(url),
+    new Promise(function(ignore, reject) {
+      setTimeout(function() { reject(new Error('Request timed out')); }, ms);
+    })
+  ]);
+}
+
+function loadData(fresh) {
+  if (!auth || !auth.currentUser) { loadFromCache(); return; }
   showLoading('Fetching live data from System\u2026');
-  var url = APPS_SCRIPT_URL + '?action=read&clientKey=' + CLIENT_KEY + '&_=' + Date.now();
-  fetch(url)
+  auth.currentUser.getIdToken()
+    .then(function(token) {
+      var url = APPS_SCRIPT_URL + '?action=read&clientKey=' + CLIENT_KEY
+              + '&idToken=' + encodeURIComponent(token)
+              + (fresh ? '&fresh=1' : '')
+              + '&_=' + Date.now();
+      return fetchWithTimeout(url, 12000);
+    })
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     })
     .then(function(json) {
       if (json.status !== 'ok') throw new Error(json.message || 'Server error: status=' + json.status);
-      D = mapResponse(json);
+      if (json.authWarn) console.warn('Auth note (' + (json.authMode || '?') + '):', json.authWarn);
+      D = sanitizeDeep(mapResponse(json));
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(D)); } catch(x){}
       hideLoading();
       hideStaleBanner();
@@ -963,7 +1002,7 @@ function loadFromCache() {
   try {
     var saved = localStorage.getItem(CACHE_KEY);
     if (saved) {
-      D = JSON.parse(saved);
+      D = sanitizeDeep(JSON.parse(saved));
       showStaleBanner(D.at);
       var rsEl = ge('refresh-status'); if (rsEl) rsEl.textContent = 'Offline \u2014 cached ' + fmtTime(new Date(D.at));
       render();
@@ -1015,7 +1054,7 @@ function guessEnt(code) {
 
 function manualRefresh() {
   if (!auth.currentUser) return;
-  loadData();
+  loadData(true);
 }
 
 function startAutoRefresh() {
@@ -1156,7 +1195,7 @@ function showPaneError(paneId, err) {
   el.innerHTML = '<div class="card" style="margin-top:12px"><div class="cb"><div style="text-align:center;padding:20px">'
     + '<div style="font-size:24px;margin-bottom:8px">&#9888;</div>'
     + '<div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px">Data render error</div>'
-    + '<div style="font-size:11px;color:var(--t3);margin-bottom:12px">' + (err && err.message ? err.message : String(err)) + '</div>'
+    + '<div style="font-size:11px;color:var(--t3);margin-bottom:12px">' + sanitizeDeep(err && err.message ? err.message : String(err)) + '</div>'
     + '<button onclick="manualRefresh()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">&#8635; Retry</button>'
     + '</div></div></div>';
 }
@@ -1274,8 +1313,6 @@ function showHomeScreen() {
   document.body.classList.add('on-home');
   resetHomeHeader();
   setHomeGreeting();
-  updateHomeClock();
-  updateHomeTiles();
 }
 
 function goHomeScreen() {
@@ -1287,7 +1324,6 @@ function goHomeScreen() {
   setHomeGreeting();
   var navBtns = document.querySelectorAll('.nt');
   for (var i=0;i<navBtns.length;i++) navBtns[i].classList.remove('act');
-  updateHomeTiles();
 }
 
 // Open a group: filter nav to only that group's tabs, show first tab
@@ -1323,53 +1359,6 @@ function openGroup(groupId) {
     if (m) goTab(m[1], firstBtn);
   }
   window.scrollTo(0,0);
-}
-
-function updateHomeClock() {
-  // Header date/time is handled by the main app header (hdate + live pill).
-  // Home screen no longer has its own clock — this is a safe no-op kept for compatibility.
-  return;
-}
-
-function updateHomeTiles() {
-  if (!D) return;
-  // 1. Sales & Cashflow → working balance
-  var mSales = ge('m-sales');
-  if (mSales && D.B) mSales.textContent = M(D.B.totalWorking) + ' working balance';
-  // 2. Malls → occupancy + P&L
-  var mMalls = ge('m-malls');
-  if (mMalls && D.MO && D.MO.rows.length) {
-    var aom = D.MO.rows.filter(function(r){return r.mall==='AOM';});
-    var ibm = D.MO.rows.filter(function(r){return r.mall==='IBM';});
-    var aL = aom.length?aom[aom.length-1]:null;
-    var bL = ibm.length?ibm[ibm.length-1]:null;
-    var combinedNOI = (aL?aL.noi:0) + (bL?bL.noi:0);
-    mMalls.textContent = (aL?aL.occupancy.toFixed(0):'0') + '% occupied \u00B7 ' + M(combinedNOI) + ' P&L';
-  }
-  // 3. IBU → group inflows
-  var mIbu = ge('m-ibu');
-  if (mIbu && D.IBU && D.IBU.rows.length) {
-    var iLM = D.IBU.months[D.IBU.months.length-1];
-    var iRows = D.IBU.rows.filter(function(r){return r.month===iLM;});
-    var iTI = 0; for(var i=0;i<iRows.length;i++) iTI += iRows[i].totalInflows;
-    mIbu.textContent = M(iTI) + ' inflows';
-  }
-  // 4. Rental → net rent
-  var mRental = ge('m-rental');
-  if (mRental && D.RA && D.RA.latestMonth) {
-    var raMD = null;
-    for(var i=0;i<D.RA.monthly.length;i++){if(D.RA.monthly[i].month===D.RA.latestMonth){raMD=D.RA.monthly[i].projects;break;}}
-    var raNR = 0; if(raMD) for(var i=0;i<raMD.length;i++) raNR += raMD[i].netRent;
-    mRental.textContent = M(raNR) + ' net rent';
-  }
-  // 5. Products → portfolio total
-  var mProd = ge('m-products');
-  if (mProd && D.PW && D.PW.rows.length) {
-    var pLM = D.PW.months[D.PW.months.length-1];
-    var pRows = D.PW.rows.filter(function(r){return r.month===pLM;});
-    var pTot = 0; for(var i=0;i<pRows.length;i++) pTot += pRows[i].total;
-    mProd.textContent = M(pTot) + ' portfolio';
-  }
 }
 
 // ════════════════════════════════════════════════════════════
