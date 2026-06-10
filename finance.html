@@ -830,29 +830,68 @@ var EMAP = {
 // ════════════════════════════════════════════════════════════
 // FIREBASE INIT
 // ════════════════════════════════════════════════════════════
-firebase.initializeApp(FIREBASE_CONFIG);
-auth = firebase.auth();
+var _bootTime      = Date.now();
+var INTRO_MS       = 2600;   // splash visible duration (anchored to page load)
+var INTRO_FADE_MS  = 800;    // matches #intro opacity transition
+var _authResolved  = false;
 
-auth.onAuthStateChanged(function(user) {
-  if (user) {
-    ge('login-screen').style.display = 'none';
-    ge('hdr-user-email').textContent  = user.email;
-    ge('logout-btn').style.display    = '';
-    ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-    // Remove 'on' from all panes so no content shows behind home
-    var panes = document.querySelectorAll('.pane');
-    for (var pi=0; pi<panes.length; pi++) panes[pi].classList.remove('on');
-    // Play intro animation once, then reveal home launcher
-    playIntro();
-    showHomeScreen();
-    loadData();
-    startAutoRefresh();
-  } else {
-    ge('login-screen').style.display  = 'flex';
-    ge('hdr-user-email').textContent  = '';
-    stopAutoRefresh();
-  }
-});
+// Fade out + remove the intro splash. Safe to call repeatedly.
+function hideIntro() {
+  var iv = ge('intro');
+  if (!iv) return;
+  iv.classList.add('gone');
+  setTimeout(function(){ if (iv) iv.style.display = 'none'; }, INTRO_FADE_MS);
+}
+
+// Reveal the login screen, letting the splash play its minimum time first.
+function revealLogin() {
+  var ls = ge('login-screen');
+  if (ls) ls.style.display = 'flex';
+  var elapsed = Date.now() - _bootTime;
+  setTimeout(hideIntro, Math.max(0, INTRO_MS - elapsed));
+}
+
+// FAILSAFE: if auth never resolves (Firebase blocked on VPN, slow network,
+// or init error), never leave the user stuck on the splash. Registered before
+// init so a Firebase load failure cannot skip it.
+setTimeout(function() {
+  if (_authResolved) return;
+  _authResolved = true;
+  revealLogin();
+}, 6000);
+
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+
+  auth.onAuthStateChanged(function(user) {
+    _authResolved = true;
+    if (user) {
+      ge('login-screen').style.display = 'none';
+      ge('hdr-user-email').textContent  = user.email;
+      ge('logout-btn').style.display    = '';
+      ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+      // Remove 'on' from all panes so no content shows behind home
+      var panes = document.querySelectorAll('.pane');
+      for (var pi=0; pi<panes.length; pi++) panes[pi].classList.remove('on');
+      // Play intro animation once, then reveal home launcher
+      playIntro();
+      showHomeScreen();
+      loadData();
+      startAutoRefresh();
+    } else {
+      // No session: let the splash play, then fade it to reveal the login form.
+      ge('hdr-user-email').textContent = '';
+      stopAutoRefresh();
+      revealLogin();
+    }
+  });
+} catch (err) {
+  // Firebase failed to load/init — surface the login screen instead of freezing.
+  _authResolved = true;
+  revealLogin();
+  showErr('Sign-in service did not load. Check your connection / VPN and refresh.');
+}
 
 // ════════════════════════════════════════════════════════════
 // AUTH
@@ -1203,14 +1242,14 @@ var GROUP_LABELS = {
 
 var _introPlayed = false;
 function playIntro() {
-  if (_introPlayed) { var iv=ge('intro'); if(iv) iv.classList.add('gone'); return; }
+  if (_introPlayed) { hideIntro(); return; }
   _introPlayed = true;
   var iv = ge('intro');
   if (!iv) return;
   iv.style.display = 'flex';
   iv.classList.remove('gone');
-  setTimeout(function(){ iv.classList.add('gone'); }, 2600);
-  setTimeout(function(){ if(iv) iv.style.display='none'; }, 3500);
+  var elapsed = Date.now() - _bootTime;
+  setTimeout(hideIntro, Math.max(0, INTRO_MS - elapsed));
 }
 
 function setHomeGreeting() {
