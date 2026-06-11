@@ -233,6 +233,11 @@ a{color:inherit;text-decoration:none}
         <div class="panel"><div class="ph"><div class="pt">Root cause</div><div class="pn">by case count</div></div><div class="cwrap"><canvas id="cRC"></canvas></div></div>
         <div class="panel"><div class="ph"><div class="pt">Monthly trend</div><div class="pn">net PKR identified</div></div><div class="cwrap"><canvas id="cMonth"></canvas></div></div>
         <div class="panel full">
+          <div class="ph"><div class="pt">Monthly recovery</div><div class="pn">net PKR by month</div></div>
+          <table class="tbl"><thead><tr><th>Month</th><th class="r">Net recovered</th><th class="r">Cases</th><th class="r">% of net</th></tr></thead>
+          <tbody id="monthTbl"><tr><td colspan="4" class="skeleton">Loading…</td></tr></tbody></table>
+        </div>
+        <div class="panel full">
           <div class="ph"><div class="pt">Watchlist &mdash; largest individual cases</div><div class="pn">act first</div></div>
           <table class="tbl"><thead><tr><th>#</th><th>Department</th><th>Process</th><th>Observation</th><th class="r">Amount</th></tr></thead>
           <tbody id="watch"><tr><td colspan="5" class="skeleton">Loading…</td></tr></tbody></table>
@@ -280,7 +285,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v6';
+var BUILD='v8';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -384,10 +389,16 @@ function renderHome(){
   document.getElementById('gHrs').textContent = ((d.team&&d.team.hrs)||0)+' h';
 }
 
+function monthLabel(k){
+  if(!k) return 'Undated';
+  var s=String(k).split('-'); if(s.length<2) return k;
+  var names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var mi=parseInt(s[1],10)-1; return (mi>=0&&mi<12)?(names[mi]+' '+s[0]):k;
+}
 function renderAudit(){
   var a=DATA.audit; if(!a) return;
   document.getElementById('kNet').textContent = pkr(a.net);
-  document.getElementById('kGross').textContent = 'gross '+pkr(a.gross);
+  document.getElementById('kGross').textContent = 'duplicates excluded';
   document.getElementById('kObs').textContent = nfmt(a.count);
   var topd=(a.byDept&&a.byDept[0])||{k:'—',v:0};
   document.getElementById('kTop').textContent = topd.k;
@@ -403,6 +414,31 @@ function renderAudit(){
   hbar('cCat',  a.byCat.slice(0,8));
   doughnut('cRC', (a.byRC||[]).slice(0,8), 'n');
   line('cMonth', a.byMonth||[]);
+
+  // Monthly recovery table — net (col G gated by col H=Yes) grouped by Month, newest first
+  (function(){
+    var net=a.net||0, months=(a.byMonth||[]).slice();
+    var sumV=0,sumN=0; months.forEach(function(m){sumV+=(m.v||0);sumN+=(m.n||0);});
+    var countedN=(a.byDept||[]).reduce(function(s,d){return s+(d.n||0);},0);
+    var tb=document.getElementById('monthTbl'); tb.innerHTML='';
+    months.slice().reverse().forEach(function(m){
+      var p=net?Math.round(m.v/net*100):0, tr=document.createElement('tr');
+      tr.innerHTML='<td><b style="color:#eaf3ec">'+esc(monthLabel(m.k))+'</b></td>'+
+        '<td class="r amt">'+pkr(m.v)+'</td><td class="r">'+nfmt(m.n)+'</td><td class="r">'+p+'%</td>';
+      tb.appendChild(tr);
+    });
+    var undV=net-sumV, undN=countedN-sumN;
+    if(undV>1000||undN>0){
+      var p=net?Math.round(undV/net*100):0, tr=document.createElement('tr');
+      tr.innerHTML='<td style="color:#8AA896">Undated</td><td class="r amt">'+pkr(undV)+'</td>'+
+        '<td class="r">'+nfmt(undN)+'</td><td class="r">'+p+'%</td>';
+      tb.appendChild(tr);
+    }
+    var trt=document.createElement('tr'); trt.style.borderTop='1px solid var(--gold-soft)';
+    trt.innerHTML='<td><b style="color:#E3C375">Total (net)</b></td><td class="r amt"><b style="color:#E3C375">'+pkr(net)+'</b></td>'+
+      '<td class="r"><b>'+nfmt(countedN)+'</b></td><td class="r"><b>100%</b></td>';
+    tb.appendChild(trt);
+  })();
 
   var tb=document.getElementById('watch'); tb.innerHTML='';
   (a.topCases||[]).forEach(function(c,i){
@@ -460,11 +496,20 @@ function vbar(id, rows){
 }
 function doughnut(id, rows, key){
   destroy(id); var el=document.getElementById(id); if(!el)return;
+  var vals=rows.map(function(r){return r[key]});
+  var total=vals.reduce(function(s,v){return s+(+v||0);},0)||1;
   CHARTS[id]=new Chart(el.getContext('2d'),{type:'doughnut',data:{labels:rows.map(function(r){return r.k}),
-    datasets:[{data:rows.map(function(r){return r[key]}),backgroundColor:PAL,borderColor:'#0f2819',borderWidth:2}]},
+    datasets:[{data:vals,backgroundColor:PAL,borderColor:'#0f2819',borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
-      plugins:{legend:{position:'right',labels:{boxWidth:9,boxHeight:9,font:{size:10.5},padding:9}},
-        tooltip:{callbacks:{label:function(c){return c.label+': '+nfmt(c.parsed)}}}}}});
+      plugins:{legend:{position:'right',labels:{boxWidth:9,boxHeight:9,font:{size:10.5},padding:8,color:'#EAF3EC',
+        generateLabels:function(chart){
+          var ds=chart.data.datasets[0];
+          return chart.data.labels.map(function(lab,i){
+            var p=Math.round((ds.data[i]||0)/total*100);
+            return {text:lab+' — '+p+'%', fillStyle:ds.backgroundColor[i], strokeStyle:ds.backgroundColor[i], lineWidth:0, fontColor:'#EAF3EC', index:i};
+          });
+        }}},
+        tooltip:{callbacks:{label:function(c){var p=Math.round(c.parsed/total*100);return c.label+': '+nfmt(c.parsed)+' cases · '+p+'%';}}}}}});
 }
 function line(id, rows){
   destroy(id); var el=document.getElementById(id); if(!el)return; var ctx=el.getContext('2d');
