@@ -274,12 +274,12 @@ a{color:inherit;text-decoration:none}
 <script>
 /* ====== CONFIG ====== */
 var CONFIG = {
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbxprvASH6dFqXu8ek7s96BEZDLEbhQrH5P3s5__LkdHKxHLcfSRd28o8z2NzDvRiyOO/exec',
+  ENDPOINT: 'https://imarat-audit.icandoit0332.workers.dev',
   KEY: 'IMARAT_AUDIT_KEY_2026',
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v3';
+var BUILD='v5';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -333,12 +333,7 @@ function fetchJson(url){
 }
 function tryDirect(){
   // works when the endpoint allows cross-origin reads
-  fetchJson(dataUrl()).then(handleData).catch(tryRelay);
-}
-function tryRelay(){
-  // CORS relay adds the permission header browsers require — this is the path that works on iOS Safari/Chrome
-  var p='https://api.allorigins.win/raw?url='+encodeURIComponent(dataUrl());
-  fetchJson(p).then(handleData).catch(loadJsonp);
+  fetchJson(dataUrl()).then(handleData).catch(loadJsonp);
 }
 function loadJsonp(){
   var cbName='__imaud'+Date.now(), done=false;
