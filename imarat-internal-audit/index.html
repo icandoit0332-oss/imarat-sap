@@ -308,25 +308,39 @@ function pkr(v){
 }
 function nfmt(v){return (+v||0).toLocaleString('en-US')}
 
-/* ====== data load (JSONP, live-first) ====== */
+/* ====== data load (fetch-first, JSONP fallback) ====== */
+function dataUrl(){
+  return CONFIG.ENDPOINT+(CONFIG.ENDPOINT.indexOf('?')<0?'?':'&')+'key='+encodeURIComponent(CONFIG.KEY)+'&t='+Date.now();
+}
+function handleData(res){
+  if(res && res.ok && res.data){
+    DATA=res.data;
+    try{localStorage.setItem(CONFIG.CACHE, JSON.stringify({d:DATA,u:res.updated}));}catch(e){}
+    hideBanner(); setLive(true,res.updated); render();
+  } else {
+    useCacheOrError(res && res.error ? ('Endpoint error: '+res.error) : 'Endpoint returned no data');
+  }
+}
 function loadData(){
   setConnecting();
   if(!CONFIG.ENDPOINT){ useCacheOrError('No endpoint configured'); return; }
+  // Primary: direct fetch — works on iOS WebKit, where dynamically injected JSONP scripts can fail.
+  if(window.fetch){
+    fetch(dataUrl(), {method:'GET', redirect:'follow', cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(res){ handleData(res); })
+      .catch(function(){ loadJsonp(); });   // CORS/network issue -> try the script-tag method
+  } else {
+    loadJsonp();
+  }
+}
+function loadJsonp(){
   var cbName='__imaud'+Date.now(), done=false;
   var to=setTimeout(function(){ if(!done){done=true;cleanup();useCacheOrError('Timed out reaching the sheet');} },11000);
-  window[cbName]=function(res){
-    done=true; clearTimeout(to); cleanup();
-    if(res && res.ok && res.data){
-      DATA=res.data;
-      try{localStorage.setItem(CONFIG.CACHE, JSON.stringify({d:DATA,u:res.updated}));}catch(e){}
-      hideBanner(); setLive(true,res.updated); render();
-    } else {
-      useCacheOrError(res && res.error ? ('Endpoint error: '+res.error) : 'Endpoint returned no data');
-    }
-  };
+  window[cbName]=function(res){ done=true; clearTimeout(to); cleanup(); handleData(res); };
   function cleanup(){ var s=document.getElementById(cbName); if(s)s.remove(); try{delete window[cbName];}catch(e){} }
   var s=document.createElement('script'); s.id=cbName;
-  s.src=CONFIG.ENDPOINT+(CONFIG.ENDPOINT.indexOf('?')<0?'?':'&')+'key='+encodeURIComponent(CONFIG.KEY)+'&callback='+cbName+'&t='+Date.now();
+  s.src=dataUrl()+'&callback='+cbName;
   s.onerror=function(){ if(!done){done=true;clearTimeout(to);cleanup();useCacheOrError('Could not reach the endpoint');} };
   document.body.appendChild(s);
 }
@@ -489,6 +503,8 @@ function setClock(){
 
 /* ====== boot ====== */
 (function(){
+  // claim this sub-path so the finance app's service worker can't intercept our live API call
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }
   setClock(); setInterval(setClock,60000);
   var v=(location.hash||'#home').slice(1);
   if(['home','audit','diary'].indexOf(v)>=0 && v!=='home') go(v);
