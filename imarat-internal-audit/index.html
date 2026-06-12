@@ -103,6 +103,10 @@ a{color:inherit;text-decoration:none}
 .dtitle em{font-style:normal;color:var(--gold)}
 .dsub{color:var(--muted);font-size:13px;margin-top:4px}
 
+.scroll{max-height:380px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:rgba(201,161,74,.3);border-radius:4px}
+.scroll thead th{position:sticky;top:0;background:#0f2819;z-index:2}
 .fpills{display:flex;gap:8px;flex-wrap:wrap}
 .fpill{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line-soft);padding:6px 13px;border-radius:999px;cursor:pointer;transition:.18s}
 .fpill:hover{color:var(--gold-2);border-color:var(--gold)}
@@ -254,8 +258,8 @@ a{color:inherit;text-decoration:none}
             <path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59c0 .53.21 1.04.59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83Z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>
         </div>
         <div class="cc">
-          <div class="ct">Pricing Compliance</div>
-          <div class="cs">Out-of-policy bookings &middot; Commercial loss &middot; Projects &middot; Managers &middot; Worst cases</div>
+          <div class="ct">Booking Policy Compliance Check</div>
+          <div class="cs">In policy vs out of policy &middot; Monthly &middot; Commercial loss &middot; Categories &middot; Managers</div>
         </div>
         <div class="arr">&rarr;</div>
       </div>
@@ -265,8 +269,8 @@ a{color:inherit;text-decoration:none}
             <path d="M9 11l3 3 8-8"/><path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg>
         </div>
         <div class="cc">
-          <div class="ct">Booking Recon</div>
-          <div class="cs">Pitstop documentation status &middot; Completion &middot; Pending by project</div>
+          <div class="ct">Pitstop Data Recon</div>
+          <div class="cs">Documentation status &middot; Monthly &middot; Pending cases &amp; reasons</div>
         </div>
         <div class="arr">&rarr;</div>
       </div>
@@ -340,8 +344,8 @@ a{color:inherit;text-decoration:none}
     <div class="dash">
       <div class="crumb" onclick="go('home')">&larr; All dashboards</div>
       <div class="dhead">
-        <div><div class="dtitle">Pricing <em>Compliance</em></div>
-        <div class="dsub">Out-of-policy bookings &middot; FMO</div></div>
+        <div><div class="dtitle">Booking Policy <em>Compliance</em></div>
+        <div class="dsub">In policy vs out of policy &middot; FMO bookings</div></div>
         <div class="fpills" id="oopPills"></div>
       </div>
       <div id="oopEmpty" class="note" style="display:none">Awaiting data &mdash; add the <b>OOP Bookings</b> and <b>OOP Summary</b> tabs to the Google Sheet.</div>
@@ -355,6 +359,7 @@ a{color:inherit;text-decoration:none}
       <div class="grid">
         <div class="panel"><div class="ph"><div class="pt">Est. loss by project</div><div class="pn">PKR</div></div><div class="cwrap"><canvas id="cOopProj"></canvas></div></div>
         <div class="panel"><div class="ph"><div class="pt">Cases by project</div><div class="pn">bookings</div></div><div class="cwrap"><canvas id="cOopProjN"></canvas></div></div>
+        <div class="panel full"><div class="ph"><div class="pt">Product category &mdash; in policy vs out of policy</div><div class="pn">bookings</div></div><div class="cwrap" style="height:300px"><canvas id="cOopCat"></canvas></div></div>
         <div class="panel full">
           <div class="ph"><div class="pt">By regional manager</div><div class="pn">est. loss &amp; cases</div></div>
           <table class="tbl"><thead><tr><th>#</th><th>Regional Manager</th><th class="r">Cases</th><th class="r">Est. loss</th><th class="r">% of loss</th></tr></thead>
@@ -376,7 +381,7 @@ a{color:inherit;text-decoration:none}
     <div class="dash">
       <div class="crumb" onclick="go('home')">&larr; All dashboards</div>
       <div class="dhead">
-        <div><div class="dtitle">Booking <em>Recon</em></div>
+        <div><div class="dtitle">Pitstop <em>Data Recon</em></div>
         <div class="dsub">Pitstop documentation status</div></div>
         <div class="fpills" id="psPills"></div>
       </div>
@@ -390,6 +395,13 @@ a{color:inherit;text-decoration:none}
       </div>
       <div class="grid">
         <div class="panel full"><div class="ph"><div class="pt">Status by project</div><div class="pn">stacked</div></div><div class="cwrap" style="height:320px"><canvas id="cPs"></canvas></div></div>
+        <div class="panel full">
+          <div class="ph"><div class="pt">Pending cases &mdash; reasons</div><div class="pn" id="pendCount"></div></div>
+          <div class="scroll">
+          <table class="tbl"><thead><tr><th>#</th><th>Booking ID</th><th>Project</th><th>Advisor</th><th>Customer</th><th>Reason</th></tr></thead>
+          <tbody id="psPend"></tbody></table>
+          </div>
+        </div>
         <div class="panel full">
           <div class="ph"><div class="pt">Project detail</div><div class="pn">completion</div></div>
           <table class="tbl"><thead><tr><th>Project</th><th class="r">Total</th><th class="r">Complete</th><th class="r">Pending</th><th class="r">% complete</th></tr></thead>
@@ -411,7 +423,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v11';
+var BUILD='v12';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -508,28 +520,32 @@ function refresh(){ var b=document.getElementById('refreshBtn'); b.style.opacity
 /* ====== render ====== */
 function render(){ renderHome(); renderAudit(); renderDiary(); renderOOP(); renderPitstop(); }
 
-/* ====== pricing compliance ====== */
+/* ====== booking policy compliance ====== */
 var OOP_SEL=null, PS_SEL=null;
 function renderOOP(){
   var o=DATA&&DATA.oop, empty=document.getElementById('oopEmpty'), body=document.getElementById('oopBody');
-  if(!o||!o.periods||!o.periods.length){ empty.style.display='block'; body.style.display='none'; return; }
+  var months=(o&&o.months)||[];
+  if(!o||(!months.length&&!o.all)){ empty.style.display='block'; body.style.display='none'; return; }
   empty.style.display='none'; body.style.display='block';
-  var ps=o.periods;
-  if(!OOP_SEL||!ps.some(function(p){return p.k===OOP_SEL})) OOP_SEL=ps[ps.length-1].k;
+  var opts=[]; if(o.all)opts.push(o.all); months.forEach(function(m){opts.push(m)});
+  if(!OOP_SEL||!opts.some(function(p){return p.k===OOP_SEL})) OOP_SEL=o.all?'All':opts[opts.length-1].k;
   var pillBox=document.getElementById('oopPills'); pillBox.innerHTML='';
-  if(ps.length>1) ps.forEach(function(p){
-    var b=document.createElement('div'); b.className='fpill'+(p.k===OOP_SEL?' on':''); b.textContent=p.k;
+  if(opts.length>1) opts.forEach(function(p){
+    var b=document.createElement('div'); b.className='fpill'+(p.k===OOP_SEL?' on':'');
+    b.textContent=(p.k==='All')?'All':monthLabel(p.k);
     b.onclick=function(){OOP_SEL=p.k; renderOOP();}; pillBox.appendChild(b);
   });
-  var P=null; ps.forEach(function(x){ if(x.k===OOP_SEL)P=x; }); if(!P)P=ps[ps.length-1];
+  var P=null; opts.forEach(function(x){ if(x.k===OOP_SEL)P=x; }); if(!P)P=opts[0];
+  var lbl=(P.k==='All')?'all months':monthLabel(P.k);
   document.getElementById('oN').textContent=nfmt(P.oop);
-  document.getElementById('oShare').textContent=P.total?('of '+nfmt(P.total)+' sold ('+Math.round(P.oop/P.total*100)+'%) · '+P.k):P.k;
+  document.getElementById('oShare').textContent=P.total?('of '+nfmt(P.total)+' sold ('+Math.round(P.oop/P.total*100)+'%) · '+nfmt(P.policy)+' in policy · '+lbl):lbl;
   document.getElementById('oLoss').textContent=pkr(P.estLoss);
   document.getElementById('oLossN').textContent='from '+nfmt(P.estN)+' quantified cases';
   document.getElementById('oDisc').textContent=P.avgDisc+'%';
   document.getElementById('oUnq').textContent=nfmt(P.unq);
   hbar('cOopProj',(P.byProject||[]).slice(0,8));
   hbarN('cOopProjN',(P.byProject||[]).slice().sort(function(a,b){return b.n-a.n}).slice(0,8));
+  catSplit('cOopCat',P.catSplit||[]);
   var tb=document.getElementById('oopRm'); tb.innerHTML='';
   (P.byRM||[]).forEach(function(m,i){
     var pc=P.estLoss?Math.round(m.v/P.estLoss*100):0;
@@ -544,6 +560,20 @@ function renderOOP(){
       '<td class="r">'+nfmt(c.pol)+'</td><td class="r">'+(c.act?nfmt(c.act):'—')+'</td><td class="r amt">'+(c.loss?pkr(c.loss):'—')+'</td>';
     tt.appendChild(tr);
   });
+}
+function catSplit(id, rows){
+  destroy(id); var el=document.getElementById(id); if(!el)return;
+  CHARTS[id]=new Chart(el.getContext('2d'),{type:'bar',
+    data:{labels:rows.map(function(r){return r.k}),
+      datasets:[
+        {label:'In policy', data:rows.map(function(r){return r.pol}), backgroundColor:'#5FD08A', borderRadius:4, maxBarThickness:20},
+        {label:'Out of policy', data:rows.map(function(r){return r.oop}), backgroundColor:'#E3C375', borderRadius:4, maxBarThickness:20}
+      ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,font:{size:10.5},color:'#EAF3EC',padding:10}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+nfmt(c.parsed.x)}}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.05)'}},
+              y:{stacked:true,grid:{display:false},ticks:{font:{size:10.5}}}}}});
 }
 function hbarN(id, rows){
   destroy(id); var el=document.getElementById(id); if(!el)return;
@@ -594,6 +624,15 @@ function renderPitstop(){
         tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y}}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
               y:{stacked:true,grid:{color:'rgba(255,255,255,.05)'}}}}});
+  // pending cases (scrollable)
+  var pendRows=M.pending||[];
+  document.getElementById('pendCount').textContent=nfmt(pendRows.length)+' cases';
+  var pb=document.getElementById('psPend'); pb.innerHTML='';
+  pendRows.forEach(function(c,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(i+1)+'</td><td><b style="color:#eaf3ec">'+esc(c.id)+'</b></td><td>'+esc(c.proj)+'</td><td>'+esc(c.adv)+'</td><td>'+esc(c.cust)+'</td><td class="amt">'+esc(c.st)+'</td>';
+    pb.appendChild(tr);
+  });
   // table
   var tb=document.getElementById('psTbl'); tb.innerHTML='';
   (M.byProject||[]).forEach(function(pr){
