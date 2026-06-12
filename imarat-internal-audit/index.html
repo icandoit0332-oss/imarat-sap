@@ -274,6 +274,17 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="arr">&rarr;</div>
       </div>
+      <div class="card" onclick="go('tax')">
+        <div class="ic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E3C375" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/><path d="M12 8v.01"/></svg>
+        </div>
+        <div class="cc">
+          <div class="ct">Tax Compliance</div>
+          <div class="cs">FBR notices &amp; exposure &middot; Pending tax payments &middot; Entities register</div>
+        </div>
+        <div class="arr">&rarr;</div>
+      </div>
     </div>
   </section>
 
@@ -412,6 +423,72 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
+
+  <!-- TAX COMPLIANCE -->
+  <section class="view" id="view-tax">
+    <div class="dash">
+      <div class="crumb" onclick="go('home')">&larr; All dashboards</div>
+      <div class="dhead">
+        <div><div class="dtitle">Tax <em>Compliance</em></div>
+        <div class="dsub">FBR notices &middot; pending payments &middot; entities</div></div>
+        <div class="fpills" id="taxPills"></div>
+      </div>
+      <div id="taxEmpty" class="note" style="display:none">Awaiting data &mdash; add the <b>Tax Notices</b>, <b>Tax Pending</b> and <b>Tax Companies</b> tabs to the Google Sheet.</div>
+
+      <div id="taxNotices" style="display:none">
+        <div class="kpis">
+          <div class="kpi"><div class="l">At stake &mdash; active notices</div><div class="v gold" id="txAct">&mdash;</div><div class="n" id="txActN"></div></div>
+          <div class="kpi"><div class="l">Corporate</div><div class="v" id="txCorp">&mdash;</div><div class="n" id="txCorpN"></div></div>
+          <div class="kpi"><div class="l">Individuals</div><div class="v" id="txInd">&mdash;</div><div class="n" id="txIndN"></div></div>
+          <div class="kpi"><div class="l">Closed</div><div class="v" id="txCl">&mdash;</div><div class="n" id="txClN"></div></div>
+        </div>
+        <div class="grid">
+          <div class="panel full"><div class="ph"><div class="pt">Active exposure by entity</div><div class="pn">PKR at stake</div></div><div class="cwrap" style="height:300px"><canvas id="cTaxCo"></canvas></div></div>
+          <div class="panel full">
+            <div class="ph"><div class="pt">Notices register</div><div class="pn" id="txRegN"></div></div>
+            <div class="scroll">
+            <table class="tbl"><thead><tr><th>#</th><th>Entity</th><th>Type</th><th>Tax year</th><th class="r">Tax involved</th><th>Status</th></tr></thead>
+            <tbody id="txReg"></tbody></table>
+            </div>
+            <div class="note">Rows marked &ldquo;&mdash;&rdquo; carry no tax demand (procedural notices).</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="taxPending" style="display:none">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Latest month pending</div><div class="v gold" id="tpLatest">&mdash;</div><div class="n" id="tpLatestM"></div></div>
+          <div class="kpi"><div class="l">FYTD pending</div><div class="v" id="tpFytd">&mdash;</div><div class="n" id="tpMonths"></div></div>
+          <div class="kpi"><div class="l">Largest category</div><div class="v" id="tpTopCat">&mdash;</div><div class="n" id="tpTopCatV"></div></div>
+          <div class="kpi"><div class="l">Largest entity</div><div class="v" id="tpTopCo">&mdash;</div><div class="n" id="tpTopCoV"></div></div>
+        </div>
+        <div class="grid">
+          <div class="panel"><div class="ph"><div class="pt">Monthly trend</div><div class="pn">total pending PKR</div></div><div class="cwrap"><canvas id="cTaxTrend"></canvas></div></div>
+          <div class="panel"><div class="ph"><div class="pt">By entity / project</div><div class="pn">FYTD PKR</div></div><div class="cwrap"><canvas id="cTaxPendCo"></canvas></div></div>
+          <div class="panel full">
+            <div class="ph"><div class="pt">By category</div><div class="pn">PKR</div></div>
+            <table class="tbl"><thead><tr><th>Category</th><th class="r">Latest month</th><th class="r">FYTD</th></tr></thead>
+            <tbody id="tpCatTbl"></tbody></table>
+            <div class="note" id="tpMissing"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="taxCompanies" style="display:none">
+        <div class="grid">
+          <div class="panel full">
+            <div class="ph"><div class="pt">Active entities register</div><div class="pn" id="tcN"></div></div>
+            <div class="scroll">
+            <table class="tbl"><thead><tr><th>#</th><th>Entity</th><th class="r">NTN</th></tr></thead>
+            <tbody id="tcTbl"></tbody></table>
+            </div>
+            <div class="note">Compliance scope per entity: monthly &amp; quarterly sales tax returns &middot; annual tax return &middot; notice replies &middot; advance income tax u/s 147 (quarterly).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <script>
@@ -423,7 +500,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v12';
+var BUILD='v14';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -440,7 +517,7 @@ function go(v){
 }
 window.addEventListener('hashchange', function(){
   var v=(location.hash||'#home').slice(1);
-  if(['home','audit','diary','oop','pitstop'].indexOf(v)<0) v='home';
+  if(['home','audit','diary','oop','pitstop','tax'].indexOf(v)<0) v='home';
   document.querySelectorAll('.view').forEach(function(s){s.classList.remove('active')});
   document.getElementById('view-'+v).classList.add('active');
 });
@@ -518,7 +595,91 @@ function setLive(live, updated, label){
 function refresh(){ var b=document.getElementById('refreshBtn'); b.style.opacity=.4; loadData(true); setTimeout(function(){b.style.opacity=1;},700); }
 
 /* ====== render ====== */
-function render(){ renderHome(); renderAudit(); renderDiary(); renderOOP(); renderPitstop(); }
+function render(){ renderHome(); renderAudit(); renderDiary(); renderOOP(); renderPitstop(); renderTax(); }
+
+/* ====== tax compliance ====== */
+var TAX_SEC='notices';
+var TAX_KNOWN_CATS=['Salary Tax U/S 149','Rental Tax Projects','Buyback Tax','Building Rental Tax','Investment Tax','Vendor Tax'];
+function renderTax(){
+  var t=DATA&&DATA.tax, empty=document.getElementById('taxEmpty');
+  var secs={notices:document.getElementById('taxNotices'),pending:document.getElementById('taxPending'),companies:document.getElementById('taxCompanies')};
+  if(!t||(!t.notices&&!t.pending&&!t.companies)){
+    empty.style.display='block'; for(var k in secs)secs[k].style.display='none';
+    document.getElementById('taxPills').innerHTML=''; return;
+  }
+  empty.style.display='none';
+  var avail=[]; if(t.notices)avail.push(['notices','Notices']);
+  if(t.pending)avail.push(['pending','Pending payments']);
+  if(t.companies)avail.push(['companies','Companies']);
+  if(!avail.some(function(a){return a[0]===TAX_SEC})) TAX_SEC=avail[0][0];
+  var pb=document.getElementById('taxPills'); pb.innerHTML='';
+  avail.forEach(function(a){
+    var b=document.createElement('div'); b.className='fpill'+(a[0]===TAX_SEC?' on':''); b.textContent=a[1];
+    b.onclick=function(){TAX_SEC=a[0]; renderTax();}; pb.appendChild(b);
+  });
+  for(var k2 in secs) secs[k2].style.display=(k2===TAX_SEC)?'block':'none';
+
+  if(TAX_SEC==='notices'&&t.notices){
+    var N=t.notices, T=N.totals;
+    document.getElementById('txAct').textContent=pkr(T.actV);
+    document.getElementById('txActN').textContent=nfmt(T.actN)+' active notices';
+    document.getElementById('txCorp').textContent=pkr(T.corp.actV);
+    document.getElementById('txCorpN').textContent=nfmt(T.corp.actN)+' active · companies';
+    document.getElementById('txInd').textContent=pkr(T.ind.actV);
+    document.getElementById('txIndN').textContent=nfmt(T.ind.actN)+' active · individuals';
+    document.getElementById('txCl').textContent=nfmt(T.clN);
+    document.getElementById('txClN').textContent=pkr(T.clV)+' resolved';
+    var rows=(N.byCompany||[]).filter(function(c){return c.v>0}).slice(0,10);
+    hbar('cTaxCo',rows);
+    var reg=N.register||[];
+    document.getElementById('txRegN').textContent=nfmt(reg.length)+' notices · active first';
+    var tb=document.getElementById('txReg'); tb.innerHTML='';
+    reg.forEach(function(x,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+(i+1)+'</td><td><b style="color:#eaf3ec">'+esc(x.co)+'</b></td>'+
+        '<td>'+(x.et==='Individual'?'<span style="color:#E3C375">Individual</span>':'Corporate')+'</td>'+
+        '<td>'+esc(x.yr)+'</td><td class="r '+(x.st==='Active'&&x.amt?'amt':'')+'">'+(x.amt?pkr(x.amt):'—')+'</td>'+
+        '<td>'+(x.st==='Active'?'<b style="color:#E3C375">Active</b>':'<span style="color:#8AA896">Closed</span>')+'</td>';
+      tb.appendChild(tr);
+    });
+  }
+
+  if(TAX_SEC==='pending'&&t.pending){
+    var P=t.pending;
+    document.getElementById('tpLatest').textContent=pkr(P.latestTotal);
+    document.getElementById('tpLatestM').textContent=monthLabel(P.latestMonth);
+    document.getElementById('tpFytd').textContent=pkr(P.fytd);
+    document.getElementById('tpMonths').textContent='across '+nfmt((P.months||[]).length)+' months';
+    var tc=(P.byCat||[])[0];
+    document.getElementById('tpTopCat').textContent=tc?tc.k.replace(' U/S 149',''):'—';
+    document.getElementById('tpTopCatV').textContent=tc?(pkr(tc.total)+' FYTD'):'';
+    var tco=(P.byCompany||[])[0];
+    document.getElementById('tpTopCo').textContent=tco?tco.k:'—';
+    document.getElementById('tpTopCoV').textContent=tco?(pkr(tco.v)+' FYTD'):'';
+    line('cTaxTrend',P.trend||[]);
+    hbar('cTaxPendCo',(P.byCompany||[]).slice(0,8));
+    var tb2=document.getElementById('tpCatTbl'); tb2.innerHTML='';
+    (P.byCat||[]).forEach(function(c){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><b style="color:#eaf3ec">'+esc(c.k)+'</b></td><td class="r">'+pkr(c.latest)+'</td><td class="r amt">'+pkr(c.total)+'</td>';
+      tb2.appendChild(tr);
+    });
+    var present={}; (P.byCat||[]).forEach(function(c){present[c.k]=1});
+    var missing=TAX_KNOWN_CATS.filter(function(c){return !present[c]});
+    document.getElementById('tpMissing').textContent=missing.length?('Awaiting data: '+missing.join(' · ')):'';
+  }
+
+  if(TAX_SEC==='companies'&&t.companies){
+    var list=t.companies||[];
+    document.getElementById('tcN').textContent=nfmt(list.length)+' entities · 100% compliance scope';
+    var tb3=document.getElementById('tcTbl'); tb3.innerHTML='';
+    list.forEach(function(c,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+(i+1)+'</td><td><b style="color:#eaf3ec">'+esc(c.name)+'</b></td><td class="r">'+esc(c.ntn)+'</td>';
+      tb3.appendChild(tr);
+    });
+  }
+}
 
 /* ====== booking policy compliance ====== */
 var OOP_SEL=null, PS_SEL=null;
@@ -593,7 +754,7 @@ function renderPitstop(){
   var ms=p.months;
   if(!PS_SEL||!ms.some(function(m){return m.k===PS_SEL})) PS_SEL=ms[ms.length-1].k;
   var pillBox=document.getElementById('psPills'); pillBox.innerHTML='';
-  if(ms.length>1) ms.forEach(function(m){
+  ms.forEach(function(m){
     var b=document.createElement('div'); b.className='fpill'+(m.k===PS_SEL?' on':''); b.textContent=m.k;
     b.onclick=function(){PS_SEL=m.k; renderPitstop();}; pillBox.appendChild(b);
   });
