@@ -103,6 +103,8 @@ a{color:inherit;text-decoration:none}
 .dtitle em{font-style:normal;color:var(--gold)}
 .dsub{color:var(--muted);font-size:13px;margin-top:4px}
 
+.chiprow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.chip{font-size:12px;font-weight:600;color:#E3C375;background:rgba(201,161,74,.1);border:1px solid rgba(201,161,74,.25);padding:6px 13px;border-radius:999px}
 .scroll{max-height:380px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
 .scroll::-webkit-scrollbar{width:8px}
 .scroll::-webkit-scrollbar-thumb{background:rgba(201,161,74,.3);border-radius:4px}
@@ -476,6 +478,20 @@ a{color:inherit;text-decoration:none}
 
       <div id="taxCompanies" style="display:none">
         <div class="grid">
+          <div class="panel">
+            <div class="ph"><div class="pt">Sales tax registration</div><div class="pn">100% compliance</div></div>
+            <div class="chiprow">
+              <span class="chip">FBR</span><span class="chip">SRB</span><span class="chip">PRA</span><span class="chip">BRA</span><span class="chip">KPRA</span>
+            </div>
+            <div class="note">Registered with federal and all provincial revenue authorities &middot; monthly &amp; quarterly sales tax returns filed &middot; 100% tax compliance in sales tax.</div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Section 100D &mdash; Income Tax Ordinance</div><div class="pn">5 companies registered</div></div>
+            <div class="chiprow">
+              <span class="chip">Amazon Mall</span><span class="chip">G-11</span><span class="chip">MOI</span><span class="chip">Amazon Marketing</span><span class="chip">Mall-2</span>
+            </div>
+            <div class="note">Builders &amp; developers special regime registrations under Section 100D.</div>
+          </div>
           <div class="panel full">
             <div class="ph"><div class="pt">Active entities register</div><div class="pn" id="tcN"></div></div>
             <div class="scroll">
@@ -500,7 +516,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v14';
+var BUILD='v16';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -525,6 +541,7 @@ window.addEventListener('hashchange', function(){
 /* ====== money / num ====== */
 function pkr(v){
   v=+v||0; var s=v<0?'-':''; v=Math.abs(v);
+  if(v>=1e9) return s+'PKR '+(v/1e9).toFixed(2)+'B';
   if(v>=1e6) return s+'PKR '+(v/1e6).toFixed(1)+'M';
   if(v>=1e3) return s+'PKR '+(v/1e3).toFixed(0)+'K';
   return s+'PKR '+Math.round(v);
@@ -906,7 +923,7 @@ function hbar(id, rows, hours){
       borderRadius:6,barThickness:'flex',maxBarThickness:22}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
       tooltip:{callbacks:{label:function(c){return hours?(c.parsed.x+' h'):pkr(c.parsed.x)}}}},
-      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:function(v){return hours?v+'h':(v>=1e6?(v/1e6)+'M':v/1e3+'K')}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:function(v){return hours?v+'h':(v>=1e9?(v/1e9)+'B':v>=1e6?(v/1e6)+'M':v/1e3+'K')}}},
       y:{grid:{display:false},ticks:{font:{size:11}}}}}});
 }
 function vbar(id, rows){
@@ -942,7 +959,7 @@ function line(id, rows){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
       tooltip:{callbacks:{label:function(c){return pkr(c.parsed.y)}}}},
       scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}},
-        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:function(v){return v>=1e6?(v/1e6)+'M':v/1e3+'K'}}}}}});
+        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:function(v){return v>=1e9?(v/1e9)+'B':v>=1e6?(v/1e6)+'M':v/1e3+'K'}}}}}});
 }
 function area(id, rows){
   destroy(id); var el=document.getElementById(id); if(!el)return; var ctx=el.getContext('2d');
