@@ -103,6 +103,10 @@ a{color:inherit;text-decoration:none}
 .dtitle em{font-style:normal;color:var(--gold)}
 .dsub{color:var(--muted);font-size:13px;margin-top:4px}
 
+.fpills{display:flex;gap:8px;flex-wrap:wrap}
+.fpill{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line-soft);padding:6px 13px;border-radius:999px;cursor:pointer;transition:.18s}
+.fpill:hover{color:var(--gold-2);border-color:var(--gold)}
+.fpill.on{color:#08180E;background:linear-gradient(135deg,#E3C375,#C9A14A);border-color:transparent}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:linear-gradient(150deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px}
@@ -244,6 +248,28 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="arr">&rarr;</div>
       </div>
+      <div class="card" onclick="go('oop')">
+        <div class="ic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E3C375" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59c0 .53.21 1.04.59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83Z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>
+        </div>
+        <div class="cc">
+          <div class="ct">Pricing Compliance</div>
+          <div class="cs">Out-of-policy bookings &middot; Commercial loss &middot; Projects &middot; Managers &middot; Worst cases</div>
+        </div>
+        <div class="arr">&rarr;</div>
+      </div>
+      <div class="card" onclick="go('pitstop')">
+        <div class="ic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E3C375" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3 8-8"/><path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="cc">
+          <div class="ct">Booking Recon</div>
+          <div class="cs">Pitstop documentation status &middot; Completion &middot; Pending by project</div>
+        </div>
+        <div class="arr">&rarr;</div>
+      </div>
     </div>
   </section>
 
@@ -308,6 +334,72 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
+
+  <!-- PRICING COMPLIANCE -->
+  <section class="view" id="view-oop">
+    <div class="dash">
+      <div class="crumb" onclick="go('home')">&larr; All dashboards</div>
+      <div class="dhead">
+        <div><div class="dtitle">Pricing <em>Compliance</em></div>
+        <div class="dsub">Out-of-policy bookings &middot; FMO</div></div>
+        <div class="fpills" id="oopPills"></div>
+      </div>
+      <div id="oopEmpty" class="note" style="display:none">Awaiting data &mdash; add the <b>OOP Bookings</b> and <b>OOP Summary</b> tabs to the Google Sheet.</div>
+      <div id="oopBody" style="display:none">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Out of policy</div><div class="v gold" id="oN">&mdash;</div><div class="n" id="oShare"></div></div>
+        <div class="kpi"><div class="l">Est. commercial loss</div><div class="v gold" id="oLoss">&mdash;</div><div class="n" id="oLossN"></div></div>
+        <div class="kpi"><div class="l">Avg rate discount</div><div class="v" id="oDisc">&mdash;</div><div class="n">vs approved policy</div></div>
+        <div class="kpi"><div class="l">Unquantified</div><div class="v" id="oUnq">&mdash;</div><div class="n">rate or loss missing</div></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><div class="ph"><div class="pt">Est. loss by project</div><div class="pn">PKR</div></div><div class="cwrap"><canvas id="cOopProj"></canvas></div></div>
+        <div class="panel"><div class="ph"><div class="pt">Cases by project</div><div class="pn">bookings</div></div><div class="cwrap"><canvas id="cOopProjN"></canvas></div></div>
+        <div class="panel full">
+          <div class="ph"><div class="pt">By regional manager</div><div class="pn">est. loss &amp; cases</div></div>
+          <table class="tbl"><thead><tr><th>#</th><th>Regional Manager</th><th class="r">Cases</th><th class="r">Est. loss</th><th class="r">% of loss</th></tr></thead>
+          <tbody id="oopRm"></tbody></table>
+        </div>
+        <div class="panel full">
+          <div class="ph"><div class="pt">Worst cases</div><div class="pn">largest est. loss</div></div>
+          <table class="tbl"><thead><tr><th>#</th><th>RFC</th><th>Project</th><th>Advisor</th><th>Manager</th><th class="r">Policy</th><th class="r">Actual</th><th class="r">Est. loss</th></tr></thead>
+          <tbody id="oopTop"></tbody></table>
+          <div class="note">Loss estimated as (booked value &divide; actual rate) &times; loss per sqft. Rows missing the actual rate are counted as unquantified.</div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING RECON -->
+  <section class="view" id="view-pitstop">
+    <div class="dash">
+      <div class="crumb" onclick="go('home')">&larr; All dashboards</div>
+      <div class="dhead">
+        <div><div class="dtitle">Booking <em>Recon</em></div>
+        <div class="dsub">Pitstop documentation status</div></div>
+        <div class="fpills" id="psPills"></div>
+      </div>
+      <div id="psEmpty" class="note" style="display:none">Awaiting data &mdash; add a <b>Pitstop &lt;Month-Year&gt;</b> tab to the Google Sheet.</div>
+      <div id="psBody" style="display:none">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Bookings</div><div class="v" id="pN">&mdash;</div><div class="n" id="pMon"></div></div>
+        <div class="kpi"><div class="l">Complete</div><div class="v gold" id="pPct">&mdash;</div><div class="n" id="pCompN"></div></div>
+        <div class="kpi"><div class="l">Pending</div><div class="v" id="pPend">&mdash;</div><div class="n" id="pPendTop"></div></div>
+        <div class="kpi"><div class="l">Weakest project</div><div class="v" id="pWorst">&mdash;</div><div class="n" id="pWorstV"></div></div>
+      </div>
+      <div class="grid">
+        <div class="panel full"><div class="ph"><div class="pt">Status by project</div><div class="pn">stacked</div></div><div class="cwrap" style="height:320px"><canvas id="cPs"></canvas></div></div>
+        <div class="panel full">
+          <div class="ph"><div class="pt">Project detail</div><div class="pn">completion</div></div>
+          <table class="tbl"><thead><tr><th>Project</th><th class="r">Total</th><th class="r">Complete</th><th class="r">Pending</th><th class="r">% complete</th></tr></thead>
+          <tbody id="psTbl"></tbody></table>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <script>
@@ -319,7 +411,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v10';
+var BUILD='v11';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -336,7 +428,7 @@ function go(v){
 }
 window.addEventListener('hashchange', function(){
   var v=(location.hash||'#home').slice(1);
-  if(['home','audit','diary'].indexOf(v)<0) v='home';
+  if(['home','audit','diary','oop','pitstop'].indexOf(v)<0) v='home';
   document.querySelectorAll('.view').forEach(function(s){s.classList.remove('active')});
   document.getElementById('view-'+v).classList.add('active');
 });
@@ -414,7 +506,104 @@ function setLive(live, updated, label){
 function refresh(){ var b=document.getElementById('refreshBtn'); b.style.opacity=.4; loadData(true); setTimeout(function(){b.style.opacity=1;},700); }
 
 /* ====== render ====== */
-function render(){ renderHome(); renderAudit(); renderDiary(); }
+function render(){ renderHome(); renderAudit(); renderDiary(); renderOOP(); renderPitstop(); }
+
+/* ====== pricing compliance ====== */
+var OOP_SEL=null, PS_SEL=null;
+function renderOOP(){
+  var o=DATA&&DATA.oop, empty=document.getElementById('oopEmpty'), body=document.getElementById('oopBody');
+  if(!o||!o.periods||!o.periods.length){ empty.style.display='block'; body.style.display='none'; return; }
+  empty.style.display='none'; body.style.display='block';
+  var ps=o.periods;
+  if(!OOP_SEL||!ps.some(function(p){return p.k===OOP_SEL})) OOP_SEL=ps[ps.length-1].k;
+  var pillBox=document.getElementById('oopPills'); pillBox.innerHTML='';
+  if(ps.length>1) ps.forEach(function(p){
+    var b=document.createElement('div'); b.className='fpill'+(p.k===OOP_SEL?' on':''); b.textContent=p.k;
+    b.onclick=function(){OOP_SEL=p.k; renderOOP();}; pillBox.appendChild(b);
+  });
+  var P=null; ps.forEach(function(x){ if(x.k===OOP_SEL)P=x; }); if(!P)P=ps[ps.length-1];
+  document.getElementById('oN').textContent=nfmt(P.oop);
+  document.getElementById('oShare').textContent=P.total?('of '+nfmt(P.total)+' sold ('+Math.round(P.oop/P.total*100)+'%) · '+P.k):P.k;
+  document.getElementById('oLoss').textContent=pkr(P.estLoss);
+  document.getElementById('oLossN').textContent='from '+nfmt(P.estN)+' quantified cases';
+  document.getElementById('oDisc').textContent=P.avgDisc+'%';
+  document.getElementById('oUnq').textContent=nfmt(P.unq);
+  hbar('cOopProj',(P.byProject||[]).slice(0,8));
+  hbarN('cOopProjN',(P.byProject||[]).slice().sort(function(a,b){return b.n-a.n}).slice(0,8));
+  var tb=document.getElementById('oopRm'); tb.innerHTML='';
+  (P.byRM||[]).forEach(function(m,i){
+    var pc=P.estLoss?Math.round(m.v/P.estLoss*100):0;
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(i+1)+'</td><td><b style="color:#eaf3ec">'+esc(m.k)+'</b></td><td class="r">'+nfmt(m.n)+'</td><td class="r amt">'+pkr(m.v)+'</td><td class="r">'+pc+'%</td>';
+    tb.appendChild(tr);
+  });
+  var tt=document.getElementById('oopTop'); tt.innerHTML='';
+  (P.topCases||[]).slice(0,15).forEach(function(c,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+(i+1)+'</td><td><b style="color:#eaf3ec">'+esc(c.rfc)+'</b></td><td>'+esc(c.proj)+'</td><td>'+esc(c.adv)+'</td><td>'+esc(c.rm)+'</td>'+
+      '<td class="r">'+nfmt(c.pol)+'</td><td class="r">'+(c.act?nfmt(c.act):'—')+'</td><td class="r amt">'+(c.loss?pkr(c.loss):'—')+'</td>';
+    tt.appendChild(tr);
+  });
+}
+function hbarN(id, rows){
+  destroy(id); var el=document.getElementById(id); if(!el)return;
+  CHARTS[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels:rows.map(function(r){return r.k}),
+    datasets:[{data:rows.map(function(r){return r.n}),backgroundColor:rows.map(function(_,i){return PAL[i%PAL.length]}),borderRadius:6,maxBarThickness:22}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:function(c){return nfmt(c.parsed.x)+' bookings'}}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+}
+
+/* ====== booking recon ====== */
+var PS_PAL={'Complete':'#5FD08A','Booking Form Pending':'#E3C375','Unit Amount Incomplete':'#C9A14A','Under Processing':'#7FC8A0','Record Room':'#9C8FBF','Wrong amount in agreement':'#D98E6A','Unknown':'#8AA896'};
+function renderPitstop(){
+  var p=DATA&&DATA.pitstop, empty=document.getElementById('psEmpty'), body=document.getElementById('psBody');
+  if(!p||!p.months||!p.months.length){ empty.style.display='block'; body.style.display='none'; return; }
+  empty.style.display='none'; body.style.display='block';
+  var ms=p.months;
+  if(!PS_SEL||!ms.some(function(m){return m.k===PS_SEL})) PS_SEL=ms[ms.length-1].k;
+  var pillBox=document.getElementById('psPills'); pillBox.innerHTML='';
+  if(ms.length>1) ms.forEach(function(m){
+    var b=document.createElement('div'); b.className='fpill'+(m.k===PS_SEL?' on':''); b.textContent=m.k;
+    b.onclick=function(){PS_SEL=m.k; renderPitstop();}; pillBox.appendChild(b);
+  });
+  var M=null; ms.forEach(function(x){ if(x.k===PS_SEL)M=x; }); if(!M)M=ms[ms.length-1];
+  var pend=M.total-M.complete;
+  document.getElementById('pN').textContent=nfmt(M.total);
+  document.getElementById('pMon').textContent=M.k;
+  document.getElementById('pPct').textContent=M.pct+'%';
+  document.getElementById('pCompN').textContent=nfmt(M.complete)+' bookings clean';
+  document.getElementById('pPend').textContent=nfmt(pend);
+  var topPend=(M.byStatus||[]).filter(function(x){return x.k!=='Complete'})[0];
+  document.getElementById('pPendTop').textContent=topPend?('mostly '+topPend.k):'';
+  var worst=null;
+  (M.byProject||[]).forEach(function(pr){ if(pr.total>=5){ var pc=pr.complete/pr.total; if(!worst||pc<worst.pc) worst={k:pr.k,pc:pc}; }});
+  document.getElementById('pWorst').textContent=worst?worst.k:'—';
+  document.getElementById('pWorstV').textContent=worst?(Math.round(worst.pc*100)+'% complete'):'';
+  // stacked chart
+  var projs=(M.byProject||[]).slice(0,10);
+  var statuses=['Complete']; (M.byStatus||[]).forEach(function(s){ if(s.k!=='Complete') statuses.push(s.k); });
+  var dss=statuses.map(function(st){
+    return {label:st, backgroundColor:PS_PAL[st]||'#8AA896', borderRadius:4, maxBarThickness:34,
+      data:projs.map(function(pr){ return st==='Complete'?pr.complete:((pr.st&&pr.st[st])||0); })};
+  });
+  destroy('cPs'); var el=document.getElementById('cPs');
+  CHARTS['cPs']=new Chart(el.getContext('2d'),{type:'bar',data:{labels:projs.map(function(p){return p.k}),datasets:dss},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,font:{size:10.5},color:'#EAF3EC',padding:10}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y}}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:45}},
+              y:{stacked:true,grid:{color:'rgba(255,255,255,.05)'}}}}});
+  // table
+  var tb=document.getElementById('psTbl'); tb.innerHTML='';
+  (M.byProject||[]).forEach(function(pr){
+    var pc=pr.total?Math.round(pr.complete/pr.total*100):0;
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><b style="color:#eaf3ec">'+esc(pr.k)+'</b></td><td class="r">'+nfmt(pr.total)+'</td><td class="r">'+nfmt(pr.complete)+'</td>'+
+      '<td class="r">'+nfmt(pr.total-pr.complete)+'</td><td class="r '+(pc<60?'amt':'')+'">'+pc+'%</td>';
+    tb.appendChild(tr);
+  });
+}
 
 function renderHome(){
   var a=DATA.audit||{}, d=DATA.diary||{};
