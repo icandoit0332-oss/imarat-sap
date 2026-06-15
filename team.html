@@ -2712,10 +2712,8 @@ function latestCommentPreview(r) {
 }
 
 function canComment(r) {
-  if (currentRole === 'admin' || currentRole === 'editor') return true;
-  // Assigned consultant can comment on their own task
-  if (currentUserName && r.consultant && currentUserName.toLowerCase() === r.consultant.toLowerCase()) return true;
-  return false;
+  // All logged-in users can comment on the activity thread
+  return !!currentUser;
 }
 
 function renderComments(raw) {
@@ -2723,12 +2721,15 @@ function renderComments(raw) {
   if (comments.length === 0) {
     return '<div style="color:var(--text-dim);font-size:12px;font-family:\'IBM Plex Mono\',monospace;text-align:center;padding:16px 0">No updates yet. Add the first comment.</div>';
   }
-  // Newest first
-  return comments.slice().reverse().map(c => `
+  // Newest first — index tracks original position for deletion
+  return comments.map((c, origIdx) => ({ c, origIdx })).reverse().map(({ c, origIdx }) => `
     <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <span style="font-size:12px;font-weight:700;color:var(--primary);font-family:'DM Sans',sans-serif">${c.author || 'Unknown'}</span>
-        <span style="font-size:10px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace">${formatCommentTime(c.time)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace">${formatCommentTime(c.time)}</span>
+          ${currentRole === 'admin' ? `<button onclick="deleteComment('${window.__modalReqId}',${origIdx})" title="Delete comment" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0;line-height:1;opacity:0.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">🗑</button>` : ''}
+        </div>
       </div>
       <div style="font-size:13px;color:var(--text);line-height:1.5">${escapeHtml(c.text || '')}</div>
     </div>`).join('');
@@ -2792,9 +2793,40 @@ async function addComment(id) {
   renderPipeline();
 }
 
+async function deleteComment(id, index) {
+  if (currentRole !== 'admin') return;
+  if (!confirm('Delete this comment? This cannot be undone.')) return;
+
+  const r = requirements.find(x => x.id === id);
+  if (!r) return;
+
+  const comments = parseComments(r.comments);
+  if (index < 0 || index >= comments.length) return;
+
+  comments.splice(index, 1);
+  r.comments = JSON.stringify(comments);
+
+  // Re-render thread
+  document.getElementById('commentThread').innerHTML = renderComments(r.comments);
+  // Update comment count badge
+  const countEl = document.querySelector('#modalBody .modal-detail-label span');
+
+  // Send to Apps Script
+  try {
+    const params = new URLSearchParams({ action:'addComment', id: id, comments: r.comments });
+    await fetch(scriptUrl + '?' + params.toString());
+    showToast('✓ Comment deleted');
+  } catch(e) {
+    showToast('Deleted locally — sync pending');
+  }
+
+  renderPipeline();
+}
+
 function openModal(id) {
   const r = requirements.find(x => x.id === id);
   if (!r) return;
+  window.__modalReqId = id;
 
   document.getElementById('modalTitle').innerHTML = `
     <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--green);margin-bottom:6px">${r.id}</div>
@@ -2856,7 +2888,7 @@ function openModal(id) {
       <div class="modal-detail-label" style="margin-bottom:12px;display:flex;align-items:center;gap:7px">💬 Activity & Comments <span style="background:var(--surface2);color:var(--text-dim);font-size:10px;padding:1px 8px;border-radius:10px;font-family:'IBM Plex Mono',monospace">${(parseComments(r.comments)).length}</span></div>
       <div id="commentThread" style="max-height:240px;overflow-y:auto;margin-bottom:12px">${renderComments(r.comments)}</div>
       ${canComment(r) ? `
-      <div class="edit-section" style="display:flex;gap:8px;align-items:flex-end">
+      <div style="display:flex;gap:8px;align-items:flex-end">
         <textarea id="newCommentText" placeholder="Add an update — where is this stuck? what's the blocker?" style="flex:1;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:42px;line-height:1.4" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
         <button onclick="addComment('${r.id}')" id="commentBtn" style="background:var(--primary);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Post</button>
       </div>` : ''}
