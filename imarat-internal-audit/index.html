@@ -59,6 +59,7 @@ a{color:inherit;text-decoration:none}
 .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--muted);
   display:grid;place-items:center;cursor:pointer;transition:.18s}
 .iconbtn:hover{color:var(--gold-2);border-color:var(--gold);transform:rotate(90deg)}
+.uname{font-size:12px;font-weight:600;color:var(--ink)}
 @media(max-width:860px){.meta{display:none}}
 
 /* ---------- views ---------- */
@@ -132,6 +133,7 @@ a{color:inherit;text-decoration:none}
   .brand .t1{font-size:13px;letter-spacing:.02em}
   .mark{width:34px;height:34px}
   .pill{font-size:11px;padding:5px 10px}
+  .uname{font-size:11px}
   .hero{padding:30px 0 6px}
   .hl{font-size:clamp(28px,8.5vw,38px)}
   .glance{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -207,7 +209,7 @@ a{color:inherit;text-decoration:none}
     </div>
     <div class="spacer"></div>
     <div class="pill" id="livePill"><span class="dot"></span><span id="liveTxt">Live</span></div>
-    <div class="meta" id="userTxt" style="color:var(--ink);font-weight:600">Abdul Wasay</div>
+    <div class="uname" id="userTxt">Abdul Wasay</div>
     <div class="meta" id="dateTxt"></div>
     <div class="meta">Updated <b id="updTxt">—</b></div>
     <div class="meta" style="opacity:.45" id="buildTxt"></div>
@@ -517,7 +519,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v20';
+var BUILD='v21';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
