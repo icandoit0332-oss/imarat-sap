@@ -517,7 +517,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v19';
+var BUILD='v20';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -786,7 +786,7 @@ function renderPitstop(){
   document.getElementById('pPct').textContent=M.pct+'%';
   document.getElementById('pCompN').textContent=nfmt(M.complete)+' bookings verified';
   document.getElementById('pPend').textContent=nfmt(pend);
-  var topPend=(M.byStatus||[]).filter(function(x){return x.k!=='Complete'})[0];
+  var topPend=(M.byStatus||[]).filter(function(x){return x.k!=='Verified'&&x.k!=='Complete'})[0];
   document.getElementById('pPendTop').textContent=topPend?('mostly '+topPend.k):'';
   var worst=null;
   (M.byProject||[]).forEach(function(pr){ if(pr.total>=5){ var pc=pr.complete/pr.total; if(!worst||pc<worst.pc) worst={k:pr.k,pc:pc}; }});
@@ -835,9 +835,14 @@ function renderHome(){
 
 function monthLabel(k){
   if(!k) return 'Undated';
-  var s=String(k).split('-'); if(s.length<2) return k;
+  if(k==='All') return 'All';
   var names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var mi=parseInt(s[1],10)-1; return (mi>=0&&mi<12)?(names[mi]+' '+s[0]):k;
+  var str=String(k).trim();
+  var m=str.match(/^(\d{4})-(\d{1,2})/);            // 2026-01 or 2026-01-15
+  if(m){ var mi=parseInt(m[2],10)-1; if(mi>=0&&mi<12) return names[mi]+' '+m[1]; }
+  var d=new Date(str);                                // ISO date string from Sheets
+  if(!isNaN(d.getTime())) return names[d.getMonth()]+' '+d.getFullYear();
+  return str;
 }
 function renderAudit(){
   var a=DATA.audit; if(!a) return;
