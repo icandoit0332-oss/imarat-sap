@@ -517,7 +517,7 @@ var CONFIG = {
   CACHE: 'imarat_audit_v1'
 };
 var EMBED = null;  // production: live-only, no baked-in data
-var BUILD='v18';
+var BUILD='v19';
 var DATA = null, CHARTS = {};
 var FONT = "'Inter', sans-serif";
 Chart.defaults.font.family = FONT;
@@ -768,19 +768,21 @@ function hbarN(id, rows){
 var PS_PAL={'Complete':'#5FD08A','Booking Form Pending':'#E3C375','Unit Amount Incomplete':'#C9A14A','Under Processing':'#7FC8A0','Record Room':'#9C8FBF','Wrong amount in agreement':'#D98E6A','Unknown':'#8AA896'};
 function renderPitstop(){
   var p=DATA&&DATA.pitstop, empty=document.getElementById('psEmpty'), body=document.getElementById('psBody');
-  if(!p||!p.months||!p.months.length){ empty.style.display='block'; body.style.display='none'; return; }
+  var months=(p&&p.months)||[];
+  if(!p||(!months.length&&!p.all)){ empty.style.display='block'; body.style.display='none'; return; }
   empty.style.display='none'; body.style.display='block';
-  var ms=p.months;
-  if(!PS_SEL||!ms.some(function(m){return m.k===PS_SEL})) PS_SEL=ms[ms.length-1].k;
+  var opts=[]; if(p.all)opts.push(p.all); months.forEach(function(m){opts.push(m)});
+  if(!PS_SEL||!opts.some(function(m){return m.k===PS_SEL})) PS_SEL=p.all?'All':opts[opts.length-1].k;
   var pillBox=document.getElementById('psPills'); pillBox.innerHTML='';
-  ms.forEach(function(m){
-    var b=document.createElement('div'); b.className='fpill'+(m.k===PS_SEL?' on':''); b.textContent=m.k;
+  opts.forEach(function(m){
+    var b=document.createElement('div'); b.className='fpill'+(m.k===PS_SEL?' on':'');
+    b.textContent=(m.k==='All')?'All':monthLabel(m.k);
     b.onclick=function(){PS_SEL=m.k; renderPitstop();}; pillBox.appendChild(b);
   });
-  var M=null; ms.forEach(function(x){ if(x.k===PS_SEL)M=x; }); if(!M)M=ms[ms.length-1];
+  var M=null; opts.forEach(function(x){ if(x.k===PS_SEL)M=x; }); if(!M)M=opts[0];
   var pend=M.total-M.complete;
   document.getElementById('pN').textContent=nfmt(M.total);
-  document.getElementById('pMon').textContent=M.k;
+  document.getElementById('pMon').textContent=(M.k==='All')?'all months':monthLabel(M.k);
   document.getElementById('pPct').textContent=M.pct+'%';
   document.getElementById('pCompN').textContent=nfmt(M.complete)+' bookings verified';
   document.getElementById('pPend').textContent=nfmt(pend);
