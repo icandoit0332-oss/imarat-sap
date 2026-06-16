@@ -396,6 +396,13 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 .mo-sel{display:flex;gap:8px;margin-bottom:12px}
 .mo-btn{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;border:2px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--font);transition:all .2s}
 .mo-btn.active{background:#166534;color:#fff;border-color:#166534}
+.mo-msel{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+.mo-msel::-webkit-scrollbar{height:4px}
+.mo-msel::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:99px}
+.mo-mlbl{flex:0 0 auto;align-self:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);padding-right:2px}
+.mo-mbtn{flex:0 0 auto;padding:6px 14px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--mono);letter-spacing:.02em;transition:all .18s;white-space:nowrap}
+.mo-mbtn:hover{border-color:#C9A850}
+.mo-mbtn.active{background:linear-gradient(135deg,#C9A850,#E3C375);color:#06140c;border-color:#C9A850;box-shadow:0 1px 4px rgba(201,168,80,.35)}
 .chart-card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:15px;margin-bottom:12px}
 .chart-title{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px}
 .chart-sub{font-size:10px;color:var(--t3);margin-bottom:12px}
@@ -2297,6 +2304,7 @@ function raView(view, el) {
 // MALL OPERATIONS
 // ════════════════════════════════════════════════════════════
 var _moMall = 'AOM';
+var _moMonth = null;  // null = latest; otherwise a specific month label
 
 function rMO() {
   if (!D || !D.MO || !D.MO.rows.length) {
@@ -2313,18 +2321,28 @@ function buildMOHtml() {
     + '</div>';
   var rows = D.MO.rows.filter(function(r){return r.mall===_moMall;});
   if (!rows.length) return sel + '<div class="card"><div class="cb"><div class="empty-sm">No data for ' + _moMall + '</div></div></div>';
-  var latest = rows[rows.length-1];
+
+  var months = rows.map(function(r){return r.month;});
+  var selIdx = months.indexOf(_moMonth);
+  if (selIdx < 0) { selIdx = months.length - 1; _moMonth = months[selIdx]; }
+  var selected = rows[selIdx];
+
+  var msel = '<div class="mo-msel"><span class="mo-mlbl">Month</span>';
+  for (var mi=0; mi<months.length; mi++) {
+    msel += '<button class="mo-mbtn' + (mi===selIdx?' active':'') + '" onclick="moSelMonth(\'' + months[mi] + '\',this)">' + months[mi] + '</button>';
+  }
+  msel += '</div>';
 
   var kpis = '<div class="mo-kpi-grid">'
-    + moKpi('OCCUPANCY',      latest.occupancy.toFixed(1) + '%', latest.leasedSqFt.toLocaleString() + ' of ' + latest.totalSqFt.toLocaleString() + ' sqft', latest.occupancy >= 70 ? '#16A34A' : '#DC2626')
-    + moKpi('RENTAL INCOME',  M(latest.rentalIncome), 'Monthly tenant rent', '#166534')
-    + moKpi('P & L',  M(latest.noi), latest.noi >= 0 ? '&#9679; Positive' : '&#9888; Loss', latest.noi >= 0 ? '#16A34A' : '#DC2626')
-    + moKpi('RATE / SQFT',    'Rs ' + latest.ratePSQFT, 'Avg per leased sqft', '#C9A850')
+    + moKpi('OCCUPANCY',      selected.occupancy.toFixed(1) + '%', selected.leasedSqFt.toLocaleString() + ' of ' + selected.totalSqFt.toLocaleString() + ' sqft', selected.occupancy >= 70 ? '#16A34A' : '#DC2626')
+    + moKpi('RENTAL INCOME',  M(selected.rentalIncome), 'Tenant rent · ' + selected.month, '#166534')
+    + moKpi('P & L',  M(selected.noi), selected.noi >= 0 ? '&#9679; Positive' : '&#9888; Loss', selected.noi >= 0 ? '#16A34A' : '#DC2626')
+    + moKpi('RATE / SQFT',    'Rs ' + selected.ratePSQFT, 'Avg per leased sqft', '#C9A850')
     + '</div>';
 
   var charts =
     '<div class="chart-card"><div class="chart-title">Revenue vs Expenses</div>'
-    + '<div class="chart-sub">Monthly trend — ' + _moMall + '</div>'
+    + '<div class="chart-sub">Monthly trend — ' + _moMall + ' · viewing ' + selected.month + '</div>'
     + '<div class="chart-wrap"><canvas id="mo-chart-1"></canvas></div></div>'
     + '<div class="chart-card"><div class="chart-title">Op Expenses vs CAM Recovery</div>'
     + '<div class="chart-sub">Gap shows the deficit — CAM should cover expenses</div>'
@@ -2333,13 +2351,13 @@ function buildMOHtml() {
     + '<div class="chart-sub">Rs / leased sqft by month</div>'
     + '<div class="chart-wrap"><canvas id="mo-chart-3"></canvas></div></div>'
     + '<div class="chart-card"><div class="chart-title">Occupancy</div>'
-    + '<div class="chart-sub">Area breakdown — ' + latest.month + '</div>'
+    + '<div class="chart-sub">Area breakdown — ' + selected.month + '</div>'
     + '<div style="max-width:220px;margin:0 auto"><div class="chart-wrap"><canvas id="mo-chart-4"></canvas></div></div></div>';
 
-  // Rental yield analysis section
-  var yieldSection = buildYieldAnalysis(rows);
+  // Rental yield analysis section (follows the selected month)
+  var yieldSection = buildYieldAnalysis(rows, selected);
 
-  return sel + kpis + charts + yieldSection;
+  return sel + msel + kpis + charts + yieldSection;
 }
 
 function moKpi(lbl, val, sub, color) {
@@ -2359,47 +2377,64 @@ function moSel(mall, el) {
   setTimeout(initMOCharts, 50);
 }
 
+function moSelMonth(month, el) {
+  _moMonth = month;
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+
+function moRad(n, sel) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?7:3); return a; }
+function moPbg(n, sel, base) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?'#C9A850':base); return a; }
+function moBw(n, sel, hi, lo) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?hi:lo); return a; }
+
 function initMOCharts() {
   var rows = D.MO.rows.filter(function(r){return r.mall===_moMall;});
   if (!rows.length) return;
   var labels = rows.map(function(r){return r.month;});
+  var n = rows.length;
+  var selIdx = labels.indexOf(_moMonth);
+  if (selIdx < 0) selIdx = n - 1;
   var C1 = ge('mo-chart-1'), C2 = ge('mo-chart-2'), C3 = ge('mo-chart-3'), C4 = ge('mo-chart-4');
   // Draw each chart independently — don't bail if one canvas is missing
 
-  // Chart 1: Revenue vs Expenses
+  // Chart 1: Revenue vs Expenses (selected month emphasised)
   if (C1) mkChart('mo-chart-1', { type:'line', data:{
     labels: labels,
     datasets:[
       {label:'Rental Income', data:rows.map(function(r){return r.rentalIncome;}),
-       borderColor:'#166534',backgroundColor:'#16653420',tension:.4,fill:true},
+       borderColor:'#166534',backgroundColor:'#16653420',tension:.4,fill:true,
+       pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#166534'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)},
       {label:'Op Expenses', data:rows.map(function(r){return r.opExp;}),
-       borderColor:'#DC2626',backgroundColor:'#DC262620',tension:.4,fill:true},
+       borderColor:'#DC2626',backgroundColor:'#DC262620',tension:.4,fill:true,
+       pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#DC2626'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)},
       {label:'Net Op Income', data:rows.map(function(r){return r.noi;}),
-       borderColor:'#C9A850',backgroundColor:'transparent',tension:.4,borderDash:[4,3]}
+       borderColor:'#C9A850',backgroundColor:'transparent',tension:.4,borderDash:[4,3],
+       pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:'#C9A850',pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)}
     ]}, options:chartOpts('number')});
 
-  // Chart 2: Op Expenses vs CAM Recovery (gap analysis)
+  // Chart 2: Op Expenses vs CAM Recovery (gap analysis) — selected month bars ringed
   if (C2) mkChart('mo-chart-2', { type:'bar', data:{
     labels: labels,
     datasets:[
       {label:'Op Expenses',   data:rows.map(function(r){return r.opExp;}),
-       backgroundColor:'#DC262699', borderRadius:4},
+       backgroundColor:'#DC262699', borderRadius:4, borderColor:moPbg(n,selIdx,'#DC262600'), borderWidth:moBw(n,selIdx,2,0)},
       {label:'CAM Recovery',  data:rows.map(function(r){return r.cam;}),
-       backgroundColor:'#16653499', borderRadius:4},
+       backgroundColor:'#16653499', borderRadius:4, borderColor:moPbg(n,selIdx,'#16653400'), borderWidth:moBw(n,selIdx,2,0)},
       {label:'Deficit (Gap)', data:rows.map(function(r){return r.opExp - r.cam;}),
        type:'line', borderColor:'#C9A850', backgroundColor:'transparent',
-       tension:.4, borderDash:[5,3], pointRadius:4}
+       tension:.4, borderDash:[5,3], pointRadius:moRad(n,selIdx), pointHoverRadius:7, pointBackgroundColor:moPbg(n,selIdx,'#C9A850'), pointBorderColor:'#fff', pointBorderWidth:moBw(n,selIdx,2,1)}
     ]}, options:chartOpts('number',true)});
 
-  // Chart 3: Rate PSQFT
+  // Chart 3: Rate PSQFT (selected month emphasised)
   if (C3) mkChart('mo-chart-3', { type:'line', data:{
     labels: labels,
     datasets:[{label:'Rate PSQFT (Rs)', data:rows.map(function(r){return r.ratePSQFT;}),
-      borderColor:'#C9A850',backgroundColor:'#C9A85020',tension:.4,fill:true}]
+      borderColor:'#C9A850',backgroundColor:'#C9A85020',tension:.4,fill:true,
+      pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#C9A850'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)}]
   }, options:chartOpts('plain')});
 
-  // Chart 4: Occupancy donut
-  if (C4) { var lat = rows[rows.length-1];
+  // Chart 4: Occupancy donut (selected month)
+  if (C4) { var lat = rows[selIdx];
   var vacant = lat.totalSqFt - lat.leasedSqFt;
   mkChart('mo-chart-4', { type:'doughnut', data:{
     labels:['Leased','Vacant'],
@@ -2413,9 +2448,9 @@ function initMOCharts() {
 }
 
 // ── Rental Yield Analysis ────────────────────────────────────────
-function buildYieldAnalysis(rows) {
+function buildYieldAnalysis(rows, selected) {
   if (!rows.length || !rows[0].propValuation) return '';
-  var latest = rows[rows.length-1];
+  var latest = selected || rows[rows.length-1];
   var hasYield = latest.propValuation > 0;
   if (!hasYield) return '';
 
