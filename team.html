@@ -2841,7 +2841,7 @@ function openModal(id) {
     </div>
     <div class="modal-detail" style="margin-bottom:12px"><div class="modal-detail-label">Description</div><div class="modal-detail-val" style="line-height:1.6">${r.description}</div></div>
     ${r.notes ? `<div class="modal-detail" style="margin-bottom:16px"><div class="modal-detail-label">Notes</div><div class="modal-detail-val">${r.notes}</div></div>` : ''}
-    ${r.attachmentUrl ? `<div class="modal-detail" style="margin-bottom:16px"><div class="modal-detail-label">Attachment</div><div class="modal-detail-val"><a href="${r.attachmentUrl}" target="_blank" style="color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:13px">📎 View Attachment</a></div></div>` : ''}
+    ${r.attachmentUrl ? `<div class="modal-detail" style="margin-bottom:16px"><div class="modal-detail-label">📎 Attachments</div><div id="attachmentGallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><div style="color:var(--text-dim);font-size:12px;font-family:'IBM Plex Mono',monospace">Loading images…</div></div></div>` : ''}
 
     <!-- SAP TEAM ASSIGNMENT PANEL — edit-section hidden for viewers via CSS -->
     ${currentRole !== 'viewer' ? `
@@ -2900,9 +2900,36 @@ function openModal(id) {
     </div>`;
 
   document.getElementById('modal').classList.add('show');
+
+  // Load attachment images if present
+  if (r.attachmentUrl) loadAttachments(r.attachmentUrl);
 }
 
-async function saveAssignment(id) {
+async function loadAttachments(docId) {
+  const gallery = document.getElementById('attachmentGallery');
+  if (!gallery) return;
+  try {
+    const snap = await fbDb.collection('attachments').doc(docId).get();
+    if (!snap.exists) { gallery.innerHTML = '<div style="color:var(--text-dim);font-size:12px;font-family:\'IBM Plex Mono\',monospace">No images found</div>'; return; }
+    const imgs = snap.data().images || [];
+    if (imgs.length === 0) { gallery.innerHTML = '<div style="color:var(--text-dim);font-size:12px">No images</div>'; return; }
+    gallery.innerHTML = imgs.map((src, i) => `<img src="${src}" onclick="viewFullImage(${i})" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);cursor:pointer;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">`).join('');
+    window.__currentAttachments = imgs;
+  } catch(e) {
+    gallery.innerHTML = '<div style="color:var(--red);font-size:12px;font-family:\'IBM Plex Mono\',monospace">Failed to load images</div>';
+  }
+}
+
+function viewFullImage(i) {
+  const imgs = window.__currentAttachments || [];
+  const src = imgs[i];
+  if (!src) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+  overlay.onclick = function(){ overlay.remove(); };
+  overlay.innerHTML = `<img src="${src}" style="max-width:100%;max-height:100%;border-radius:8px">`;
+  document.body.appendChild(overlay);
+}
   const req = requirements.find(r => r.id === id);
   if (!req) return;
 
