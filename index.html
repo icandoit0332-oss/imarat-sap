@@ -11,6 +11,9 @@
 <link rel="manifest" href="/imarat-sap/manifest.json">
 <link rel="apple-touch-icon" href="/imarat-sap/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#EFF5F8;color:#0C2D3E;font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:40px;font-size:16px}
@@ -50,6 +53,17 @@ select option{background:#fff}
 .new-btn{margin-top:28px;background:#fff;border:1.5px solid #C0D8E8;color:#4A7B8C;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
 .new-btn:hover{border-color:#0891B2;color:#0891B2}
 .form-wrap.hide{display:none}
+.attach-zone{border:1.5px dashed #C0D8E8;border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;background:#F5F9FC}
+.attach-zone:active{border-color:#0891B2;background:#E0F4FA}
+.attach-zone input{display:none}
+.attach-icon{font-size:26px;margin-bottom:6px}
+.attach-text{font-size:13px;color:#4A7B8C;font-weight:500}
+.attach-hint{font-size:11px;color:#8AABB8;margin-top:3px;font-family:'DM Mono',monospace}
+.thumb-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1.5px solid #D6E8F0}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(220,38,38,0.9);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.upload-status{font-size:11px;color:#0891B2;font-family:'DM Mono',monospace;margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
@@ -116,6 +130,16 @@ select option{background:#fff}
           <label class="lbl">Your Email <span style="font-weight:400;color:#8AABB8;font-size:10px;text-transform:none;letter-spacing:0">(optional — receive status updates)</span></label>
           <input type="email" id="reqEmail" placeholder="your.email@company.com">
         </div>
+        <div class="fld full">
+          <label class="lbl">Attach Screenshots <span style="font-weight:400;color:#8AABB8;font-size:10px;text-transform:none;letter-spacing:0">(optional — images only)</span></label>
+          <label class="attach-zone" for="imgInput">
+            <div class="attach-icon">📎</div>
+            <div class="attach-text">Tap to attach images</div>
+            <div class="attach-hint">JPG / PNG · up to 5 images</div>
+            <input type="file" id="imgInput" accept="image/jpeg,image/png,image/jpg" multiple onchange="handleImages(this)">
+          </label>
+          <div class="thumb-row" id="thumbRow"></div>
+        </div>
       </div>
       <button class="sub-btn" id="subBtn" onclick="submitReq()">Submit Requirement</button>
     </div>
@@ -133,6 +157,75 @@ select option{background:#fff}
 <script>
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
 var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Sarmad'};
+
+// ── FIREBASE INIT ──
+var firebaseConfig = {
+  apiKey: "AIzaSyBei-lo6GIehz3UT93xg2KTs5bU_1-4osQ",
+  authDomain: "imarat-sap-aff7f.firebaseapp.com",
+  projectId: "imarat-sap-aff7f",
+  storageBucket: "imarat-sap-aff7f.firebasestorage.app",
+  messagingSenderId: "117630327064",
+  appId: "1:117630327064:web:a9f35c5ec768e6d1db666d"
+};
+firebase.initializeApp(firebaseConfig);
+var fbDb = firebase.firestore();
+var fbAuth = firebase.auth();
+
+// Sign in anonymously so the public form can write attachments
+fbAuth.signInAnonymously().catch(function(e){ console.log('anon auth:', e.message); });
+
+// ── IMAGE HANDLING ──
+var pendingImages = []; // array of compressed base64 strings
+
+function handleImages(input){
+  var files = Array.prototype.slice.call(input.files);
+  if(pendingImages.length + files.length > 5){
+    alert('Maximum 5 images allowed.');
+    input.value='';
+    return;
+  }
+  files.forEach(function(file){
+    if(!file.type.match(/image\/(jpeg|png|jpg)/)){ return; }
+    compressImage(file, function(base64){
+      pendingImages.push(base64);
+      renderThumbs();
+    });
+  });
+  input.value='';
+}
+
+function compressImage(file, cb){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var maxW = 1000;
+      var scale = img.width > maxW ? maxW / img.width : 1;
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // Compress to JPEG ~0.7 quality
+      var base64 = canvas.toDataURL('image/jpeg', 0.7);
+      cb(base64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderThumbs(){
+  var row = document.getElementById('thumbRow');
+  row.innerHTML = pendingImages.map(function(img, i){
+    return '<div class="thumb"><img src="'+img+'"><button class="thumb-del" onclick="removeImage('+i+')">×</button></div>';
+  }).join('');
+}
+
+function removeImage(i){
+  pendingImages.splice(i,1);
+  renderThumbs();
+}
 
 function onDept(){
   var v=document.getElementById('dept').value;
@@ -152,7 +245,7 @@ function sendInBackground(params){
   }catch(e){}
 }
 
-function submitReq(){
+async function submitReq(){
   var dept=document.getElementById('dept').value;
   var name=getName();
   var module=document.getElementById('module').value;
@@ -170,6 +263,29 @@ function submitReq(){
   if(!desc){alert('Please describe the requirement.');return;}
 
   var id='REQ-'+String(Date.now()).slice(-6);
+  var btn=document.getElementById('subBtn');
+  btn.disabled=true;
+  btn.innerHTML='Submitting…';
+
+  // ── Save images to Firestore (if any) ──
+  var attachmentRef='';
+  if(pendingImages.length>0){
+    try{
+      // Ensure anonymous auth is ready
+      if(!fbAuth.currentUser){ await fbAuth.signInAnonymously(); }
+      var docRef=await fbDb.collection('attachments').add({
+        reqId: id,
+        images: pendingImages,
+        count: pendingImages.length,
+        uploadedAt: new Date().toISOString()
+      });
+      attachmentRef=docRef.id; // store the Firestore doc ID
+    }catch(e){
+      console.log('image upload failed:', e.message);
+      // Continue submitting even if images fail
+    }
+  }
+
   var params='action=submit'
     +'&module='+encodeURIComponent(module)
     +'&title='+encodeURIComponent(title)
@@ -180,7 +296,7 @@ function submitReq(){
     +'&consultant='+encodeURIComponent(consultant)
     +'&abapDev=&targetDate=&notes='
     +'&requesterEmail='+encodeURIComponent(reqEmail)
-    +'&attachmentUrl=';
+    +'&attachmentUrl='+encodeURIComponent(attachmentRef);
 
   showSuccess(id);
   sendInBackground(params);
@@ -200,6 +316,10 @@ function resetForm(){
   ['title','desc','nameTxt','reqEmail'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+  pendingImages=[];
+  renderThumbs();
+  var btn=document.getElementById('subBtn');
+  if(btn){ btn.disabled=false; btn.innerHTML='Submit Requirement'; }
   document.getElementById('nameWrap').style.display='none';
   document.getElementById('formWrap').classList.remove('hide');
   document.getElementById('successScreen').classList.remove('show');
