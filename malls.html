@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0B2818">
+<title>IMARAT Malls P&L</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --hdr:#0B2818;--body-bg:#0F1A12;
+  --gold:#C9A850;
+  --card:#FFFFFF;
+  --t1:#132015;--t2:#4A6B4E;--t3:#8AAB8E;
+  --bdr:#D8E8DA;
+  --green:#16A34A;--red:#DC2626;--amber:#D97706;
+  --sh:0 1px 6px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,monospace;
+  --r:14px;
+}
+body{font-family:var(--font);background:var(--body-bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-overlay{position:fixed;inset:0;background:rgba(11,40,24,.8);display:none;align-items:center;justify-content:center;z-index:900;flex-direction:column}
+.spinner{width:40px;height:40px;border:3px solid rgba(201,168,80,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+.loading-txt{color:#fff;font-size:12px;margin-top:12px;opacity:.75}
+#stale-banner{background:linear-gradient(90deg,var(--amber),#F59E0B);color:#fff;font-size:11px;font-weight:600;padding:6px 16px;text-align:center;display:none}
+.hdr{background:var(--hdr);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.hdr-l{display:flex;align-items:center;gap:10px;min-width:0}
+.logo-box{width:36px;height:36px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-en{font-size:14px;font-weight:700;color:#fff;letter-spacing:.06em;white-space:nowrap}
+.brand-sub{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:1px}
+.hdr-r{display:flex;align-items:center;gap:7px}
+.live-pill{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(22,163,74,.2);color:#4ADE80;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.hdr-date,#refresh-status{font-size:11px;color:rgba(255,255,255,.45)}
+.hdr-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer;font-family:var(--font)}
+.hdr-btn:hover{background:rgba(255,255,255,.14)}
+.main{padding:14px;padding-bottom:48px;max-width:780px;margin:0 auto}
+.page-title{color:#fff;font-size:20px;font-weight:800;letter-spacing:-.3px;margin:6px 2px 16px}
+.page-title span{color:var(--gold)}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.cb{padding:14px 15px}
+.empty-sm{color:var(--t3);font-size:13px;text-align:center;padding:30px}
+.mo-sel{display:flex;gap:8px;margin-bottom:12px}
+.mo-btn{flex:1;padding:11px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;border:2px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--font);transition:all .2s}
+.mo-btn.active{background:#166534;color:#fff;border-color:#166534}
+.mo-msel{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+.mo-msel::-webkit-scrollbar{height:4px}
+.mo-msel::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:99px}
+.mo-mlbl{flex:0 0 auto;align-self:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);padding-right:2px}
+.mo-mbtn{flex:0 0 auto;padding:6px 14px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--bdr);background:#fff;color:var(--t2);font-family:var(--mono);letter-spacing:.02em;transition:all .18s;white-space:nowrap}
+.mo-mbtn:hover{border-color:#C9A850}
+.mo-mbtn.active{background:linear-gradient(135deg,#C9A850,#E3C375);color:#06140c;border-color:#C9A850;box-shadow:0 1px 4px rgba(201,168,80,.35)}
+.mo-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mo-kpi{background:#fff;border-radius:11px;box-shadow:var(--sh);padding:12px 14px}
+.mo-kpi-lbl{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.mo-kpi-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--t1)}
+.mo-kpi-sub{font-size:10px;margin-top:2px}
+.chart-card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:15px;margin-bottom:12px}
+.chart-title{font-size:13px;font-weight:700;color:var(--t1)}
+.chart-sub{font-size:10px;color:var(--t3);margin-bottom:10px}
+.chart-wrap{position:relative;height:240px}
+@media(max-width:768px){
+  .hdr{padding:0 12px;height:48px}
+  .hdr-date,#refresh-status{display:none}
+  .main{padding:10px}
+  .page-title{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div id="stale-banner">&#9888; Showing cached data from <span id="stale-time">—</span></div>
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo-box">
+      <svg width="22" height="22" viewBox="0 0 22 22">
+        <rect x="2" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+        <rect x="6" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+        <rect x="10" y="7" width="2.5" height="14" rx=".8" fill="#0B2818"/>
+        <rect x="14" y="10" width="2.5" height="11" rx=".8" fill="#0B2818"/>
+        <rect x="18" y="14" width="2.5" height="7" rx=".8" fill="#0B2818"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-en">IMARAT <span style="color:var(--gold);font-weight:400">Finance</span></div>
+      <div class="brand-sub">Malls P&amp;L</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span class="live-pill" id="live-pill">● Live</span>
+    <span class="hdr-date" id="hdate"></span>
+    <span id="refresh-status"></span>
+    <button class="hdr-btn" onclick="manualRefresh()" title="Refresh">↻</button>
+  </div>
+</div>
+<div id="loading-overlay"><div class="spinner"></div><div class="loading-txt" id="loading-txt">Fetching live data…</div></div>
+<div class="main">
+  <div class="page-title">Malls <span>Profit &amp; Loss</span></div>
+  <div id="mo-body"></div>
+</div>
+<script>
+
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykbYka3cqRualsEhfNNef48wnwoHwwhTmQvttt-vjNW4KV9BVFs1rdjHFVfNZY_tTP/exec';
+var CLIENT_KEY = 'IMARAT_FCC_2026_Xk7Qp9ZmRv4T';
+var CACHE_KEY = 'imarat_malls_cache';
+var D = null;
+var _charts = {};
+var _moMall = 'AOM';
+var _moMonth = null;
+
+function ge(id){return document.getElementById(id);}
+function showLoading(t){var o=ge('loading-overlay');if(o){ge('loading-txt').textContent=t||'Loading\u2026';o.style.display='flex';}}
+function hideLoading(){var o=ge('loading-overlay');if(o)o.style.display='none';}
+function showStale(at){var b=ge('stale-banner');if(b){if(at)ge('stale-time').textContent=fmtTime(new Date(at));b.style.display='block';}var p=ge('live-pill');if(p){p.textContent='\u25CF Offline';p.style.background='rgba(217,119,6,.2)';p.style.color='#FBBF24';}}
+function hideStale(){var b=ge('stale-banner');if(b)b.style.display='none';var p=ge('live-pill');if(p){p.textContent='\u25CF Live';p.style.background='rgba(22,163,74,.2)';p.style.color='#4ADE80';}}
+
+function M(n) {
+  if (!n && n !== 0) return '\u2014';
+  var a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e9) return s + 'Rs ' + (a/1e9).toFixed(2) + ' B';
+  if (a >= 1e6) return s + 'Rs ' + (a/1e6).toFixed(2) + ' M';
+  if (a >= 1e3) return s + 'Rs ' + (a/1e3).toFixed(1) + ' K';
+  return s + 'Rs ' + Math.round(a).toLocaleString();
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+}
+
+function mkChart(canvasId, config) {
+  var el = ge(canvasId);
+  if (!el) return null;
+  // Destroy any existing chart bound to this canvas
+  if (_chartRegistry[canvasId]) {
+    try { _chartRegistry[canvasId].destroy(); } catch(e) {}
+    delete _chartRegistry[canvasId];
+  }
+  // Also catch Chart.js internal registry
+  if (typeof Chart !== 'undefined' && Chart.getChart) {
+    var existing = Chart.getChart(el);
+    if (existing) { try { existing.destroy(); } catch(e) {} }
+  }
+  var c = new Chart(el, config);
+  _chartRegistry[canvasId] = c;
+  return c;
+}
+
+function chartOpts(fmt, grouped) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10,padding:8}}},
+    scales:{
+      x:{ticks:{font:{size:9},maxRotation:40},grid:{display:false}},
+      y:{ticks:{font:{size:9},callback:function(v){
+        if (fmt==='number') return v>=1000000?'Rs'+(v/1000000).toFixed(1)+'M':v>=1000?'Rs'+(v/1000).toFixed(0)+'K':v;
+        if (fmt==='plain') return v;
+        return v;
+      }},grid:{color:'#E4EFE5'}}
+    }
+  };
+}
+
+function moKpi(lbl, val, sub, color) {
+  return '<div class="mo-kpi">'
+    + '<div class="mo-kpi-lbl">' + lbl + '</div>'
+    + '<div class="mo-kpi-val" style="color:' + color + '">' + val + '</div>'
+    + '<div class="mo-kpi-sub" style="color:' + color + '">' + sub + '</div>'
+    + '</div>';
+}
+
+function buildYieldAnalysis(rows, selected) {
+  if (!rows.length || !rows[0].propValuation) return '';
+  var latest = selected || rows[rows.length-1];
+  var hasYield = latest.propValuation > 0;
+  if (!hasYield) return '';
+
+  var achPct = latest.targetMonthlyRent > 0
+    ? (latest.rentalIncome / latest.targetMonthlyRent * 100).toFixed(1)
+    : 0;
+  var barW = Math.min(parseFloat(achPct), 100);
+  var barColor = barW >= 80 ? '#166534' : barW >= 50 ? '#C9A850' : '#DC2626';
+
+  var html = '<div class="chart-card">'
+    + '<div class="chart-title">Rental Yield Analysis</div>'
+    + '<div class="chart-sub">5% annual target vs actual performance — ' + latest.mall + ' · ' + latest.month + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+    // Left: Property value and targets
+    + '<div>'
+    + '<div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:6px">Property Value</div>'
+    + '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#166534">' + M(latest.propValuation) + '</div>'
+    + '<div style="margin-top:10px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:4px">Target Monthly (5% p.a.)</div>'
+    + '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:#4A6B4E">' + M(latest.targetMonthlyRent) + '</div>'
+    + '</div>'
+    // Right: Actual and gap
+    + '<div>'
+    + '<div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:6px">Actual Monthly</div>'
+    + '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:' + barColor + '">' + M(latest.rentalIncome) + '</div>'
+    + '<div style="margin-top:10px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8AAB8E;margin-bottom:4px">Actual Yield</div>'
+    + '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:' + barColor + '">' + latest.actualYieldPct + '% <span style="font-size:11px;color:#8AAB8E">vs 5% target</span></div>'
+    + '</div>'
+    + '</div>'
+    // Achievement bar
+    + '<div style="margin-bottom:14px">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+    + '<span style="font-size:10px;font-weight:600;color:#4A6B4E">Achievement</span>'
+    + '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + barColor + '">' + achPct + '%</span>'
+    + '</div>'
+    + '<div style="background:#E4EFE5;border-radius:99px;height:10px;overflow:hidden">'
+    + '<div style="width:' + barW + '%;height:10px;border-radius:99px;background:' + barColor + ';transition:width .6s"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:4px">'
+    + '<span style="font-size:9px;color:#8AAB8E">Rs 0</span>'
+    + '<span style="font-size:9px;color:#8AAB8E">Target ' + M(latest.targetMonthlyRent) + '</span>'
+    + '</div>'
+    + '</div>'
+    // Trend chart
+    + '<div class="chart-sub" style="margin-bottom:8px">Actual vs Target — monthly trend</div>'
+    + '<div class="chart-wrap"><canvas id="mo-chart-5"></canvas></div>'
+    + '</div>';
+  return html;
+}
+
+function initYieldChart(rows, labels) {
+  var C5 = ge('mo-chart-5');
+  if (!C5 || !rows.length || !rows[0].propValuation) return;
+  mkChart('mo-chart-5', { type:'bar', data:{
+    labels: labels,
+    datasets:[
+      {label:'Actual Rental',
+       data:rows.map(function(r){return r.rentalIncome;}),
+       backgroundColor:'#166534BB', borderRadius:4},
+      {label:'Target Monthly (5% p.a.)',
+       data:rows.map(function(r){return r.targetMonthlyRent;}),
+       type:'line', borderColor:'#C9A850', backgroundColor:'transparent',
+       tension:0, borderWidth:2, borderDash:[6,3], pointRadius:4,
+       pointBackgroundColor:'#C9A850'}
+    ]}, options:chartOpts('number')});
+}
+
+function moRad(n, sel) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?7:3); return a; }
+
+function moPbg(n, sel, base) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?'#C9A850':base); return a; }
+
+function moBw(n, sel, hi, lo) { var a=[]; for (var i=0;i<n;i++) a.push(i===sel?hi:lo); return a; }
+
+function sanitizeDeep(v) {
+  if (typeof v === 'string') {
+    return v.replace(/</g,'\u2039').replace(/>/g,'\u203A')
+            .replace(/"/g,'\u201D').replace(/'/g,'\u2019');
+  }
+  if (v && typeof v === 'object') {
+    if (Object.prototype.toString.call(v) === '[object Array]') {
+      for (var i = 0; i < v.length; i++) v[i] = sanitizeDeep(v[i]);
+    } else {
+      for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) v[k] = sanitizeDeep(v[k]);
+    }
+  }
+  return v;
+}
+
+function noDataCard(tabName, d) {
+  var keys = d ? Object.keys(d).join(', ') : 'null';
+  var iKeys = (d && d.I) ? Object.keys(d.I).slice(0,6).join(', ')+'...' : 'not present';
+  var eKeys = (d && d.E) ? Object.keys(d.E).slice(0,4).join(', ')+'...' : 'not present';
+  var bKeys = (d && d.B) ? Object.keys(d.B).slice(0,4).join(', ')+'...' : 'not present';
+  return '<div class="card" style="margin-top:12px"><div class="cb"><div style="text-align:center;padding:20px 10px">'
+    + '<div style="font-size:24px;margin-bottom:8px">&#128203;</div>'
+    + '<div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px">' + tabName + ' data not available</div>'
+    + '<div style="font-size:11px;color:var(--t3);margin-bottom:12px">The dashboard received data but could not map it to this view.<br>Check the Apps Script response format.</div>'
+    + '<div style="text-align:left;background:#F0F5F0;border-radius:8px;padding:10px;font-size:10px;color:var(--t2);font-family:monospace;margin-bottom:12px">'
+    + '<b>D keys:</b> ' + keys + '<br>'
+    + '<b>D.I (inflow):</b> ' + iKeys + '<br>'
+    + '<b>D.E (expenses):</b> ' + eKeys + '<br>'
+    + '<b>D.B (balances):</b> ' + bKeys
+    + '</div>'
+    + '<button onclick="manualRefresh()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--font)">&#8635; Refresh Data</button>'
+    + '</div></div></div>';
+}
+
+function fetchWithTimeout(url, ms){
+  return Promise.race([fetch(url), new Promise(function(ig,rej){setTimeout(function(){rej(new Error('Request timed out'));},ms);})]);
+}
+
+function loadData(fresh){
+  showLoading('Fetching live Mall P&L\u2026');
+  var url = APPS_SCRIPT_URL + '?action=malls&clientKey=' + CLIENT_KEY + (fresh?'&fresh=1':'') + '&_=' + Date.now();
+  fetchWithTimeout(url, 12000)
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(json){
+      if(json.status!=='ok') throw new Error(json.message||'Server error');
+      D = sanitizeDeep(json.data);
+      try{ localStorage.setItem(CACHE_KEY, JSON.stringify(D)); }catch(x){}
+      hideLoading(); hideStale();
+      ge('hdate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+      ge('refresh-status').textContent = 'Updated ' + fmtTime(new Date());
+      rMO();
+    })
+    .catch(function(err){
+      hideLoading(); console.warn('Fetch failed:', err.message);
+      loadFromCache();
+    });
+}
+
+function loadFromCache(){
+  try{
+    var saved = localStorage.getItem(CACHE_KEY);
+    if(saved){ D = sanitizeDeep(JSON.parse(saved)); showStale(); rMO(); return; }
+  }catch(x){}
+  ge('mo-body').innerHTML = '<div class="card"><div class="cb"><div class="empty-sm">No data yet. Check your connection and refresh.</div></div></div>';
+}
+
+function manualRefresh(){ loadData(true); }
+
+// ---- Mall P&L view (mirrors the main dashboard) ----
+function rMO(){
+  if(!D || !D.rows || !D.rows.length){ ge('mo-body').innerHTML = noDataCard('Mall Operations', {}); return; }
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+
+function buildMOHtml(){
+  var sel = '<div class="mo-sel">'
+    + '<button class="mo-btn'+(_moMall==='AOM'?' active':'')+'" onclick="moSel(\'AOM\',this)">AOM \u2014 Amazon Outlet Mall</button>'
+    + '<button class="mo-btn'+(_moMall==='IBM'?' active':'')+'" onclick="moSel(\'IBM\',this)">IBM \u2014 IMARAT Builders Mall</button>'
+    + '</div>';
+  var rows = D.rows.filter(function(r){return r.mall===_moMall;});
+  if(!rows.length) return sel + '<div class="card"><div class="cb"><div class="empty-sm">No data for '+_moMall+'</div></div></div>';
+  var months = rows.map(function(r){return r.month;});
+  var selIdx = months.indexOf(_moMonth);
+  if(selIdx<0){ selIdx = months.length-1; _moMonth = months[selIdx]; }
+  var selected = rows[selIdx];
+  var msel = '<div class="mo-msel"><span class="mo-mlbl">Month</span>';
+  for(var mi=0;mi<months.length;mi++){ msel += '<button class="mo-mbtn'+(mi===selIdx?' active':'')+'" onclick="moSelMonth(\''+months[mi]+'\',this)">'+months[mi]+'</button>'; }
+  msel += '</div>';
+  var kpis = '<div class="mo-kpi-grid">'
+    + moKpi('OCCUPANCY', selected.occupancy.toFixed(1)+'%', selected.leasedSqFt.toLocaleString()+' of '+selected.totalSqFt.toLocaleString()+' sqft', selected.occupancy>=70?'#16A34A':'#DC2626')
+    + moKpi('RENTAL INCOME', M(selected.rentalIncome), 'Tenant rent \u00B7 '+selected.month, '#166534')
+    + moKpi('P & L', M(selected.noi), selected.noi>=0?'&#9679; Positive':'&#9888; Loss', selected.noi>=0?'#16A34A':'#DC2626')
+    + moKpi('RATE / SQFT', 'Rs '+selected.ratePSQFT, 'Avg per leased sqft', '#C9A850')
+    + '</div>';
+  var charts =
+    '<div class="chart-card"><div class="chart-title">Revenue vs Expenses</div><div class="chart-sub">Monthly trend \u2014 '+_moMall+' \u00B7 viewing '+selected.month+'</div><div class="chart-wrap"><canvas id="mo-chart-1"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Op Expenses vs CAM Recovery</div><div class="chart-sub">Gap shows the deficit \u2014 CAM should cover expenses</div><div class="chart-wrap"><canvas id="mo-chart-2"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Rate per SqFt Trend</div><div class="chart-sub">Rs / leased sqft by month</div><div class="chart-wrap"><canvas id="mo-chart-3"></canvas></div></div>'
+    + '<div class="chart-card"><div class="chart-title">Occupancy</div><div class="chart-sub">Area breakdown \u2014 '+selected.month+'</div><div style="max-width:220px;margin:0 auto"><div class="chart-wrap"><canvas id="mo-chart-4"></canvas></div></div></div>';
+  var yieldSection = buildYieldAnalysis(rows, selected);
+  return sel + msel + kpis + charts + yieldSection;
+}
+
+function moSel(mall, el){
+  _moMall = mall;
+  var btns = document.querySelectorAll('.mo-btn');
+  for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
+  if(el) el.classList.add('active');
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+function moSelMonth(month, el){
+  _moMonth = month;
+  ge('mo-body').innerHTML = buildMOHtml();
+  setTimeout(initMOCharts, 50);
+}
+
+function initMOCharts(){
+  var rows = D.rows.filter(function(r){return r.mall===_moMall;});
+  if(!rows.length) return;
+  var labels = rows.map(function(r){return r.month;});
+  var n = rows.length;
+  var selIdx = labels.indexOf(_moMonth);
+  if(selIdx<0) selIdx = n-1;
+  var C1=ge('mo-chart-1'),C2=ge('mo-chart-2'),C3=ge('mo-chart-3'),C4=ge('mo-chart-4');
+  if(C1) mkChart('mo-chart-1',{type:'line',data:{labels:labels,datasets:[
+    {label:'Rental Income',data:rows.map(function(r){return r.rentalIncome;}),borderColor:'#166534',backgroundColor:'#16653420',tension:.4,fill:true,pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#166534'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)},
+    {label:'Op Expenses',data:rows.map(function(r){return r.opExp;}),borderColor:'#DC2626',backgroundColor:'#DC262620',tension:.4,fill:true,pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#DC2626'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)},
+    {label:'Net Op Income',data:rows.map(function(r){return r.noi;}),borderColor:'#C9A850',backgroundColor:'transparent',tension:.4,borderDash:[4,3],pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:'#C9A850',pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)}
+  ]},options:chartOpts('number')});
+  if(C2) mkChart('mo-chart-2',{type:'bar',data:{labels:labels,datasets:[
+    {label:'Op Expenses',data:rows.map(function(r){return r.opExp;}),backgroundColor:'#DC262699',borderRadius:4,borderColor:moPbg(n,selIdx,'#DC262600'),borderWidth:moBw(n,selIdx,2,0)},
+    {label:'CAM Recovery',data:rows.map(function(r){return r.cam;}),backgroundColor:'#16653499',borderRadius:4,borderColor:moPbg(n,selIdx,'#16653400'),borderWidth:moBw(n,selIdx,2,0)},
+    {label:'Deficit (Gap)',data:rows.map(function(r){return r.opExp-r.cam;}),type:'line',borderColor:'#C9A850',backgroundColor:'transparent',tension:.4,borderDash:[5,3],pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#C9A850'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)}
+  ]},options:chartOpts('number',true)});
+  if(C3) mkChart('mo-chart-3',{type:'line',data:{labels:labels,datasets:[{label:'Rate PSQFT (Rs)',data:rows.map(function(r){return r.ratePSQFT;}),borderColor:'#C9A850',backgroundColor:'#C9A85020',tension:.4,fill:true,pointRadius:moRad(n,selIdx),pointHoverRadius:7,pointBackgroundColor:moPbg(n,selIdx,'#C9A850'),pointBorderColor:'#fff',pointBorderWidth:moBw(n,selIdx,2,1)}]},options:chartOpts('plain')});
+  if(C4){ var lat=rows[selIdx]; var vacant=lat.totalSqFt-lat.leasedSqFt;
+    mkChart('mo-chart-4',{type:'doughnut',data:{labels:['Leased','Vacant'],datasets:[{data:[lat.leasedSqFt,vacant],backgroundColor:['#166534','#FEE2E2'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}}});
+  }
+  initYieldChart(rows, labels);
+}
+
+document.addEventListener('DOMContentLoaded', function(){ loadData(false); });
+setInterval(function(){ loadData(false); }, 300000);
+
+</script>
+</body>
+</html>
