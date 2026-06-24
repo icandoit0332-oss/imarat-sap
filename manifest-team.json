@@ -1,0 +1,25 @@
+{
+  "name": "IMARAT SAP — Team Dashboard",
+  "short_name": "SAP Dashboard",
+  "description": "SAP Requirement Management dashboard for the IMARAT SAP team",
+  "start_url": "/imarat-sap/team.html",
+  "scope": "/imarat-sap/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFF5F8",
+  "theme_color": "#0891B2",
+  "icons": [
+    {
+      "src": "/imarat-sap/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/imarat-sap/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
