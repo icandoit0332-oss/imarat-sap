@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="IMARAT SAP">
 <meta name="theme-color" content="#0891B2">
@@ -1662,21 +1663,39 @@ fbAuth.onAuthStateChanged(async (user) => {
   const authScreen = document.getElementById('authScreen');
   if (user) {
     currentUser = user;
-    try {
-      const snap = await fbDb.collection('users').doc(user.uid).get();
-      if (snap.exists) {
-        currentRole = snap.data().role || 'viewer';
-        const name = snap.data().name || user.email.split('@')[0];
-        currentUserName = name;
-        showUserPill(name, currentRole);
-      } else {
-        // First login — auto-create as viewer
-        await fbDb.collection('users').doc(user.uid).set({ email: user.email, name: user.email.split('@')[0], role: 'viewer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-        currentRole = 'viewer';
-        currentUserName = user.email.split('@')[0];
-        showUserPill(user.email.split('@')[0], 'viewer');
+    const safeName = (user.email || 'user').split('@')[0];
+
+    // Try to read role with one retry on failure (handles network blips)
+    let roleLoaded = false;
+    for (let attempt = 0; attempt < 2 && !roleLoaded; attempt++) {
+      try {
+        const snap = await fbDb.collection('users').doc(user.uid).get();
+        if (snap.exists) {
+          currentRole = snap.data().role || 'viewer';
+          currentUserName = snap.data().name || safeName;
+          showUserPill(currentUserName, currentRole);
+          roleLoaded = true;
+        } else {
+          // First login — auto-create as viewer
+          await fbDb.collection('users').doc(user.uid).set({ email: user.email, name: safeName, role: 'viewer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          currentRole = 'viewer';
+          currentUserName = safeName;
+          showUserPill(safeName, 'viewer');
+          roleLoaded = true;
+        }
+      } catch(e) {
+        if (attempt === 0) {
+          // Wait briefly and retry once
+          await new Promise(res => setTimeout(res, 1200));
+        } else {
+          // Both attempts failed — keep any previously known role, don't force viewer
+          if (!currentRole) currentRole = 'viewer';
+          currentUserName = currentUserName || safeName;
+          showUserPill(currentUserName, currentRole);
+          showToast('⚠️ Network issue — role may be limited. Refresh if controls are missing.');
+        }
       }
-    } catch(e) { currentRole = 'viewer'; currentUserName = user.email.split('@')[0]; showUserPill(user.email.split('@')[0], 'viewer'); }
+    }
 
     // Hide auth screen
     if (authScreen) { authScreen.style.transition='opacity 0.3s'; authScreen.style.opacity='0'; setTimeout(()=>authScreen.style.display='none',300); }
