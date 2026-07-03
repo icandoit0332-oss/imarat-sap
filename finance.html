@@ -297,7 +297,11 @@ body{font-family:var(--font);background:var(--body-bg);color:var(--t1);min-heigh
 .cal-btn:hover{background:rgba(201,168,80,.3)}
 .cal-pop{background:#fff;border-radius:var(--r);box-shadow:var(--sh2);padding:14px;margin-bottom:12px;display:none}
 .cal-pop.open{display:block}
-.cal-pop-hdr{font-size:12px;font-weight:700;color:var(--t1);text-align:center;margin-bottom:10px}
+.cal-pop-hdr{font-size:12px;font-weight:700;color:var(--t1);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav{width:26px;height:26px;border-radius:8px;border:1px solid var(--bdr);background:#fff;color:var(--t1);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cal-nav:hover:not(:disabled){background:var(--gold);border-color:var(--gold);color:#06140c}
+.cal-nav:disabled{opacity:.28;cursor:default}
+.cal-pop-title{flex:1;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .cal-dow{text-align:center;font-size:9px;font-weight:600;color:var(--t3);padding:3px 0}
 .cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;position:relative;transition:background .12s}
@@ -1853,6 +1857,8 @@ function codeColor(c) { return CODE_COLOR[c] || '#6B7280'; }
 // DAILY CALENDAR
 // ════════════════════════════════════════════════════════════
 var _dlSelected = '';
+var _calMonth = null;  // calendar view month (0-11), independent of selected day
+var _calYear = null;
 
 function rDL() {
   if (!D || !D.currentMTD || !D.currentMTD.periods.length) {
@@ -1860,10 +1866,19 @@ function rDL() {
     return;
   }
   var periods = D.currentMTD.periods;
-  // Default: latest day that has any non-zero data
-  if (!_dlSelected || periods.indexOf(_dlSelected) < 0) {
-    _dlSelected = latestDayWithData(periods);
+  // Single-month view: anchor to the LATEST month that has data. Preserve the
+  // user's day selection within a month, but auto-jump forward when a newer
+  // month's data appears (older months live in Trends).
+  var latest = latestDayWithData(periods);
+  var selD = parseDateLabel(_dlSelected);
+  var latD = parseDateLabel(latest);
+  if (!_dlSelected || periods.indexOf(_dlSelected) < 0 ||
+      (selD && latD && (latD.year > selD.year || (latD.year === selD.year && latD.month > selD.month)))) {
+    _dlSelected = latest;
   }
+  // Calendar opens on the selected day's month (user can then page back/forward)
+  var sd0 = parseDateLabel(_dlSelected);
+  if (sd0) { _calMonth = sd0.month; _calYear = sd0.year; }
 
   var dlHtml = '<div class="dl-hdr">'
     + '<div class="dl-title">DAILY EXPENSES</div>'
@@ -1889,35 +1904,70 @@ function dayTotal(period) {
   return t;
 }
 
+// Earliest/latest month present in the data, as comparable year*12+month values
+function calBounds(periods) {
+  var lo = Infinity, hi = -Infinity;
+  for (var i = 0; i < periods.length; i++) {
+    var d = parseDateLabel(periods[i]);
+    if (!d) continue;
+    var v = d.year * 12 + d.month;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  return { lo: lo, hi: hi };
+}
+
+function calShift(delta) {
+  var m = _calMonth + delta, y = _calYear;
+  if (m < 0) { m = 11; y--; }
+  if (m > 11) { m = 0; y++; }
+  var b = calBounds(D.currentMTD.periods);
+  var val = y * 12 + m;
+  if (val < b.lo || val > b.hi) return; // stay within the range of months that exist
+  _calMonth = m; _calYear = y;
+  var pop = ge('cal-pop');
+  if (pop) pop.innerHTML = buildCalPop(D.currentMTD.periods);
+}
+
 function buildCalPop(periods) {
-  // Parse first period to determine month/year
-  var first = parseDateLabel(periods[0]);
-  if (!first) return '<div class="empty-sm">Calendar unavailable</div>';
-  var year = first.year, month = first.month;
+  // Anchor to the calendar's current view month; fall back to selected/latest.
+  if (_calMonth === null || _calYear === null) {
+    var a = parseDateLabel(_dlSelected) || parseDateLabel(periods[periods.length - 1]);
+    if (!a) return '<div class="empty-sm">Calendar unavailable</div>';
+    _calMonth = a.month; _calYear = a.year;
+  }
+  var year = _calYear, month = _calMonth;
   var monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][month];
 
-  // Map day-of-month → period label (only days present in data)
+  // Map day-of-month → period label, ONLY for days in the view month/year
   var dayMap = {};
   for (var i = 0; i < periods.length; i++) {
     var d = parseDateLabel(periods[i]);
-    if (d) dayMap[d.day] = periods[i];
+    if (d && d.month === month && d.year === year) dayMap[d.day] = periods[i];
   }
 
+  var b = calBounds(periods);
+  var cur = year * 12 + month;
+  var prevDis = cur <= b.lo ? ' disabled' : '';
+  var nextDis = cur >= b.hi ? ' disabled' : '';
+
   var firstDow = new Date(year, month, 1).getDay(); // 0=Sun
-  // Convert to Mon-first: Mon=0..Sun=6
-  var lead = (firstDow === 0) ? 6 : firstDow - 1;
+  var lead = (firstDow === 0) ? 6 : firstDow - 1;   // Mon-first
   var daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  var html = '<div class="cal-pop-hdr">' + monthName + ' ' + year + '</div><div class="cal-grid">';
+  var html = '<div class="cal-pop-hdr">'
+    + '<button class="cal-nav" onclick="calShift(-1)"' + prevDis + '>&#8249;</button>'
+    + '<span class="cal-pop-title">' + monthName + ' ' + year + '</span>'
+    + '<button class="cal-nav" onclick="calShift(1)"' + nextDis + '>&#8250;</button>'
+    + '</div><div class="cal-grid">';
   var dows = ['M','T','W','T','F','S','S'];
-  for (var d = 0; d < 7; d++) html += '<div class="cal-dow">' + dows[d] + '</div>';
+  for (var dw = 0; dw < 7; dw++) html += '<div class="cal-dow">' + dows[dw] + '</div>';
   for (var l = 0; l < lead; l++) html += '<div class="cal-cell empty"></div>';
   for (var day = 1; day <= daysInMonth; day++) {
     var period = dayMap[day];
     var hasData = period && dayTotal(period) > 0;
     var cls = 'cal-cell';
-    if (!period) cls += ' no-data';
-    else if (!hasData) cls += ' no-data';
+    if (!period || !hasData) cls += ' no-data';
     else cls += ' has-data';
     if (period === _dlSelected) cls += ' sel';
     var click = (period && hasData) ? ' onclick="selectDay(\'' + period + '\')"' : '';
