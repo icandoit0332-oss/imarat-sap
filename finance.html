@@ -2210,6 +2210,7 @@ function sparkline(values, color) {
 // RENTALS & ADVANCES
 // ════════════════════════════════════════════════════════════
 var _raView = 'advances'; // 'advances' | 'rentals' | 'customers'
+var _raMonth = null;      // null = latest; otherwise a specific month label
 
 function rRA() {
   if (!D || !D.RA || !D.RA.latestMonth) {
@@ -2217,12 +2218,19 @@ function rRA() {
     return;
   }
   var RA = D.RA;
-  var lm = RA.latestMonth;
-  var latest = null;
-  for (var i = 0; i < RA.monthly.length; i++) {
-    if (RA.monthly[i].month === lm) { latest = RA.monthly[i].projects; break; }
-  }
+  var months = RA.monthly.map(function(m){ return m.month; });
+  var mi = months.indexOf(_raMonth);
+  if (mi < 0) { mi = months.length - 1; _raMonth = months[mi]; }
+  var lm = _raMonth;
+  var latest = RA.monthly[mi].projects;
   if (!latest) { ge('ra-body').innerHTML = noDataCard('Customer Rental', D); return; }
+
+  // Month selector (matches Malls styling); shows all months present in the sheet
+  var msel = '<div class="mo-msel" style="margin-bottom:14px"><span class="mo-mlbl">Month</span>';
+  for (var mm = 0; mm < months.length; mm++) {
+    msel += '<button class="mo-mbtn' + (mm === mi ? ' active' : '') + '" onclick="raSelMonth(\'' + months[mm] + '\',this)">' + months[mm] + '</button>';
+  }
+  msel += '</div>';
 
   // ── Rental totals ─────────────────────────────────────────
   var totCount = 0, totGross = 0, totWHT = 0, totDed = 0, totNet = 0;
@@ -2295,7 +2303,7 @@ function rRA() {
   }
   tbl += '</tbody></table></div></div>';
 
-  ge('ra-body').innerHTML = hero + kpis + projCard + tbl;
+  ge('ra-body').innerHTML = msel + hero + kpis + projCard + tbl;
 }
 function buildRaRows(projects, prev, view) {
   var sorted = projects.slice().sort(function(a,b) {
@@ -2322,6 +2330,11 @@ function buildRaRows(projects, prev, view) {
       + '</div>';
   }
   return h || '<div class="empty-sm">No data</div>';
+}
+
+function raSelMonth(month, el) {
+  _raMonth = month;
+  rRA();
 }
 
 function raView(view, el) {
