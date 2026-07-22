@@ -2834,6 +2834,7 @@ function renderComments(raw) {
         </div>
       </div>
       <div style="font-size:13px;color:var(--text);line-height:1.5">${escapeHtml(c.text || '')}</div>
+      ${c.attach ? `<div class="comment-imgs" data-attach="${c.attach}" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span style="font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace">📎 loading image…</span></div>` : ''}
     </div>`;
   }).join('');
 }
@@ -2855,12 +2856,87 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ══════════════════════════════════════════
+//  COMMENT IMAGE ATTACHMENTS
+// ══════════════════════════════════════════
+// Same free-tier pattern as the submit form: compress in-browser, store the
+// image in Firestore `attachments`, keep only the short doc ID in the comment.
+var pendingCommentImages = []; // compressed base64 strings for the comment being written
+var MAX_COMMENT_IMAGES = 3;
+
+function compressImage(file, cb){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var maxW = 1000;
+      var scale = img.width > maxW ? maxW / img.width : 1;
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      cb(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleCommentImages(input){
+  var files = Array.prototype.slice.call(input.files);
+  if (pendingCommentImages.length + files.length > MAX_COMMENT_IMAGES){
+    showToast('Up to ' + MAX_COMMENT_IMAGES + ' images per comment');
+    input.value=''; return;
+  }
+  files.forEach(function(file){
+    if (!file.type.match(/image\/(jpeg|png|jpg)/)) { showToast('Images only (JPG/PNG)'); return; }
+    compressImage(file, function(base64){ pendingCommentImages.push(base64); renderCommentThumbs(); });
+  });
+  input.value='';
+}
+
+function renderCommentThumbs(){
+  var row = document.getElementById('commentThumbRow');
+  if (!row) return;
+  row.innerHTML = pendingCommentImages.map(function(img, i){
+    return '<div style="position:relative;display:inline-block"><img src="'+img+'" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)"><button onclick="removeCommentImage('+i+')" title="Remove" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:var(--red);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;line-height:1;padding:0">×</button></div>';
+  }).join('');
+}
+
+function removeCommentImage(i){ pendingCommentImages.splice(i,1); renderCommentThumbs(); }
+
+// Fetch + render each comment's stored images (called after the thread renders)
+async function hydrateCommentImages(){
+  const conts = document.querySelectorAll('.comment-imgs[data-attach]:not([data-loaded])');
+  for (const el of conts) {
+    const docId = el.getAttribute('data-attach');
+    el.setAttribute('data-loaded','1');
+    try {
+      const snap = await fbDb.collection('attachments').doc(docId).get();
+      const imgs = snap.exists ? (snap.data().images || []) : [];
+      window.__imgCache = window.__imgCache || {};
+      window.__imgCache[docId] = imgs;
+      el.innerHTML = imgs.map((src,i)=>`<img src="${src}" onclick="viewCommentImage('${docId}',${i})" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);cursor:pointer;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">`).join('');
+    } catch(e) { el.innerHTML = '<span style="font-size:11px;color:var(--text-dim)">image unavailable</span>'; }
+  }
+}
+
+function viewCommentImage(docId, i){
+  const imgs = (window.__imgCache && window.__imgCache[docId]) || [];
+  const src = imgs[i]; if (!src) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+  overlay.onclick = function(){ overlay.remove(); };
+  overlay.innerHTML = `<img src="${src}" style="max-width:100%;max-height:100%;border-radius:8px">`;
+  document.body.appendChild(overlay);
+}
+
 async function addComment(id) {
   const txtEl = document.getElementById('newCommentText');
   const btn = document.getElementById('commentBtn');
   if (!txtEl) return;
   const text = txtEl.value.trim();
-  if (!text) { showToast('Write something first'); return; }
+  if (!text && pendingCommentImages.length === 0) { showToast('Write something or attach an image'); return; }
 
   const r = requirements.find(x => x.id === id);
   if (!r) return;
@@ -2868,15 +2944,39 @@ async function addComment(id) {
   btn.disabled = true;
   btn.textContent = '...';
 
+  // Upload attached images to Firestore first (store only the doc ID in the comment)
+  let attachId = '';
+  let attachCount = 0;
+  if (pendingCommentImages.length > 0) {
+    try {
+      const docRef = await fbDb.collection('attachments').add({
+        reqId: id,
+        images: pendingCommentImages.slice(),
+        count: pendingCommentImages.length,
+        uploadedAt: new Date().toISOString()
+      });
+      attachId = docRef.id;
+      attachCount = pendingCommentImages.length;
+    } catch(e) {
+      showToast('Image upload failed — posting text only');
+    }
+  }
+
   const comments = parseComments(r.comments);
   const newComment = { author: currentUserName || 'Unknown', text: text, time: new Date().toISOString() };
+  if (attachId) { newComment.attach = attachId; newComment.attachCount = attachCount; }
   comments.push(newComment);
 
   // Update locally first (optimistic)
   r.comments = JSON.stringify(comments);
 
-  // Re-render thread
+  // Reset composer
+  pendingCommentImages = [];
+  renderCommentThumbs();
+
+  // Re-render thread + load any images
   document.getElementById('commentThread').innerHTML = renderComments(r.comments);
+  hydrateCommentImages();
   txtEl.value = '';
   txtEl.style.height = 'auto';
 
@@ -2985,7 +3085,7 @@ function buildActivityFeed() {
     parseComments(r.comments).forEach(function(c){
       out.push({
         reqId: r.id, reqTitle: r.title || '',
-        author: c.author || '—', text: c.text || '',
+        author: c.author || '—', text: c.text || '', hasImg: !!c.attach,
         time: c.time || '', type: (c.type === 'system' ? 'system' : 'human')
       });
     });
@@ -3025,9 +3125,10 @@ function drawActivityFeed() {
   if (!rows.length) { box.innerHTML = '<div style="font-size:13px;color:var(--text-dim);padding:16px">No matching activity.</div>'; return; }
   box.innerHTML = rows.map(function(e){
     const icon = e.type === 'system' ? '⚙' : '💬';
+    const imgTag = e.hasImg ? ' <span title="has image" style="color:var(--text-dim)">📎</span>' : '';
     const body = e.type === 'system'
       ? '<span style="color:var(--text-mid)">'+escapeHtml(e.text)+'</span>'
-      : '<span style="color:var(--text)">'+escapeHtml(e.text)+'</span>';
+      : '<span style="color:var(--text)">'+(escapeHtml(e.text) || '<span style="color:var(--text-dim)">(image)</span>')+'</span>'+imgTag;
     return '<div style="display:flex;gap:12px;padding:11px 12px;border-bottom:1px solid var(--border);align-items:flex-start">'
       + '<div style="min-width:150px;font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--text-dim)">'+escapeHtml(alFmtTime(e.time))+'</div>'
       + '<div style="flex:1;font-size:13px;line-height:1.5">'
@@ -3116,7 +3217,9 @@ function openModal(id) {
       <div class="modal-detail-label" style="margin-bottom:12px;display:flex;align-items:center;gap:7px">💬 Activity & Comments <span style="background:var(--surface2);color:var(--text-dim);font-size:10px;padding:1px 8px;border-radius:10px;font-family:'IBM Plex Mono',monospace">${(parseComments(r.comments)).length}</span></div>
       <div id="commentThread" style="max-height:240px;overflow-y:auto;margin-bottom:12px">${renderComments(r.comments)}</div>
       ${canComment(r) ? `
+      <div id="commentThumbRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div style="display:flex;gap:8px;align-items:flex-end">
+        <label title="Attach image (JPG/PNG)" style="flex-shrink:0;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-size:18px">📎<input type="file" accept="image/png,image/jpeg" multiple onchange="handleCommentImages(this)" style="display:none"></label>
         <textarea id="newCommentText" placeholder="Add an update — where is this stuck? what's the blocker?" style="flex:1;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:42px;line-height:1.4" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
         <button onclick="addComment('${r.id}')" id="commentBtn" style="background:var(--primary);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Post</button>
       </div>` : ''}
@@ -3128,6 +3231,11 @@ function openModal(id) {
     </div>`;
 
   document.getElementById('modal').classList.add('show');
+
+  // Fresh composer each open + load any images already on the comments
+  pendingCommentImages = [];
+  renderCommentThumbs();
+  hydrateCommentImages();
 
   // Load attachment images if present
   if (r.attachmentUrl) loadAttachments(r.attachmentUrl);
