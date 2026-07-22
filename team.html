@@ -2265,6 +2265,9 @@ async function updateStatus(id, status) {
   if (!req) return;
   const oldStatus = req.status;
 
+  // Clicking the status it's already in does nothing (no move, no log entry)
+  if (oldStatus === status) { renderAll(); return; }
+
   // Target date mandatory for all forward status changes
   const order = ['Not Started', 'In Progress', 'UAT', 'Completed'];
   const currentIdx = order.indexOf(req.status);
@@ -2276,6 +2279,14 @@ async function updateStatus(id, status) {
     openModal(id);
     return;
   }
+
+  // Confirm before committing — prevents accidental taps moving a requirement
+  // (and writing a false activity entry). Cancel re-renders to reset any dropdown.
+  if (!confirm(`Move ${id}\n"${req.title}"\n\n${oldStatus}  →  ${status} ?`)) {
+    renderAll();
+    return;
+  }
+
   if (req) {
     req.status = status;
     req.lastUpdated = new Date().toISOString();
