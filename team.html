@@ -403,6 +403,7 @@ td.td-title div { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; m
 /* ── VIEWER MODE ── */
 body.viewer-mode .edit-only { display:none !important; }
 body.viewer-mode .edit-section { display:none !important; }
+body:not(.admin-mode) .admin-only { display:none !important; }
 /* ════════════════════════════════════════
    MOBILE APP DESIGN (max-width: 768px)
    ════════════════════════════════════════ */
@@ -618,6 +619,7 @@ body.viewer-mode .edit-section { display:none !important; }
     <label class="auth-label">Password</label>
     <input class="auth-input" type="password" id="authPass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignIn()">
     <button class="auth-btn" id="authBtn" onclick="doSignIn()">🔓 Sign In to Dashboard</button>
+    <div style="text-align:center;margin-top:12px"><a id="forgotLink" onclick="doForgotPassword()" style="font-size:13px;color:var(--primary);cursor:pointer;text-decoration:none">Forgot password?</a></div>
     <div class="auth-err" id="authErr"></div>
     <div class="auth-footer">Authorized SAP Team Access Only &nbsp;·&nbsp; IMARAT Group</div>
   </div>
@@ -658,6 +660,7 @@ body.viewer-mode .edit-section { display:none !important; }
   <div class="nav-tab" data-tab="tasks" onclick="goTab('tasks')">📋 All Tasks</div>
   <div class="nav-tab" data-tab="rankings" onclick="goTab('rankings')">🏆 Rankings</div>
   <div class="nav-tab" data-tab="calendar" onclick="goTab('calendar')">📅 Calendar</div>
+  <div class="nav-tab admin-only" data-tab="activity" onclick="goTab('activity')">🕓 Activity Log</div>
   <div class="nav-tab edit-only" data-tab="settings" onclick="goTab('settings')">⚙️ Settings</div>
 </nav>
 
@@ -1011,10 +1014,13 @@ body.viewer-mode .edit-section { display:none !important; }
           <div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">Email</label><input id="nuEmail" type="email" placeholder="user@email.com" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;font-family:'DM Mono',monospace;outline:none;background:var(--surface);"></div>
           <div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">Full Name</label><input id="nuName" type="text" placeholder="Full Name" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:var(--surface);"></div>
           <div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">Password</label><input id="nuPass" type="password" placeholder="Password" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;font-family:'DM Mono',monospace;outline:none;background:var(--surface);"></div>
-          <div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">Role</label><select id="nuRole" style="border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:13px;background:var(--surface);outline:none;"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+          <div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">Role</label><select id="nuRole" style="border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:13px;background:var(--surface);outline:none;"><option value="editor" selected>Editor</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></div>
         </div>
         <button onclick="addUser()" style="margin-top:12px;background:linear-gradient(135deg,#0891B2,#0C6A8B);color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">+ Add User</button>
         <div id="addUserMsg" style="margin-top:8px;font-size:12px;font-family:'DM Mono',monospace;min-height:16px;"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button onclick="bulkPromoteViewers()" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--green);padding:8px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">⬆ Promote all viewers → editor</button>
       </div>
       <div id="usersList"><div style="font-size:13px;color:var(--text-dim);padding:12px;">Loading users...</div></div>
     </div>
@@ -1035,6 +1041,26 @@ body.viewer-mode .edit-section { display:none !important; }
       </div>
     </div>
   </div>
+</div>
+
+<!-- ══ ACTIVITY LOG (admin only) ══ -->
+<div class="tab-pane" id="pane-activity">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div>
+      <div class="form-label" style="margin-bottom:2px">🕓 Activity Log</div>
+      <div style="font-size:12px;color:var(--text-dim)">Every change across all requirements — who did what, and when. <span id="alCount"></span></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="renderActivityLog()" style="background:var(--blue-dim);border:1px solid rgba(77,159,255,0.3);color:var(--blue);padding:8px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">↻ Refresh</button>
+      <button onclick="exportActivityCSV()" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--green);padding:8px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">⬇ Export CSV</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <input id="alSearch" type="text" placeholder="Search text / requirement / person…" oninput="drawActivityFeed()" style="border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:var(--surface);color:var(--text)">
+    <select id="alType" onchange="drawActivityFeed()" style="border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:13px;background:var(--surface);color:var(--text);outline:none"><option value="">All activity</option><option value="system">⚙ Changes only</option><option value="human">💬 Comments only</option></select>
+    <select id="alPerson" onchange="drawActivityFeed()" style="border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:13px;background:var(--surface);color:var(--text);outline:none"><option value="">All people</option></select>
+  </div>
+  <div id="activityFeed"><div style="font-size:13px;color:var(--text-dim);padding:16px">Loading activity…</div></div>
 </div>
 
 </div><!-- /page -->
@@ -1653,6 +1679,32 @@ async function doSignIn() {
   }
 }
 
+// ── FORGOT PASSWORD ──
+async function doForgotPassword() {
+  const emailEl = document.getElementById('authEmail');
+  const err = document.getElementById('authErr');
+  const email = (emailEl.value || '').trim();
+  if (!email) {
+    err.style.color = '#DC2626';
+    err.textContent = '✗ Type your email above first, then click Forgot password.';
+    emailEl.classList.add('err');
+    setTimeout(() => emailEl.classList.remove('err'), 1500);
+    emailEl.focus();
+    return;
+  }
+  err.style.color = '#4A7B8C';
+  err.textContent = 'Sending reset link…';
+  try {
+    await fbAuth.sendPasswordResetEmail(email);
+    err.style.color = '#0D9965';
+    err.textContent = '✓ Reset link sent to ' + email + '. Check your inbox (and spam folder).';
+  } catch(e) {
+    const msgs = { 'auth/invalid-email':'That email address looks invalid.', 'auth/user-not-found':'No account found for that email.', 'auth/too-many-requests':'Too many requests. Please try again later.' };
+    err.style.color = '#DC2626';
+    err.textContent = '✗ ' + (msgs[e.code] || e.message);
+  }
+}
+
 // ── SIGN OUT ──
 async function doSignOut() {
   await fbAuth.signOut();
@@ -1676,11 +1728,11 @@ fbAuth.onAuthStateChanged(async (user) => {
           showUserPill(currentUserName, currentRole);
           roleLoaded = true;
         } else {
-          // First login — auto-create as viewer
-          await fbDb.collection('users').doc(user.uid).set({ email: user.email, name: safeName, role: 'viewer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-          currentRole = 'viewer';
+          // First login — auto-create as editor (default working role)
+          await fbDb.collection('users').doc(user.uid).set({ email: user.email, name: safeName, role: 'editor', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          currentRole = 'editor';
           currentUserName = safeName;
-          showUserPill(safeName, 'viewer');
+          showUserPill(safeName, 'editor');
           roleLoaded = true;
         }
       } catch(e) {
@@ -1737,6 +1789,9 @@ function applyRole(role) {
   } else {
     document.body.classList.add('viewer-mode');
   }
+  // admin-mode gates the Activity Log tab + user/dept/consultant management
+  if (role === 'admin') document.body.classList.add('admin-mode');
+  else document.body.classList.remove('admin-mode');
   const umSection = document.getElementById('userMgmtSection');
   if (umSection) umSection.style.display = role === 'admin' ? '' : 'none';
   const deptSection = document.getElementById('deptMgmtSection');
@@ -1959,6 +2014,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function goTab(name) {
   // Redirect viewers away from edit-only tabs
   if (currentRole === 'viewer' && (name === 'new' || name === 'settings')) name = 'pipeline';
+  // Activity Log is admin-only
+  if (name === 'activity' && currentRole !== 'admin') name = 'pipeline';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.bn-tab').forEach(t => t.classList.remove('active'));
@@ -1976,6 +2033,7 @@ function goTab(name) {
   if (name === 'tasks')     renderTasks();
   if (name === 'rankings')  renderRankings();
   if (name === 'calendar')  renderCalendar();
+  if (name === 'activity')  renderActivityLog();
 }
 
 // ══════════════════════════════════════════
@@ -2205,6 +2263,7 @@ function loadLocal() {
 async function updateStatus(id, status) {
   const req = requirements.find(r => r.id === id);
   if (!req) return;
+  const oldStatus = req.status;
 
   // Target date mandatory for all forward status changes
   const order = ['Not Started', 'In Progress', 'UAT', 'Completed'];
@@ -2236,6 +2295,7 @@ async function updateStatus(id, status) {
       await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
     } catch(e) { /* silent fail */ }
   }
+  if (oldStatus !== status) await logActivity(id, `Status: ${oldStatus} → ${status}`);
   showToast(`Status updated to "${status}"`, 'success');
 }
 
@@ -2741,7 +2801,19 @@ function renderComments(raw) {
     return '<div style="color:var(--text-dim);font-size:12px;font-family:\'IBM Plex Mono\',monospace;text-align:center;padding:16px 0">No updates yet. Add the first comment.</div>';
   }
   // Newest first — index tracks original position for deletion
-  return comments.map((c, origIdx) => ({ c, origIdx })).reverse().map(({ c, origIdx }) => `
+  return comments.map((c, origIdx) => ({ c, origIdx })).reverse().map(({ c, origIdx }) => {
+    // System entries = automatic change records (status/assignment). Muted, no delete — tamper-evident.
+    if (c.type === 'system') {
+      return `
+    <div style="display:flex;gap:8px;align-items:flex-start;padding:7px 11px;margin-bottom:6px;background:var(--surface);border-left:2px solid var(--border2);border-radius:0 6px 6px 0">
+      <span style="font-size:12px;opacity:0.65;line-height:1.5">⚙</span>
+      <div style="flex:1;font-size:12px;color:var(--text-mid);line-height:1.5">
+        ${escapeHtml(c.text || '')}
+        <span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-left:4px">· ${c.author?escapeHtml(c.author)+' · ':''}${formatCommentTime(c.time)}</span>
+      </div>
+    </div>`;
+    }
+    return `
     <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <span style="font-size:12px;font-weight:700;color:var(--primary);font-family:'DM Sans',sans-serif">${c.author || 'Unknown'}</span>
@@ -2751,7 +2823,8 @@ function renderComments(raw) {
         </div>
       </div>
       <div style="font-size:13px;color:var(--text);line-height:1.5">${escapeHtml(c.text || '')}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function formatCommentTime(iso) {
@@ -2840,6 +2913,131 @@ async function deleteComment(id, index) {
   }
 
   renderPipeline();
+}
+
+// ══════════════════════════════════════════
+//  ACTIVITY LOG — automatic change tracking
+// ══════════════════════════════════════════
+// Records a system entry (who did what) into a requirement's activity thread.
+// Reuses the same comments store that syncs to the Google Sheet — no extra backend.
+async function logActivity(id, text) {
+  try {
+    const r = requirements.find(x => x.id === id);
+    if (!r) return;
+    const comments = parseComments(r.comments);
+    comments.push({ author: currentUserName || 'System', text: text, time: new Date().toISOString(), type: 'system' });
+    r.comments = JSON.stringify(comments);
+    if (typeof saveLocal === 'function') saveLocal();
+    // If this requirement's modal is open, refresh the thread live
+    if (window.__modalReqId === id) {
+      const thread = document.getElementById('commentThread');
+      if (thread) thread.innerHTML = renderComments(r.comments);
+    }
+    // Persist to the sheet (same action comments already use)
+    if (scriptUrl) {
+      try {
+        const params = new URLSearchParams({ action:'addComment', id: id, comments: r.comments });
+        await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
+      } catch(e) { /* silent — saved locally */ }
+    }
+  } catch(e) { /* never break the action that triggered logging */ }
+}
+
+// One-click: bump every current viewer to editor.
+async function bulkPromoteViewers() {
+  if (!confirm('Promote ALL current viewers to editor?')) return;
+  try {
+    const snap = await fbDb.collection('users').where('role','==','viewer').get();
+    if (snap.empty) { showToast('No viewers to promote','info'); return; }
+    const batch = fbDb.batch();
+    let n = 0;
+    snap.forEach(function(d){ batch.update(d.ref, { role:'editor' }); n++; });
+    await batch.commit();
+    showToast('✓ Promoted '+n+' user(s) to editor','green');
+    loadUsersList();
+  } catch(e) { showToast('Error: '+e.message,'red'); }
+}
+
+// ── Global Activity Log (admin tab): every change across all requirements ──
+var activityCache = [];
+function alFmtTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return iso; }
+}
+
+function buildActivityFeed() {
+  const out = [];
+  (requirements || []).forEach(function(r){
+    parseComments(r.comments).forEach(function(c){
+      out.push({
+        reqId: r.id, reqTitle: r.title || '',
+        author: c.author || '—', text: c.text || '',
+        time: c.time || '', type: (c.type === 'system' ? 'system' : 'human')
+      });
+    });
+  });
+  out.sort(function(a,b){ return (b.time||'').localeCompare(a.time||''); });
+  return out;
+}
+
+function renderActivityLog() {
+  activityCache = buildActivityFeed();
+  const personSel = document.getElementById('alPerson');
+  if (personSel) {
+    const people = Array.from(new Set(activityCache.map(function(e){return e.author;}).filter(Boolean))).sort();
+    const cur = personSel.value;
+    personSel.innerHTML = '<option value="">All people</option>' + people.map(function(p){return '<option value="'+escapeHtml(p)+'"'+(p===cur?' selected':'')+'>'+escapeHtml(p)+'</option>';}).join('');
+  }
+  drawActivityFeed();
+}
+
+function drawActivityFeed() {
+  const box = document.getElementById('activityFeed');
+  if (!box) return;
+  const q = (document.getElementById('alSearch') && document.getElementById('alSearch').value || '').toLowerCase();
+  const fType = (document.getElementById('alType') && document.getElementById('alType').value) || '';
+  const fPerson = (document.getElementById('alPerson') && document.getElementById('alPerson').value) || '';
+  const rows = activityCache.filter(function(e){
+    if (fType && e.type !== fType) return false;
+    if (fPerson && e.author !== fPerson) return false;
+    if (q) {
+      const hay = [e.author,e.reqId,e.reqTitle,e.text].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  const counter = document.getElementById('alCount');
+  if (counter) counter.textContent = rows.length + ' event' + (rows.length===1?'':'s');
+  if (!rows.length) { box.innerHTML = '<div style="font-size:13px;color:var(--text-dim);padding:16px">No matching activity.</div>'; return; }
+  box.innerHTML = rows.map(function(e){
+    const icon = e.type === 'system' ? '⚙' : '💬';
+    const body = e.type === 'system'
+      ? '<span style="color:var(--text-mid)">'+escapeHtml(e.text)+'</span>'
+      : '<span style="color:var(--text)">'+escapeHtml(e.text)+'</span>';
+    return '<div style="display:flex;gap:12px;padding:11px 12px;border-bottom:1px solid var(--border);align-items:flex-start">'
+      + '<div style="min-width:150px;font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--text-dim)">'+escapeHtml(alFmtTime(e.time))+'</div>'
+      + '<div style="flex:1;font-size:13px;line-height:1.5">'
+        + '<span style="opacity:0.7">'+icon+'</span> '
+        + '<span style="font-weight:600;color:var(--text)">'+escapeHtml(e.author)+'</span> · '
+        + '<a onclick="openModal(\''+e.reqId+'\')" style="font-family:\'IBM Plex Mono\',monospace;color:var(--green);cursor:pointer;text-decoration:none">'+escapeHtml(e.reqId)+'</a> '
+        + '<span style="color:var(--text-dim)">'+escapeHtml((e.reqTitle||'').length>48?e.reqTitle.slice(0,48)+'…':e.reqTitle)+'</span><br>'
+        + body
+      + '</div></div>';
+  }).join('');
+}
+
+function exportActivityCSV() {
+  if (!activityCache.length) { showToast('Nothing to export','info'); return; }
+  const cols = ['time','author','type','reqId','reqTitle','text'];
+  const csv = [cols.join(',')].concat(activityCache.map(function(e){
+    return cols.map(function(c){ return '"'+String(e[c]==null?'':e[c]).replace(/"/g,'""')+'"'; }).join(',');
+  })).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'imarat-sap-activity-log.csv'; a.click();
 }
 
 function openModal(id) {
@@ -2958,6 +3156,10 @@ async function saveAssignment(id) {
   const newTarget     = document.getElementById('m-target').value;
   const newAbap       = document.getElementById('m-abap').value;
 
+  const oldConsultant = req.consultant || '';
+  const oldTarget     = req.targetDate ? req.targetDate.split('T')[0] : '';
+  const oldAbap       = req.abapDev || '';
+
   // Update local immediately with fresh timestamp
   req.consultant  = newConsultant;
   req.targetDate  = newTarget;
@@ -2979,6 +3181,13 @@ async function saveAssignment(id) {
       await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
     } catch(e) { /* silent — local is already saved */ }
   }
+
+  // Record what changed into the activity thread
+  const changes = [];
+  if ((newConsultant||'') !== oldConsultant) changes.push(`Consultant: ${oldConsultant||'—'} → ${newConsultant||'—'}`);
+  if ((newAbap||'') !== oldAbap)             changes.push(`ABAP: ${oldAbap||'—'} → ${newAbap||'—'}`);
+  if (((newTarget||'').split('T')[0]) !== oldTarget) changes.push(`Target date: ${oldTarget||'—'} → ${(newTarget||'—')}`);
+  if (changes.length) await logActivity(id, changes.join(' · '));
 }
 
 function deleteRequirement(id) {
