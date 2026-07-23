@@ -802,6 +802,9 @@ body:not(.admin-mode) .admin-only { display:none !important; }
         <option value="MM">MM</option>
         <option value="HCM">HCM</option>
       </select>
+      <select class="tb-filter" id="pipe-filter-cons" onchange="renderPipeline()">
+        <option value="">All Consultants</option>
+      </select>
     </div>
   </div>
   <div class="pipeline" id="pipelineBoard"></div>
@@ -1088,6 +1091,7 @@ const CONSULTANTS = {
 };
 
 const ALL_CONSULTANTS = ['Abdul Wasay', 'Ayaz', 'Hassan', 'Sarmad'];
+const ALL_ABAP = ['Saad', 'Zeeshan', 'Hussain'];
 
 const STATUS_ORDER = ['Not Started','In Progress','UAT','Completed'];
 
@@ -1525,8 +1529,8 @@ function renderCalendar() {
   // Filter requirements with a target date
   let filtered = requirements.filter(r => {
     if (!r.targetDate) return false;
-    if (modFilter  && r.module     !== modFilter)  return false;
-    if (consFilter && r.consultant !== consFilter) return false;
+    if (modFilter  && r.module !== modFilter && (r.modules||'').split(',').map(s=>s.trim()).indexOf(modFilter) === -1) return false;
+    if (consFilter && !consultantInvolved(r, consFilter)) return false;
     if (statFilter && r.status     !== statFilter) return false;
     return true;
   });
@@ -1542,7 +1546,7 @@ function renderCalendar() {
     return d.getFullYear() === calYear && d.getMonth() === calMonth;
   });
   const monthDone     = monthReqs.filter(r => r.status === 'Completed').length;
-  const monthOverdue  = monthReqs.filter(r => r.status !== 'Completed' && new Date(r.targetDate) < today).length;
+  const monthOverdue  = monthReqs.filter(r => r.status !== 'Completed' && r.ballInCourt !== 'Requester' && new Date(r.targetDate) < today).length;
   const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
   const upcoming = filtered.filter(r => {
     const d = new Date(r.targetDate);
@@ -1601,9 +1605,10 @@ function renderCalendar() {
     let itemsHtml = shown.map(r => {
       const isPast = new Date(dateStr) < today;
       const isDone = r.status === 'Completed';
-      const isOverdue = isPast && !isDone;
+      const isAwaiting = r.ballInCourt === 'Requester' || r.ballInCourt === 'Collaborator';
+      const isOverdue = isPast && !isDone && !isAwaiting; // paused while waiting on requester/collaborator
       const cls = isOverdue ? 'cal-item overdue' : `cal-item ${r.module} ${isDone ? 'done' : ''}`;
-      const icon = isDone ? '✓ ' : isOverdue ? '⚠ ' : '';
+      const icon = isDone ? '✓ ' : isOverdue ? '⚠ ' : isAwaiting ? '⏳ ' : '';
       return `<div class="${cls}" onclick="openModal('${r.id}')" title="${r.title} — ${r.consultant}">
         ${icon}${r.title.length > 22 ? r.title.slice(0,22)+'…' : r.title}
       </div>`;
@@ -1659,6 +1664,22 @@ const fbDb   = firebase.firestore();
 let currentUser = null;
 let currentRole = 'viewer';
 let currentUserName = '';
+
+// ── BACKEND AUTH ──
+// Every call to the Apps Script carries the signed-in user's Firebase ID token
+// (verified server-side) plus the client key as an infrastructure fallback.
+const SAP_CLIENT_KEY = 'IMARAT_SAP_KEY_2024';
+let AUTH_TOKEN = '';
+async function refreshAuthToken() {
+  try { if (fbAuth.currentUser) AUTH_TOKEN = await fbAuth.currentUser.getIdToken(); }
+  catch(e) { /* keep last token */ }
+}
+// Query-string suffix appended to every backend request
+function authQS() {
+  return '&clientKey=' + SAP_CLIENT_KEY + (AUTH_TOKEN ? '&idToken=' + encodeURIComponent(AUTH_TOKEN) : '');
+}
+// Tokens last ~1h; refresh well before expiry so calls never carry a stale token
+setInterval(refreshAuthToken, 20 * 60 * 1000);
 
 // ── SIGN IN ──
 async function doSignIn() {
@@ -1755,6 +1776,9 @@ fbAuth.onAuthStateChanged(async (user) => {
 
     // Apply role
     applyRole(currentRole);
+
+    // Get a fresh backend token before the first data load
+    await refreshAuthToken();
 
     // Load data
     if (scriptUrl) loadAllData();
@@ -2118,7 +2142,7 @@ async function submitRequirement() {
       abapDev:'', targetDate:'', notes:notes||'',
       requesterEmail: reqEmail || ''
     });
-    const res = await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(15000) });
+    const res = await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(15000) });
     const text = await res.text();
     try {
       const json = JSON.parse(text);
@@ -2175,7 +2199,7 @@ async function loadAllData() {
 
   setSyncStatus(false, 'Syncing...');
   try {
-    const res = await fetch(scriptUrl + '?action=read&clientKey=IMARAT_SAP_KEY_2024', { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(scriptUrl + '?action=read' + authQS(), { signal: AbortSignal.timeout(10000) });
     const json = await res.json();
     if (json.success) {
       const sheetData = json.data || [];
@@ -2303,11 +2327,105 @@ async function updateStatus(id, status) {
   if (scriptUrl) {
     try {
       const params = new URLSearchParams({ action:'updateStatus', id, status });
-      await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
     } catch(e) { /* silent fail */ }
   }
   if (oldStatus !== status) await logActivity(id, `Status: ${oldStatus} → ${status}`);
   showToast(`Status updated to "${status}"`, 'success');
+}
+
+// Ball-in-Court: hand the requirement back to the requester for missing info
+async function requestInfo(id) {
+  const req = requirements.find(r => r.id === id);
+  if (!req) return;
+  const reason = prompt('What do you need from the requester?\n(e.g. "Upload your vendor master template", "Confirm the company code")');
+  if (reason === null) return;                 // cancelled
+  if (!reason.trim()) { showToast('Please describe what you need', 'error'); return; }
+
+  req.ballInCourt   = 'Requester';
+  req.waitingReason = reason.trim();
+  req.waitingSince  = new Date().toISOString();
+  req.lastUpdated   = new Date().toISOString();
+  saveLocal();
+  renderAll();
+  closeModal();
+  showToast('⏳ Sent to requester — ball is now in their court', 'success');
+
+  await logActivity(id, 'Requested info from requester: ' + reason.trim());
+
+  // Backend emails the requester a secure reply link
+  if (scriptUrl) {
+    try {
+      const params = new URLSearchParams({ action:'requestInfo', id, reason: reason.trim() });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
+    } catch(e) { /* silent — saved locally */ }
+  }
+}
+
+// Consultant takes the ball back (requester answered offline, or work resumes)
+async function takeBackBall(id) {
+  const req = requirements.find(r => r.id === id);
+  if (!req) return;
+  req.ballInCourt = 'Consultant';
+  req.waitingReason = '';
+  req.lastUpdated = new Date().toISOString();
+  saveLocal(); renderAll(); closeModal();
+  showToast('↩ Back in your court', 'success');
+  await logActivity(id, 'Marked received — ball back to consultant');
+  if (scriptUrl) {
+    try {
+      const params = new URLSearchParams({ action:'passBall', id, ball:'Consultant' });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
+    } catch(e) { /* silent */ }
+  }
+}
+
+// Hand the ball to a cross-module collaborator
+async function passToCollaborator(id, name) {
+  const req = requirements.find(r => r.id === id);
+  if (!req) return;
+  if (!confirm('Pass the ball to ' + name + '?')) return;
+  req.ballInCourt = 'Collaborator';
+  req.waitingReason = 'Awaiting ' + name;
+  req.lastUpdated = new Date().toISOString();
+  saveLocal(); renderAll(); closeModal();
+  showToast('⏳ Passed to ' + name, 'success');
+  await logActivity(id, 'Passed ball to collaborator: ' + name);
+  if (scriptUrl) {
+    try {
+      const params = new URLSearchParams({ action:'passBall', id, ball:'Collaborator', who:name, reason:'Awaiting ' + name });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
+    } catch(e) { /* silent */ }
+  }
+}
+
+// Add a collaborator from another module (cross-module Lead + Collaborators)
+async function addCollaboratorUI(id) {
+  const req = requirements.find(r => r.id === id);
+  if (!req) return;
+  const name = prompt('Add collaborator (consultant name)\ne.g. Hassan, Sarmad, Ayaz, Abdul Wasay');
+  if (name === null) return;
+  if (!name.trim()) { showToast('Enter a name', 'error'); return; }
+  const module = (prompt('Which module do they cover? (FICO / MM / HCM)\nOptional — leave blank to skip') || '').trim();
+
+  const collabs = (req.collaborators || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (collabs.indexOf(name.trim()) === -1) collabs.push(name.trim());
+  req.collaborators = collabs.join(',');
+  const mods = (req.modules || req.module || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (module && mods.indexOf(module) === -1) mods.push(module);
+  req.modules = mods.join(',');
+  if (!req.leadConsultant) req.leadConsultant = req.consultant;
+  req.lastUpdated = new Date().toISOString();
+  saveLocal(); renderAll();
+  openModal(id);
+  showToast('✓ Added ' + name.trim() + ' as collaborator', 'success');
+  await logActivity(id, 'Added collaborator: ' + name.trim() + (module ? ' (' + module + ')' : ''));
+  if (scriptUrl) {
+    try {
+      const params = new URLSearchParams({ action:'addCollaborator', id, name:name.trim(), module });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
+    } catch(e) { /* silent */ }
+  }
 }
 
 // ══════════════════════════════════════════
@@ -2356,13 +2474,50 @@ function getOnTimeStats(data) {
     return deliveryDate <= new Date(r.targetDate);
   }).length;
   const late = withTargetArr.length - onTime;
-  const overdue = data.filter(r => r.status !== 'Completed' && r.targetDate && daysFromToday(r.targetDate) < 0);
+  // Ball-in-Court fairness: a requirement waiting on the requester isn't "overdue on the consultant"
+  const overdue = data.filter(r => r.status !== 'Completed' && r.ballInCourt !== 'Requester' && r.targetDate && daysFromToday(r.targetDate) < 0);
   return { withTarget: withTargetArr.length, onTime, late, overdue };
+}
+
+// Ball-in-Court badge — shows when a requirement is waiting on the requester (not the consultant)
+// A consultant is "involved" if they're the consultant, the lead, the ABAP dev, or a collaborator
+function consultantInvolved(r, name) {
+  return r.consultant === name || r.leadConsultant === name || r.abapDev === name ||
+    (r.collaborators || '').split(',').map(s => s.trim()).indexOf(name) !== -1;
+}
+
+function bicBadge(r) {
+  if (!r) return '';
+  const amber = "font-size:10px;background:rgba(247,168,35,0.14);color:var(--amber,#F7A823);border:1px solid rgba(247,168,35,0.3);padding:2px 7px;border-radius:3px;font-family:'IBM Plex Mono',monospace";
+  if (r.ballInCourt === 'Requester') {
+    return `<span title="${(r.waitingReason||'Waiting on requester').replace(/"/g,'&quot;')}" style="${amber}">⏳ Awaiting Requester</span>`;
+  }
+  if (r.ballInCourt === 'Collaborator') {
+    return `<span title="${(r.waitingReason||'').replace(/"/g,'&quot;')}" style="${amber}">⏳ ${escapeHtml(r.waitingReason||'Collaborator')}</span>`;
+  }
+  return '';
 }
 
 function renderPipeline() {
   const modFilter = document.getElementById('pipe-filter-mod')?.value || '';
-  const filtered = requirements.filter(r => !modFilter || r.module === modFilter);
+  const consSel = document.getElementById('pipe-filter-cons');
+  const consFilter = consSel?.value || '';
+  // Populate the consultant dropdown (preserve selection)
+  if (consSel) {
+    const names = (typeof ALL_CONSULTANTS !== 'undefined' ? ALL_CONSULTANTS : [])
+      .concat(typeof ALL_ABAP !== 'undefined' ? ALL_ABAP : [])
+      .concat(requirements.map(r => r.consultant).filter(Boolean))
+      .concat(requirements.map(r => r.abapDev).filter(Boolean));
+    const funcs = Array.from(new Set(names.filter(n => (typeof ALL_ABAP === 'undefined' || ALL_ABAP.indexOf(n) === -1)))).sort();
+    const abaps = Array.from(new Set(names.filter(n => (typeof ALL_ABAP !== 'undefined' && ALL_ABAP.indexOf(n) !== -1)))).sort();
+    const opt = n => `<option value="${n}" ${n===consFilter?'selected':''}>${n}</option>`;
+    consSel.innerHTML = '<option value="">All Consultants</option>'
+      + funcs.map(opt).join('')
+      + (abaps.length ? '<optgroup label="ABAP Developers">' + abaps.map(opt).join('') + '</optgroup>' : '');
+  }
+  const filtered = requirements.filter(r =>
+    (!modFilter || r.module === modFilter || (r.modules || '').split(',').map(s=>s.trim()).indexOf(modFilter) !== -1) &&
+    (!consFilter || consultantInvolved(r, consFilter)));
 
   const board = document.getElementById('pipelineBoard');
   board.innerHTML = STATUS_ORDER.map(status => {
@@ -2382,10 +2537,11 @@ function renderPipeline() {
           <div class="pipe-card" onclick="openModal('${r.id}')">
             <div class="pipe-card-title">${r.title}</div>
             <div class="pipe-card-meta">
-              <span class="mod mod-${r.module}">${r.module}</span>
+              ${(r.modules || r.module || '').split(',').map(m=>m.trim()).filter(Boolean).map(m=>`<span class="mod mod-${m}">${m}</span>`).join('')}
               <span class="pri pri-${r.priority}">${r.priority}</span>
               ${r.abapDev ? `<span style="font-size:10px;color:var(--amber);font-family:'IBM Plex Mono',monospace">⚙ ${r.abapDev}</span>` : ''}
               ${dueBadge(r)}
+              ${bicBadge(r)}
             </div>
             <div style="font-size:11px;color:var(--text-dim);margin-top:7px;font-family:'IBM Plex Mono',monospace">${r.consultant} · ${r.requester}</div>
             ${latestCommentPreview(r)}
@@ -2406,6 +2562,7 @@ function renderDashboard() {
   const uat = (byStatus['UAT'] || []).length;
   const newReqs = (byStatus['Not Started'] || []).length;
   const high = requirements.filter(r => r.priority === 'High').length;
+  const awaiting = requirements.filter(r => r.ballInCourt === 'Requester').length;
 
   const { withTarget, onTime, late, overdue } = getOnTimeStats(requirements);
   const onTimeRate = withTarget ? Math.round(onTime/withTarget*100) : 0;
@@ -2414,6 +2571,7 @@ function renderDashboard() {
     <div class="kpi c-blue"><div class="kpi-label">Total Requirements</div><div class="kpi-val">${total}</div><div class="kpi-sub">All time</div></div>
     <div class="kpi c-red"><div class="kpi-label">New / Pending</div><div class="kpi-val">${newReqs}</div><div class="kpi-sub">Awaiting action</div></div>
     <div class="kpi c-amber"><div class="kpi-label">In Progress</div><div class="kpi-val">${inprog}</div><div class="kpi-sub">Being worked on</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">Awaiting Requester</div><div class="kpi-val">${awaiting}</div><div class="kpi-sub">Ball in their court</div></div>
     <div class="kpi c-purple"><div class="kpi-label">In UAT</div><div class="kpi-val">${uat}</div><div class="kpi-sub">User testing</div></div>
     <div class="kpi c-green"><div class="kpi-label">Completed</div><div class="kpi-val">${done}</div><div class="kpi-sub">${total ? Math.round(done/total*100) : 0}% rate</div></div>
     <div class="kpi c-${onTimeRate>=75?'green':onTimeRate>=50?'amber':'red'}"><div class="kpi-label">On-Time Rate</div><div class="kpi-val">${onTimeRate}%</div><div class="kpi-sub">${onTime} on time · ${late} late</div></div>
@@ -2477,7 +2635,7 @@ function renderDashboard() {
 
   // Per-consultant on-time stats
   const consultantOnTime = ALL_CONSULTANTS.map(name => {
-    const tasks = requirements.filter(r => r.consultant === name);
+    const tasks = requirements.filter(r => consultantInvolved(r, name));
     const s = getOnTimeStats(tasks);
     return { name, ...s, total: tasks.length };
   }).filter(c => c.total > 0);
@@ -2526,9 +2684,9 @@ function renderTasks() {
   const fPri  = document.getElementById('fPri')?.value || '';
 
   let filtered = requirements.filter(r => {
-    if (fMod  && r.module     !== fMod)  return false;
+    if (fMod  && r.module !== fMod && (r.modules||'').split(',').map(s=>s.trim()).indexOf(fMod) === -1) return false;
     if (fStat && r.status     !== fStat) return false;
-    if (fCons && r.consultant !== fCons) return false;
+    if (fCons && !consultantInvolved(r, fCons)) return false;
     if (fPri  && r.priority   !== fPri)  return false;
     if (search && !JSON.stringify(r).toLowerCase().includes(search)) return false;
     return true;
@@ -2554,7 +2712,7 @@ function renderTasks() {
           ${STATUS_ORDER.map(s => `<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}
         </select>
       </td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)">${r.targetDate || '—'} ${dueBadge(r)}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim)">${r.targetDate || '—'} ${dueBadge(r)} ${bicBadge(r)}</td>
       <td style="display:flex;gap:5px">
         <button onclick="openModal('${r.id}')" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text-mid);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer">View</button>
         ${currentRole !== 'viewer' ? `<button onclick="deleteRequirement('${r.id}')" style="background:var(--red-dim);border:1px solid rgba(255,92,108,0.2);color:var(--red);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer" title="Delete">🗑</button>` : ''}
@@ -2599,7 +2757,8 @@ function renderRankings() {
   const area = document.getElementById('rankingsArea');
 
   const consultantStats = ALL_CONSULTANTS.map(name => {
-    const tasks = requirements.filter(r => r.consultant === name);
+    // Involvement-based: a consultant is credited for tasks they lead, own, or collaborate on
+    const tasks = requirements.filter(r => consultantInvolved(r, name));
     const done  = tasks.filter(r => r.status === 'Completed').length;
     const s = getOnTimeStats(tasks);
     const completionPct = tasks.length ? Math.round(done/tasks.length*100) : 0;
@@ -2983,7 +3142,7 @@ async function addComment(id) {
   // Send to Apps Script
   try {
     const params = new URLSearchParams({ action:'addComment', id: id, comments: r.comments });
-    await fetch(scriptUrl + '?' + params.toString());
+    await fetch(scriptUrl + '?' + params.toString() + authQS());
     showToast('✓ Comment posted');
   } catch(e) {
     showToast('Saved locally — sync pending');
@@ -3017,7 +3176,7 @@ async function deleteComment(id, index) {
   // Send to Apps Script
   try {
     const params = new URLSearchParams({ action:'addComment', id: id, comments: r.comments });
-    await fetch(scriptUrl + '?' + params.toString());
+    await fetch(scriptUrl + '?' + params.toString() + authQS());
     showToast('✓ Comment deleted');
   } catch(e) {
     showToast('Deleted locally — sync pending');
@@ -3048,7 +3207,7 @@ async function logActivity(id, text) {
     if (scriptUrl) {
       try {
         const params = new URLSearchParams({ action:'addComment', id: id, comments: r.comments });
-        await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
+        await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
       } catch(e) { /* silent — saved locally */ }
     }
   } catch(e) { /* never break the action that triggered logging */ }
@@ -3210,6 +3369,24 @@ function openModal(id) {
           color:${s===r.status?'var(--primary)':'var(--text-mid)'};padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">
           ${s}</button>`).join('')}
       </div>
+    </div>
+    <div class="edit-section" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="modal-detail-label" style="margin-bottom:10px">Ball in Court · ${r.ballInCourt === 'Requester' ? '<span style="color:var(--amber,#F7A823);font-weight:700">⏳ Requester</span>' : (r.ballInCourt === 'Collaborator' ? '<span style="color:var(--amber,#F7A823);font-weight:700">⏳ '+escapeHtml(r.waitingReason||'Collaborator')+'</span>' : '<span style="color:var(--primary);font-weight:700">Consultant</span>')}</div>
+      ${(r.ballInCourt === 'Requester' || r.ballInCourt === 'Collaborator')
+        ? `<div style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:10px">${r.ballInCourt === 'Requester' ? 'Waiting on the requester' : 'Handed to a collaborator'}${r.waitingReason ? ': <span style="color:var(--text-mid)">'+escapeHtml(r.waitingReason)+'</span>' : ''}. ${r.ballInCourt === 'Requester' ? 'They have an email link — it comes back automatically.' : ''}</div>
+           <button onclick="takeBackBall('${r.id}')" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--primary);padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">↩ Mark received — take it back</button>`
+        : `<button onclick="requestInfo('${r.id}')" style="background:rgba(247,168,35,0.14);border:1px solid rgba(247,168,35,0.3);color:var(--amber,#F7A823);padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">⏸ Request Info from Requester</button>`}
+    </div>
+    <div class="edit-section" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="modal-detail-label" style="margin-bottom:10px">Cross-module Team</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <span style="font-size:11px;color:var(--text-dim)">Modules:</span>
+        ${((r.modules || r.module || '').split(',').map(m=>m.trim()).filter(Boolean).map(m=>`<span class="mod mod-${m}">${m}</span>`).join('')) || '<span style="font-size:11px;color:var(--text-dim)">—</span>'}
+        <span style="font-size:11px;color:var(--text-dim);margin-left:8px">Lead:</span>
+        <span style="font-size:12px;color:var(--text)">${r.leadConsultant || r.consultant || '—'}</span>
+      </div>
+      ${(r.collaborators || '').trim() ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:var(--text-dim)">Collaborators:</span>${(r.collaborators||'').split(',').map(c=>c.trim()).filter(Boolean).map(c=>`<span style="font-size:11px;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:10px">${c} <a onclick="passToCollaborator('${r.id}','${c}')" title="Pass the ball to ${c}" style="color:var(--amber,#F7A823);cursor:pointer">⏳</a></span>`).join('')}</div>` : ''}
+      <button onclick="addCollaboratorUI('${r.id}')" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text-mid);padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace">+ Add collaborator</button>
     </div>` : ''}
 
     <!-- ══ COMMENT / ACTIVITY THREAD ══ -->
@@ -3297,7 +3474,7 @@ async function saveAssignment(id) {
         targetDate: req.targetDate,
         abapDev: req.abapDev
       });
-      await fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
+      await fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
     } catch(e) { /* silent — local is already saved */ }
   }
 
@@ -3322,7 +3499,7 @@ function deleteRequirement(id) {
   if (scriptUrl) {
     try {
       const params = new URLSearchParams({ action:'deleteReq', id });
-      fetch(scriptUrl + '?' + params.toString(), { signal: AbortSignal.timeout(10000) });
+      fetch(scriptUrl + '?' + params.toString() + authQS(), { signal: AbortSignal.timeout(10000) });
     } catch(e) { /* silent */ }
   }
 }
