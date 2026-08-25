@@ -3612,5 +3612,50 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/imarat-sap/sw.js').catch(function(){});
 }
 </script>
+  <style>
+  .pw-wrap { position: relative; }
+  .pw-wrap input { padding-right: 46px !important; }
+  .pw-eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 17px;
+    line-height: 1;
+    opacity: .55;
+    color: #0891B2;
+  }
+  .pw-eye:hover { opacity: 1; }
+</style>
+<script>
+document.querySelectorAll('input[type="password"]').forEach(function (pw) {
+  if (pw.dataset.pwToggle) return;
+  pw.dataset.pwToggle = '1';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'pw-wrap';
+  pw.parentNode.insertBefore(wrap, pw);
+  wrap.appendChild(pw);
+
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'pw-eye';
+  btn.textContent = '👁';
+  btn.setAttribute('aria-label', 'Show password');
+  btn.addEventListener('click', function () {
+    var showing = pw.type === 'text';
+    pw.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    pw.focus();
+  });
+  wrap.appendChild(btn);
+});
+</script>
 </body>
 </html>
+  
