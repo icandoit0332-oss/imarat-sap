@@ -4,7 +4,7 @@
 // cache-first for other same-origin assets, and NEVER touch cross-origin calls
 // (Firebase, Apps Script, Google Fonts) so live data always hits the network.
 // Bump CACHE_VERSION on EVERY deploy to force every client to drop old caches.
-var CACHE_VERSION = 'imarat-pwa-v2';
+var CACHE_VERSION = 'imarat-pwa-v3';
  
 self.addEventListener('install', function (e) {
   self.skipWaiting();
