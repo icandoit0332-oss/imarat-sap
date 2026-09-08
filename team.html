@@ -3657,5 +3657,25 @@ document.querySelectorAll('input[type="password"]').forEach(function (pw) {
 });
 </script>
 </body>
+  <!-- n8n AI Chat Widget Integration -->
+<link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+<script type="module">
+  import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+
+  createChat({
+    webhookUrl: 'https://qudsia9988.app.n8n.cloud/webhook/b5ade05c-1599-4cd7-ba8f-ab61b36c2faa/chat',
+    initialMessages: [
+      '👋 Welcome to IMARAT SAP Portal!',
+      'Ask me anything about pipeline requirements, overdue tasks, or module statuses.'
+    ],
+    i18n: {
+      en: {
+        title: 'IMARAT SAP Assistant',
+        subtitle: 'Live Pipeline Intelligence',
+        inputPlaceholder: 'Ask about FICO, HCM tasks, or assignees...'
+      }
+    }
+  });
+</script>
 </html>
   
