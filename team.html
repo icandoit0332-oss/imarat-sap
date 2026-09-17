@@ -46,6 +46,8 @@
   --fico: #0891B2;
   --mm: #D97706;
   --hcm: #7C3AED;
+  --ps: #059669;
+  --pm: #DB2777;
   --shadow: 0 1px 3px rgba(8,145,178,0.08), 0 1px 2px rgba(8,145,178,0.04);
   --shadow-md: 0 4px 12px rgba(8,145,178,0.10);
 }
@@ -143,6 +145,8 @@ body {
 .mod-FICO { background:var(--blue-dim); color:var(--primary); border:1px solid rgba(8,145,178,0.2); }
 .mod-MM   { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(217,119,6,0.2); }
 .mod-HCM  { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(124,58,237,0.2); }
+.mod-PS   { background:rgba(5,150,105,0.12); color:var(--ps); border:1px solid rgba(5,150,105,0.25); }
+.mod-PM   { background:rgba(219,39,119,0.12); color:var(--pm); border:1px solid rgba(219,39,119,0.25); }
 
 /* ── STATUS BADGES ── */
 .status { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:4px; font-family:'DM Mono',monospace; font-size:11px; }
@@ -747,6 +751,8 @@ body:not(.admin-mode) .admin-only { display:none !important; }
           <option value="FICO">FICO — Finance & Controlling</option>
           <option value="MM">MM — Materials Management</option>
           <option value="HCM">HCM — Human Capital Management</option>
+          <option value="PS">PS — Project Systems</option>
+          <option value="PM">PM — Plant Maintenance</option>
         </select>
       </div>
 
@@ -795,12 +801,15 @@ body:not(.admin-mode) .admin-only { display:none !important; }
       <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px">Pipeline Board</div>
       <div style="color:var(--text-dim);font-size:13px;margin-top:4px">Live view of all requirements by stage</div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="tb-search" type="text" id="pipe-search" placeholder="🔍 Search ID, title, requester…" oninput="renderPipeline()">
       <select class="tb-filter" id="pipe-filter-mod" onchange="renderPipeline()">
         <option value="">All Modules</option>
         <option value="FICO">FICO</option>
         <option value="MM">MM</option>
         <option value="HCM">HCM</option>
+        <option value="PS">PS</option>
+        <option value="PM">PM</option>
       </select>
       <select class="tb-filter" id="pipe-filter-cons" onchange="renderPipeline()">
         <option value="">All Consultants</option>
@@ -836,6 +845,8 @@ body:not(.admin-mode) .admin-only { display:none !important; }
         <option value="FICO">FICO</option>
         <option value="MM">MM</option>
         <option value="HCM">HCM</option>
+        <option value="PS">PS</option>
+        <option value="PM">PM</option>
       </select>
       <select class="tb-filter" id="fStatus" onchange="renderTasks()">
         <option value="">All Statuses</option>
@@ -908,6 +919,8 @@ body:not(.admin-mode) .admin-only { display:none !important; }
         <option value="FICO">FICO</option>
         <option value="MM">MM</option>
         <option value="HCM">HCM</option>
+        <option value="PS">PS</option>
+        <option value="PM">PM</option>
       </select>
       <select class="cal-filter" id="calFilterConsultant" onchange="renderCalendar()">
         <option value="">All Consultants</option>
@@ -1011,6 +1024,8 @@ body:not(.admin-mode) .admin-only { display:none !important; }
           <option value="FICO">FICO</option>
           <option value="MM">MM</option>
           <option value="HCM">HCM</option>
+        <option value="PS">PS</option>
+        <option value="PM">PM</option>
           <option value="ABAP">ABAP</option>
         </select>
         <button onclick="addConsultant()" style="background:var(--green-dim);border:1px solid rgba(8,145,178,0.3);color:var(--green);padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Mono',monospace;white-space:nowrap">+ Add</button>
@@ -1098,9 +1113,11 @@ const CONSULTANTS = {
   FICO: ['Abdul Wasay', 'Ayaz'],
   MM:   ['Hassan'],
   HCM:  ['Sarmad'],
+  PS:   ['Shahzad Iqbal'],
+  PM:   ['Abdul Wasay'],
 };
 
-const ALL_CONSULTANTS = ['Abdul Wasay', 'Ayaz', 'Hassan', 'Sarmad'];
+const ALL_CONSULTANTS = ['Abdul Wasay', 'Ayaz', 'Hassan', 'Sarmad', 'Shahzad Iqbal'];
 const ALL_ABAP = ['Saad', 'Zeeshan', 'Hussain'];
 
 const STATUS_ORDER = ['Not Started','In Progress','UAT','Completed'];
@@ -1981,7 +1998,7 @@ async function loadConsList() {
 function renderConsList(cons) {
   var container = document.getElementById('consList');
   if (!container) return;
-  var typeColors = { FICO:'var(--primary)', MM:'var(--green)', HCM:'var(--purple, #7C3AED)', ABAP:'var(--amber)' };
+  var typeColors = { FICO:'var(--primary)', MM:'var(--green)', HCM:'var(--purple, #7C3AED)', PS:'var(--ps, #059669)', PM:'var(--pm, #DB2777)', ABAP:'var(--amber)' };
   container.innerHTML = cons.map(function(c, i) {
     return '<div class="umgmt-row">'
       + '<div class="u-avatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">' + (c.name||'?').substring(0,2).toUpperCase() + '</div>'
@@ -2104,7 +2121,7 @@ async function submitRequirement() {
   const reqEmail = document.getElementById('f-email') ? document.getElementById('f-email').value.trim() : '';
 
   // Auto-assign consultant based on module
-  const defaultConsultants = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Sarmad' };
+  const defaultConsultants = { FICO:'Abdul Wasay', MM:'Hassan', HCM:'Sarmad', PS:'Shahzad Iqbal', PM:'Abdul Wasay' };
   const consultant = module ? (defaultConsultants[module] || '') : '';
 
   if (!dept)     { showToast('Please select your department.','error'); return; }
@@ -2525,9 +2542,11 @@ function renderPipeline() {
       + funcs.map(opt).join('')
       + (abaps.length ? '<optgroup label="ABAP Developers">' + abaps.map(opt).join('') + '</optgroup>' : '');
   }
+  const search = (document.getElementById('pipe-search')?.value || '').toLowerCase();
   const filtered = requirements.filter(r =>
     (!modFilter || r.module === modFilter || (r.modules || '').split(',').map(s=>s.trim()).indexOf(modFilter) !== -1) &&
-    (!consFilter || consultantInvolved(r, consFilter)));
+    (!consFilter || consultantInvolved(r, consFilter)) &&
+    (!search || JSON.stringify(r).toLowerCase().includes(search)));
 
   const board = document.getElementById('pipelineBoard');
   board.innerHTML = STATUS_ORDER.map(status => {
@@ -2927,7 +2946,7 @@ function renderRankings() {
     return { name:m, total:items.length, done, pct: items.length ? Math.round(done/items.length*100):0 };
   });
   const maxMod = Math.max(...modStats.map(m => m.total), 1);
-  const modColors = { FICO:'var(--fico)', MM:'var(--mm)', HCM:'var(--hcm)' };
+  const modColors = { FICO:'var(--fico)', MM:'var(--mm)', HCM:'var(--hcm)', PS:'var(--ps)', PM:'var(--pm)' };
 
   area.innerHTML += `
   <div class="card" style="grid-column:1/-1">
@@ -3350,7 +3369,7 @@ function openModal(id) {
           <div class="modal-detail-label" style="margin-bottom:6px">Functional Consultant</div>
           <select id="m-consultant" style="width:100%;background:var(--surface);border:1.5px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;outline:none">
             <option value="">— Select —</option>
-            ${['Abdul Wasay','Ayaz','Hassan','Sarmad'].map(c=>`<option value="${c}" ${c===r.consultant?'selected':''}>${c}</option>`).join('')}
+            ${['Abdul Wasay','Ayaz','Hassan','Sarmad','Shahzad Iqbal'].map(c=>`<option value="${c}" ${c===r.consultant?'selected':''}>${c}</option>`).join('')}
           </select>
         </div>
         <div>
@@ -3612,70 +3631,5 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/imarat-sap/sw.js').catch(function(){});
 }
 </script>
-  <style>
-  .pw-wrap { position: relative; }
-  .pw-wrap input { padding-right: 46px !important; }
-  .pw-eye {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 17px;
-    line-height: 1;
-    opacity: .55;
-    color: #0891B2;
-  }
-  .pw-eye:hover { opacity: 1; }
-</style>
-<script>
-document.querySelectorAll('input[type="password"]').forEach(function (pw) {
-  if (pw.dataset.pwToggle) return;
-  pw.dataset.pwToggle = '1';
-
-  var wrap = document.createElement('div');
-  wrap.className = 'pw-wrap';
-  pw.parentNode.insertBefore(wrap, pw);
-  wrap.appendChild(pw);
-
-  var btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'pw-eye';
-  btn.textContent = '👁';
-  btn.setAttribute('aria-label', 'Show password');
-  btn.addEventListener('click', function () {
-    var showing = pw.type === 'text';
-    pw.type = showing ? 'password' : 'text';
-    btn.textContent = showing ? '👁' : '🙈';
-    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-    pw.focus();
-  });
-  wrap.appendChild(btn);
-});
-</script>
 </body>
-  <!-- n8n AI Chat Widget Integration -->
-<link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-<script type="module">
-  import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
-  createChat({
-    webhookUrl: 'https://qudsia9988.app.n8n.cloud/webhook/b5ade05c-1599-4cd7-ba8f-ab61b36c2faa/chat',
-    initialMessages: [
-      '👋 Welcome to IMARAT SAP Portal!',
-      'Ask me anything about pipeline requirements, overdue tasks, or module statuses.'
-    ],
-    i18n: {
-      en: {
-        title: 'IMARAT SAP Assistant',
-        subtitle: 'Live Pipeline Intelligence',
-        inputPlaceholder: 'Ask about FICO, HCM tasks, or assignees...'
-      }
-    }
-  });
-</script>
 </html>
-  

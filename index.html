@@ -107,6 +107,8 @@ select option{background:#fff}
             <option value="FICO">FICO — Finance &amp; Controlling</option>
             <option value="MM">MM — Materials Management</option>
             <option value="HCM">HCM — Human Capital Management</option>
+            <option value="PS">PS — Project Systems</option>
+            <option value="PM">PM — Plant Maintenance</option>
           </select>
         </div>
         <div class="fld">
@@ -156,7 +158,7 @@ select option{background:#fff}
 
 <script>
 var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxGsPIkGoZxVFqZ-17h1TLm1wAEB_h0J8Dax2DBlTNQgN6nrCVqJUjt7fZaIgMZWowg/exec';
-var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Sarmad'};
+var CONSULTANTS={FICO:'Abdul Wasay',MM:'Hassan',HCM:'Sarmad',PS:'Shahzad Iqbal',PM:'Abdul Wasay'};
 
 // ── FIREBASE INIT ──
 var firebaseConfig = {
@@ -297,6 +299,14 @@ async function submitReq(){
     +'&abapDev=&targetDate=&notes='
     +'&requesterEmail='+encodeURIComponent(reqEmail)
     +'&attachmentUrl='+encodeURIComponent(attachmentRef);
+
+  // Attach backend auth: anonymous Firebase token (verified server-side) + client key fallback
+  var idToken='';
+  try{
+    if(!fbAuth.currentUser){ await fbAuth.signInAnonymously(); }
+    idToken=await fbAuth.currentUser.getIdToken();
+  }catch(e){}
+  params+='&clientKey=IMARAT_SAP_KEY_2024'+(idToken?'&idToken='+encodeURIComponent(idToken):'');
 
   showSuccess(id);
   sendInBackground(params);
