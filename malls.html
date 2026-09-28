@@ -314,7 +314,7 @@ function fetchWithTimeout(url, ms){
 function loadData(fresh){
   showLoading('Fetching live Mall P&L\u2026');
   var url = APPS_SCRIPT_URL + '?action=malls&clientKey=' + CLIENT_KEY + (fresh?'&fresh=1':'') + '&_=' + Date.now();
-  fetchWithTimeout(url, 12000)
+  fetchWithTimeout(url, 30000)
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(function(json){
       if(json.status!=='ok') throw new Error(json.message||'Server error');
