@@ -1,4 +1,3 @@
-
 // IMARAT — shared Service Worker (serves index.html, team.html, finance.html, malls.html)
 // Strategy: network-first for pages (new deploys show immediately; cache only for true offline),
 // cache-first for other same-origin assets, and NEVER touch cross-origin calls
@@ -82,3 +81,4 @@ self.addEventListener('fetch', function (e) {
     })
   );
 });
+ 
