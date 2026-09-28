@@ -1004,7 +1004,7 @@ function loadData(fresh) {
               + '&idToken=' + encodeURIComponent(token)
               + (fresh ? '&fresh=1' : '')
               + '&_=' + Date.now();
-      return fetchWithTimeout(url, 12000);
+      return fetchWithTimeout(url, 30000);
     })
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
