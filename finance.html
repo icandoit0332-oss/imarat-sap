@@ -2451,12 +2451,7 @@ function buildMOHtml() {
   msel += '</div>';
 
   // ── 3-tier card hierarchy ──
-  var occColor = s.occupancy >= 70 ? '#16A34A' : '#DC2626';
-  var tier1 = '<div class="mo-tier"><div class="mo-tier-lbl">Core Metrics</div><div class="mo-cards">'
-    + moKpi('OCCUPANCY', s.occupancy.toFixed(1) + '%', s.leasedSqFt.toLocaleString() + ' / ' + s.totalSqFt.toLocaleString() + ' sqft', occColor)
-    + moKpi('RENTAL INCOME', M(s.rentalIncome), 'Tenant rent · ' + s.month, '#166534')
-    + moKpi('CAM RECOVERY', M(s.cam), 'Common area maintenance', '#166534')
-    + '</div></div>';
+  var tier1 = moOccTiers(s);
 
   var fcColor = s.fcNoi >= 0 ? '#16A34A' : '#DC2626';
   var tier2 = '<div class="mo-tier"><div class="mo-tier-lbl">Food Court</div><div class="mo-cards">'
@@ -2497,6 +2492,38 @@ function moKpi(lbl, val, sub, color) {
     + '<div class="mo-kpi-val" style="color:' + color + '">' + val + '</div>'
     + '<div class="mo-kpi-sub" style="color:' + color + '">' + sub + '</div>'
     + '</div>';
+}
+
+// Occupancy split: rent-paying vs non-rent (rent-exempt + units sold). Falls back to the
+// single card when the sheet/script does not yet supply exemptSqFt / soldSqFt.
+function moOccTiers(s) {
+  var num = function(v){ return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v); };
+  var fmt = function(n){ return Math.round(n).toLocaleString(); };
+  var total = num(s.totalSqFt) || 0, leased = num(s.leasedSqFt) || 0;
+  var ex = num(s.exemptSqFt), sold = num(s.soldSqFt);
+  var income = moKpi('RENTAL INCOME', M(s.rentalIncome), 'Tenant rent · ' + s.month, '#166534')
+             + moKpi('CAM RECOVERY', M(s.cam), 'Common area maintenance', '#166534');
+  var revPct = total ? leased / total * 100 : 0;
+  var revColor = revPct >= 70 ? '#16A34A' : '#DC2626';
+  if (ex === null && sold === null) {
+    return '<div class="mo-tier"><div class="mo-tier-lbl">Core Metrics</div><div class="mo-cards">'
+      + moKpi('OCCUPANCY', revPct.toFixed(1) + '%', fmt(leased) + ' / ' + fmt(total) + ' sqft', revColor)
+      + income + '</div></div>';
+  }
+  ex = ex || 0; sold = sold || 0;
+  var nonRent = ex + sold;
+  var nonPct = total ? nonRent / total * 100 : 0;
+  var totPct = total ? (leased + nonRent) / total * 100 : 0;
+  var vacant = total - leased - nonRent;
+  var totColor = totPct >= 70 ? '#16A34A' : '#DC2626';
+  var vacTxt = vacant < 0 ? '⚠ Areas exceed total by ' + fmt(-vacant) + ' sqft' : 'Vacant ' + fmt(vacant) + ' sqft';
+  return '<div class="mo-tier"><div class="mo-tier-lbl">Occupancy</div><div class="mo-cards">'
+    + moKpi('REVENUE-GENERATING OCCUPANCY', revPct.toFixed(1) + '%', fmt(leased) + ' / ' + fmt(total) + ' sqft · rent-paying', revColor)
+    + moKpi('NON-RENT OCCUPANCY', nonPct.toFixed(1) + '%', 'Exempt ' + fmt(ex) + ' · Sold ' + fmt(sold) + ' sqft', '#A16207')
+    + moKpi('TOTAL OCCUPANCY', totPct.toFixed(1) + '%', vacTxt, totColor)
+    + '</div></div>'
+    + '<div class="mo-tier"><div class="mo-tier-lbl">Core Metrics</div><div class="mo-cards" style="grid-template-columns:repeat(2,1fr)">'
+    + income + '</div></div>';
 }
 
 function moSel(mall, el) {
