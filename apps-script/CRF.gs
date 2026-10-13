@@ -281,22 +281,45 @@ function crfDecidePage_(p) {
   }
   var approve = p.d !== 'reject';
   var color = approve ? '#14432A' : '#B42318';
-  var form = '<form method="GET" action="' + CRF_CFG.execUrl + '">'
-    + '<input type="hidden" name="action" value="crfDecideSubmit">'
-    + '<input type="hidden" name="id" value="' + crfEsc_(rec['CRF ID']) + '">'
-    + '<input type="hidden" name="token" value="' + crfEsc_(p.token) + '">'
-    + '<input type="hidden" name="d" value="' + (approve ? 'approve' : 'reject') + '">'
+  // The form is submitted with google.script.run and the page updates in place.
+  // (A normal form submit would navigate inside Google's sandbox frame, which
+  //  script.google.com refuses to load — the "refused to connect" screen.)
+  var form = '<form id="crfForm" onsubmit="return crfGo(event)">'
     + '<label style="display:block;font-weight:bold;margin:16px 0 6px">Remarks' + (approve ? ' (optional)' : ' — reason for rejection *') + '</label>'
-    + '<textarea name="remarks" ' + (approve ? '' : 'required') + ' style="width:100%;box-sizing:border-box;min-height:90px;border:1px solid #C9D6CC;border-radius:6px;padding:10px;font-family:inherit;font-size:14px"></textarea>'
-    + '<button type="submit" style="width:100%;margin-top:12px;background:' + color + ';color:#fff;border:0;border-radius:6px;padding:13px;font-size:15px;font-weight:bold;cursor:pointer">'
-    + (approve ? 'Confirm Approval' : 'Confirm Rejection') + '</button></form>';
+    + '<textarea id="crfRemarks" ' + (approve ? '' : 'required') + ' style="width:100%;box-sizing:border-box;min-height:90px;border:1px solid #C9D6CC;border-radius:6px;padding:10px;font-family:inherit;font-size:14px"></textarea>'
+    + '<button id="crfBtn" type="submit" style="width:100%;margin-top:12px;background:' + color + ';color:#fff;border:0;border-radius:6px;padding:13px;font-size:15px;font-weight:bold;cursor:pointer">'
+    + (approve ? 'Confirm Approval' : 'Confirm Rejection') + '</button>'
+    + '<div id="crfErr" style="display:none;margin-top:10px;color:#B42318;font-size:13px"></div></form>'
+    + '<script>'
+    + 'var CRF_P=' + JSON.stringify({ id: rec['CRF ID'], token: p.token, d: approve ? 'approve' : 'reject' }).replace(/</g, '\\u003c') + ';'
+    + 'function crfGo(e){e.preventDefault();var b=document.getElementById("crfBtn"),r=document.getElementById("crfRemarks").value.trim();'
+    + 'if(CRF_P.d==="reject"&&!r){crfErr("Please give a reason for rejection.");return false;}'
+    + 'b.disabled=true;b.style.opacity="0.6";b.textContent="Recording decision…";'
+    + 'google.script.run.withSuccessHandler(function(res){document.getElementById("crfTitle").textContent=res.title;'
+    + 'document.getElementById("crfTitle").style.color=res.color;document.getElementById("crfContent").innerHTML=res.html;})'
+    + '.withFailureHandler(function(err){b.disabled=false;b.style.opacity="1";b.textContent="Try again";crfErr("Could not record the decision: "+(err&&err.message||err));})'
+    + '.crfDecideRun({id:CRF_P.id,token:CRF_P.token,d:CRF_P.d,remarks:r});return false;}'
+    + 'function crfErr(m){var x=document.getElementById("crfErr");x.textContent=m;x.style.display="block";}'
+    + '</script>';
   return crfPage_((approve ? 'Approve ' : 'Reject ') + rec['CRF ID'], crfTable_(rec) + form, color);
 }
 
+// Called from the confirm page via google.script.run (must stay public — no trailing underscore)
+function crfDecideRun(p) {
+  var r = crfDecide_(p || {});
+  return { title: r.title, html: r.html, color: r.color };
+}
+
+// Older emails / direct GET submissions still work
 function crfDecideSubmit_(p) {
+  var r = crfDecide_(p);
+  return crfPage_(r.title, r.html, r.color);
+}
+
+function crfDecide_(p) {
   var approve = p.d !== 'reject';
   var remarks = String(p.remarks || '').trim();
-  if (!approve && !remarks) return crfPage_('Reason required', '<p>Please go back and give a reason for rejection.</p>', '#B42318');
+  if (!approve && !remarks) return { title:'Reason required', html:'<p>Please give a reason for rejection.</p>', color:'#B42318' };
   var rec = crfLocked_(function () {
     var r = crfFind_(p.id);
     if (!r || !p.token || r['Approval Token'] !== p.token || r['Status'] !== 'Pending Approval') return null;
@@ -305,7 +328,12 @@ function crfDecideSubmit_(p) {
                  'Approver Remarks':remarks, 'Approval Token':'', 'History': crfHistory_(r, CRF_CFG.approverName, decision, remarks) });
     return r;
   });
-  if (!rec) return crfPage_('Link not valid', '<p>This decision was already recorded or the link has expired.</p>', '#B42318');
+  if (!rec) {
+    var cur = crfFind_(p.id);
+    if (cur && cur['Decision']) return { title:'Decision already recorded', color:'#14432A',
+      html:'<p>' + crfEsc_(cur['CRF ID']) + ' was <b>' + crfEsc_(cur['Decision']) + '</b> on ' + crfFmt_(cur['Decision On']) + '.</p>' };
+    return { title:'Link not valid', html:'<p>This approval link is no longer valid.</p>', color:'#B42318' };
+  }
 
   var dc = approve ? '#14432A' : '#B42318';
   var body = '<p style="margin:0 0 14px">' + crfEsc_(CRF_CFG.approverName) + ' has <b style="color:' + dc + '">' + rec['Decision'].toLowerCase() + '</b> this change request'
@@ -316,8 +344,18 @@ function crfDecideSubmit_(p) {
   var rev = CRF_CFG.reviewerEmail.toLowerCase();
   crfMail_(raiser || rev, (raiser && raiser !== rev) ? rev : '', subj, crfTpl_('Change Request ' + rec['Decision'], body));
 
-  return crfPage_('Thank you', '<p>' + crfEsc_(rec['CRF ID']) + ' has been <b style="color:' + dc + '">' + rec['Decision'].toLowerCase() + '</b>. '
-    + crfEsc_(CRF_CFG.reviewerName) + ' and the raiser have been notified.</p>', dc);
+  var done = '<div style="text-align:center;padding:8px 0 4px">'
+    + '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;background:' + dc + '">' + (approve ? '&#10003;' : '&#10005;') + '</div>'
+    + '<p style="font-size:15px;margin:0 0 6px"><b>' + crfEsc_(rec['CRF ID']) + '</b> &mdash; ' + crfEsc_(rec['Title']) + '</p>'
+    + '<p style="margin:0 0 14px">' + (approve ? 'Approved' : 'Rejected') + ' on ' + crfFmt_(rec['Decision On']) + '.</p>'
+    + (remarks ? '<div style="text-align:left">' + crfNote_('Your remarks', remarks, dc) + '</div>' : '')
+    + '<p style="color:#6B7F72;font-size:13px;margin:14px 0 0">' + crfEsc_(CRF_CFG.reviewerName) + ' and the raiser have been notified by email. You can close this page.</p></div>';
+  return { title: approve ? 'Change request approved' : 'Change request rejected', html: done, color: dc };
+}
+
+function authorizeCRF() {
+  UrlFetchApp.fetch('https://www.google.com');
+  Logger.log('CRF permissions OK');
 }
 
 // ── OUTPUT / EMAIL HELPERS ──────────────────────────────────────────
@@ -398,6 +436,6 @@ function crfPage_(title, content, color) {
     + '<div style="max-width:620px;margin:24px auto;background:#fff;border:1px solid #DDE6DF;border-radius:8px;overflow:hidden">'
     + '<div style="padding:16px 22px 8px;border-bottom:3px solid #9A7B2F"><div style="font-variant:small-caps;letter-spacing:1px;font-size:17px;font-weight:bold;color:#14432A">Imarat Group of Companies</div>'
     + '<div style="font-size:12px;color:#9A7B2F">SAP Programme · Change Control</div></div>'
-    + '<div style="padding:20px 22px"><h2 style="margin:0 0 14px;color:' + color + ';font-size:19px">' + crfEsc_(title) + '</h2>' + content + '</div>'
+    + '<div style="padding:20px 22px"><h2 id="crfTitle" style="margin:0 0 14px;color:' + color + ';font-size:19px">' + crfEsc_(title) + '</h2><div id="crfContent">' + content + '</div></div>'
     + '</div></body></html>').setTitle('IMARAT — Change Request');
 }
