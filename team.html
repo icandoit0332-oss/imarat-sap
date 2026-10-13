@@ -608,6 +608,41 @@ body:not(.admin-mode) .admin-only { display:none !important; }
   .bn-label { font-size: 8px; }
 }
 
+
+/* ══ CRF ══ */
+.crf-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.crf-title { font-weight:700; font-size:22px; color:var(--text); letter-spacing:-0.3px; }
+.crf-sub { font-size:13px; color:var(--text-mid); margin-top:4px; max-width:640px; line-height:1.5; }
+.crf-btn { background:var(--primary); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; }
+.crf-btn.ghost { background:var(--surface); color:var(--text-mid); border:1.5px solid var(--border2); }
+.crf-btn.ok { background:var(--green); } .crf-btn.warn { background:var(--amber); } .crf-btn.danger { background:var(--red); }
+.crf-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.crf-filters { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 14px; }
+.crf-chip { font-size:12px; padding:5px 11px; border-radius:20px; border:1px solid var(--border2); background:var(--surface); color:var(--text-mid); cursor:pointer; }
+.crf-chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+.crf-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; box-shadow:var(--shadow); overflow:hidden; }
+.crf-head { display:grid; grid-template-columns:120px 1fr auto; gap:12px; align-items:center; padding:13px 16px; cursor:pointer; }
+.crf-id { font-family:'DM Mono',monospace; font-size:12px; color:var(--primary); font-weight:500; }
+.crf-name { font-weight:600; font-size:14px; color:var(--text); }
+.crf-meta { font-size:12px; color:var(--text-dim); margin-top:2px; }
+.crf-st { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+.crf-st-Submitted { background:var(--blue-dim); color:var(--blue); }
+.crf-st-Returned { background:var(--amber-dim); color:var(--amber); }
+.crf-st-Pending { background:var(--purple-dim); color:var(--purple); }
+.crf-st-Approved { background:var(--green-dim); color:var(--green); }
+.crf-st-Rejected { background:var(--red-dim); color:var(--red); }
+.crf-st-Implemented { background:#E9F0E8; color:#14432A; }
+.crf-body { display:none; border-top:1px solid var(--border); padding:14px 16px 16px; background:var(--surface2); }
+.crf-item.open .crf-body { display:block; }
+.crf-dl { display:grid; grid-template-columns:150px 1fr; gap:6px 14px; font-size:13px; }
+.crf-dl dt { color:var(--text-mid); font-weight:500; }
+.crf-dl dd { color:var(--text); white-space:pre-wrap; word-break:break-word; }
+.crf-note { margin-top:12px; padding:10px 12px; border-left:3px solid var(--amber); background:var(--surface); font-size:13px; white-space:pre-wrap; }
+.crf-hist { margin-top:12px; font-size:12px; color:var(--text-mid); }
+.crf-hist div { padding:3px 0; border-bottom:1px dashed var(--border); }
+.crf-act { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.crf-act-row { display:flex; gap:8px; flex-wrap:wrap; }
+@media (max-width:600px) { .crf-head { grid-template-columns:1fr auto; } .crf-head .crf-id { grid-column:1/-1; } .crf-dl { grid-template-columns:1fr; } .crf-dl dt { margin-top:6px; } }
 </style>
 </head>
 <body>
@@ -664,6 +699,7 @@ body:not(.admin-mode) .admin-only { display:none !important; }
   <div class="nav-tab" data-tab="tasks" onclick="goTab('tasks')">📋 All Tasks</div>
   <div class="nav-tab" data-tab="rankings" onclick="goTab('rankings')">🏆 Rankings</div>
   <div class="nav-tab" data-tab="calendar" onclick="goTab('calendar')">📅 Calendar</div>
+  <div class="nav-tab edit-only" data-tab="crf" onclick="goTab('crf')">📝 CRF <span class="badge-count" id="badgeCrf" style="display:none">0</span></div>
   <div class="nav-tab admin-only" data-tab="activity" onclick="goTab('activity')">🕓 Activity Log</div>
   <div class="nav-tab edit-only" data-tab="settings" onclick="goTab('settings')">⚙️ Settings</div>
 </nav>
@@ -961,6 +997,106 @@ body:not(.admin-mode) .admin-only { display:none !important; }
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
+</div>
+
+<!-- ══ CRF ══ -->
+<div class="tab-pane" id="pane-crf">
+  <div class="crf-top">
+    <div>
+      <div class="crf-title">Change Request Forms</div>
+      <div class="crf-sub">Required for every SAP backend change and any change that impacts, triggers or interacts with an API. Each CRF is reviewed by Abdul Wasay and then sent to Saad Sb for approval before implementation.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="crf-btn ghost" onclick="loadCRF()">↻ Refresh</button>
+      <button class="crf-btn" id="crfNewBtn" onclick="crfOpenForm()">+ Raise CRF</button>
+    </div>
+  </div>
+
+  <div class="form-card" id="crfFormCard" style="display:none;margin-bottom:20px">
+    <div class="sec-div" style="margin-top:0"><div class="sec-div-label" id="crfFormLabel">New Change Request</div><div class="sec-div-line"></div></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">SAP Module <span>*</span></label>
+        <select class="form-control" id="crf-module">
+          <option value="">— Select —</option>
+          <option>FICO</option><option>MM</option><option>HCM</option><option>PS</option><option>PM</option><option>Basis</option><option>Cross-module</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Change Type <span>*</span></label>
+        <select class="form-control" id="crf-changeType">
+          <option value="">— Select —</option>
+          <option>Configuration (SPRO)</option>
+          <option>ABAP development / enhancement</option>
+          <option>API / interface</option>
+          <option>Transport to production</option>
+          <option>Master data / mass change</option>
+          <option>Roles &amp; authorizations</option>
+          <option>OSS note / system</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Change Title <span>*</span></label>
+        <input class="form-control" type="text" id="crf-title" placeholder="Short title of the change">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Description of Change <span>*</span></label>
+        <textarea class="form-control" id="crf-description" placeholder="What exactly will be changed — objects, transactions, tables, settings"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Business Reason <span>*</span></label>
+        <textarea class="form-control" id="crf-reason" style="min-height:70px" placeholder="Why the change is needed"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Impact — Modules, APIs &amp; Integrations Affected <span>*</span></label>
+        <textarea class="form-control" id="crf-impact" style="min-height:70px" placeholder="e.g. FI postings in 5200; Evoke HCM interface; UBL payment API"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Codes</label>
+        <input class="form-control" type="text" id="crf-companyCodes" placeholder="e.g. 1100, 5200 or All">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Linked Requirement</label>
+        <input class="form-control" type="text" id="crf-linkedReq" list="crfReqList" placeholder="REQ-xxxxxx (optional)">
+        <datalist id="crfReqList"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Urgency <span>*</span></label>
+        <select class="form-control" id="crf-urgency">
+          <option value="">— Select —</option>
+          <option>Normal</option>
+          <option>Emergency — production defect</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Risk <span>*</span></label>
+        <select class="form-control" id="crf-risk">
+          <option value="">— Select —</option>
+          <option>Low</option><option>Medium</option><option>High</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Test Plan</label>
+        <textarea class="form-control" id="crf-testPlan" style="min-height:60px" placeholder="Where and how it will be tested (DEV 100 / QAS 230), who signs off"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Rollback Plan <span>*</span></label>
+        <textarea class="form-control" id="crf-rollback" style="min-height:60px" placeholder="How the change is reversed if it fails"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Planned Implementation Date</label>
+        <input class="form-control" type="date" id="crf-plannedDate">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-submit" id="crfSubmitBtn" style="margin-top:0" onclick="crfSubmit()">✦ Submit CRF for Review</button>
+      <button class="crf-btn ghost" onclick="crfCloseForm()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="crf-filters" id="crfFilters"></div>
+  <div id="crfList"><div class="empty"><div class="empty-icon">📝</div><div class="empty-title">Loading CRFs…</div></div></div>
 </div>
 
 <!-- ══ SETTINGS ══ -->
@@ -1810,6 +1946,7 @@ fbAuth.onAuthStateChanged(async (user) => {
     // Load data
     if (scriptUrl) loadAllData();
     if (currentRole === 'admin') { loadUsersList(); loadDeptList(); loadConsList(); }
+    if (currentRole === 'admin' || currentRole === 'editor') loadCRF(true);
 
   } else {
     currentUser = null; currentRole = 'viewer';
@@ -2064,7 +2201,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ══════════════════════════════════════════
 function goTab(name) {
   // Redirect viewers away from edit-only tabs
-  if (currentRole === 'viewer' && (name === 'new' || name === 'settings')) name = 'pipeline';
+  if (currentRole === 'viewer' && (name === 'new' || name === 'settings' || name === 'crf')) name = 'pipeline';
   // Activity Log is admin-only
   if (name === 'activity' && currentRole !== 'admin') name = 'pipeline';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2085,6 +2222,7 @@ function goTab(name) {
   if (name === 'rankings')  renderRankings();
   if (name === 'calendar')  renderCalendar();
   if (name === 'activity')  renderActivityLog();
+  if (name === 'crf')       loadCRF();
 }
 
 // ══════════════════════════════════════════
@@ -3616,6 +3754,241 @@ function countBy(arr, key) {
     acc[v] = (acc[v] || 0) + 1;
     return acc;
   }, {});
+}
+
+
+// ══════════════════════════════════════════
+//  CHANGE REQUEST FORMS (CRF)
+//  Backend: apps-script/CRF.gs (actions crfRead / crfSubmit / crfReturn / crfSend / crfRemind / crfImplement)
+// ══════════════════════════════════════════
+const CRF_STATUSES = ['All','Submitted','Returned','Pending Approval','Approved','Rejected','Implemented'];
+const CRF_FIELD_IDS = ['module','changeType','title','description','reason','impact','companyCodes','linkedReq','urgency','risk','testPlan','rollback','plannedDate'];
+const CRF_FIELD_COLS = { module:'Module', changeType:'Change Type', title:'Title', description:'Description', reason:'Business Reason',
+  impact:'Impact', companyCodes:'Company Codes', linkedReq:'Linked REQ', urgency:'Urgency', risk:'Risk',
+  testPlan:'Test Plan', rollback:'Rollback Plan', plannedDate:'Planned Date' };
+const CRF_REQUIRED_IDS = ['module','changeType','title','description','reason','impact','urgency','risk','rollback'];
+let crfs = [];
+let crfMe = null;
+let crfFilter = 'All';
+let crfEditingId = null;
+const crfOpen = new Set();
+
+async function crfCall(params, post) {
+  await refreshAuthToken();
+  const qs = new URLSearchParams(params);
+  qs.set('clientKey', SAP_CLIENT_KEY);
+  if (AUTH_TOKEN) qs.set('idToken', AUTH_TOKEN);
+  const res = post
+    ? await fetch(scriptUrl, { method:'POST', body: qs, signal: AbortSignal.timeout(30000) })
+    : await fetch(scriptUrl + '?' + qs.toString(), { signal: AbortSignal.timeout(20000) });
+  const json = await res.json();
+  if (!json.crf) throw new Error('CRF backend is not deployed yet — add CRF.gs to the Apps Script project.');
+  if (!json.success) throw new Error(json.error || 'Request failed');
+  return json;
+}
+
+async function loadCRF(silent) {
+  if (!scriptUrl) return;
+  try {
+    const json = await crfCall({ action:'crfRead' });
+    crfs = (json.data || []).sort((a,b) => String(b['CRF ID']).localeCompare(String(a['CRF ID'])));
+    crfMe = json.me || null;
+    crfUpdateBadge();
+    renderCRF();
+  } catch (e) {
+    if (!silent) {
+      document.getElementById('crfList').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load CRFs</div><div style="font-size:12px;margin-top:6px">${escapeHtml(e.message)}</div></div>`;
+    }
+  }
+}
+
+function crfUpdateBadge() {
+  // Reviewer sees CRFs waiting for review; others see their own returned CRFs
+  const myEmail = (currentUser && currentUser.email || '').toLowerCase();
+  const n = currentRole === 'admin'
+    ? crfs.filter(c => c.Status === 'Submitted').length
+    : crfs.filter(c => c.Status === 'Returned' && String(c['Raiser Email']).toLowerCase() === myEmail).length;
+  const b = document.getElementById('badgeCrf');
+  if (b) { b.style.display = n ? 'inline' : 'none'; b.textContent = n; }
+}
+
+function crfFmtDate(v) {
+  if (!v) return '';
+  const d = new Date(String(v).length === 10 ? v + 'T00:00:00' : v);
+  if (isNaN(d)) return escapeHtml(String(v));
+  const n = d.getDate(), sfx = (n%10===1&&n!==11)?'st':(n%10===2&&n!==12)?'nd':(n%10===3&&n!==13)?'rd':'th';
+  return `${n}${sfx} ${d.toLocaleString('en-GB',{month:'long'})}, ${d.getFullYear()}`;
+}
+
+function crfStClass(s) { return 'crf-st crf-st-' + String(s).split(' ')[0]; }
+
+function renderCRF() {
+  const fl = document.getElementById('crfFilters');
+  if (!fl) return;
+  fl.innerHTML = CRF_STATUSES.map(s => {
+    const n = s === 'All' ? crfs.length : crfs.filter(c => c.Status === s).length;
+    return `<span class="crf-chip ${crfFilter===s?'active':''}" onclick="crfSetFilter('${s}')">${s} (${n})</span>`;
+  }).join('');
+
+  const list = crfFilter === 'All' ? crfs : crfs.filter(c => c.Status === crfFilter);
+  const box = document.getElementById('crfList');
+  if (!list.length) {
+    box.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">${crfs.length ? 'No CRFs in this status' : 'No CRFs raised yet'}</div></div>`;
+    return;
+  }
+  box.innerHTML = list.map(crfItemHtml).join('');
+}
+
+function crfSetFilter(s) { crfFilter = s; renderCRF(); }
+function crfToggle(id) { crfOpen.has(id) ? crfOpen.delete(id) : crfOpen.add(id); renderCRF(); }
+
+function crfItemHtml(c) {
+  const id = c['CRF ID'];
+  const sid = escapeHtml(id);
+  const isAdmin = currentRole === 'admin';
+  const myEmail = (currentUser && currentUser.email || '').toLowerCase();
+  const isRaiser = String(c['Raiser Email']).toLowerCase() === myEmail;
+  const st = c.Status;
+
+  const rows = [
+    ['Module', c.Module], ['Change type', c['Change Type']], ['Urgency', c.Urgency], ['Risk', c.Risk],
+    ['Raised by', `${c['Raised By']} · ${crfFmtDate(c['Raised On'])}`], ['Company codes', c['Company Codes']],
+    ['Linked requirement', c['Linked REQ']], ['Planned date', crfFmtDate(c['Planned Date'])],
+    ['Description', c.Description], ['Business reason', c['Business Reason']], ['Impact', c.Impact],
+    ['Test plan', c['Test Plan']], ['Rollback plan', c['Rollback Plan']],
+    ['Sent for approval', crfFmtDate(c['Sent On'])],
+    ['Decision', c.Decision ? `${c.Decision} · ${crfFmtDate(c['Decision On'])}` : ''],
+    ['Approver remarks', c['Approver Remarks']],
+    ['Transport / reference', c['Transport Ref'] ? `${c['Transport Ref']} · ${crfFmtDate(c['Implemented On'])}` : '']
+  ].filter(r => r[1]);
+  const dl = '<dl class="crf-dl">' + rows.map(r => `<dt>${r[0]}</dt><dd>${escapeHtml(String(r[1]))}</dd>`).join('') + '</dl>';
+
+  const note = c['Reviewer Note'] ? `<div class="crf-note"><b>Reviewer note:</b> ${escapeHtml(c['Reviewer Note'])}</div>` : '';
+
+  let hist = [];
+  try { hist = JSON.parse(c.History || '[]'); } catch(e) {}
+  const histHtml = hist.length ? '<div class="crf-hist">' + hist.map(h =>
+    `<div>${crfFmtDate(h.t)} ${new Date(h.t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} — <b>${escapeHtml(h.a)}</b> by ${escapeHtml(h.by)}${h.n ? ': ' + escapeHtml(h.n) : ''}</div>`).join('') + '</div>' : '';
+
+  // Actions by role and status
+  let act = '';
+  if (isAdmin && st === 'Submitted') {
+    act = `<textarea class="form-control" id="crfNote-${sid}" style="min-height:60px" placeholder="Note — included in Saad Sb's email when sending; required when returning"></textarea>
+      <div class="crf-act-row">
+        <button class="crf-btn ok" onclick="crfAction('crfSend','${sid}')">✉ Send to Saad Sb for approval</button>
+        <button class="crf-btn warn" onclick="crfAction('crfReturn','${sid}')">↩ Return to raiser</button>
+        <button class="crf-btn ghost" onclick="crfEdit('${sid}')">✎ Edit</button>
+      </div>`;
+  } else if (st === 'Returned' && (isRaiser || isAdmin)) {
+    act = `<div class="crf-act-row"><button class="crf-btn" onclick="crfEdit('${sid}')">✎ Edit &amp; resubmit</button></div>`;
+  } else if (st === 'Submitted' && isRaiser) {
+    act = `<div class="crf-act-row"><button class="crf-btn ghost" onclick="crfEdit('${sid}')">✎ Edit</button></div>`;
+  } else if (isAdmin && st === 'Pending Approval') {
+    act = `<div class="crf-act-row"><button class="crf-btn ghost" onclick="crfAction('crfRemind','${sid}')">✉ Send reminder to Saad Sb</button></div>`;
+  } else if (st === 'Approved' && (isRaiser || isAdmin)) {
+    act = `<input class="form-control" type="text" id="crfRef-${sid}" placeholder="Transport request / reference (e.g. DEVK900123)">
+      <div class="crf-act-row"><button class="crf-btn ok" onclick="crfAction('crfImplement','${sid}')">✓ Mark implemented</button></div>`;
+  }
+
+  return `<div class="crf-item ${crfOpen.has(id)?'open':''}">
+    <div class="crf-head" onclick="crfToggle('${sid}')">
+      <div class="crf-id">${sid}</div>
+      <div><div class="crf-name">${escapeHtml(c.Title)}</div>
+        <div class="crf-meta">${escapeHtml(c.Module)} · ${escapeHtml(c['Change Type'])} · ${escapeHtml(c['Raised By'])}${String(c.Urgency).indexOf('Emergency')===0?' · <b style="color:var(--red)">Emergency</b>':''}</div></div>
+      <span class="${crfStClass(st)}">${escapeHtml(st)}</span>
+    </div>
+    <div class="crf-body">${dl}${note}${histHtml}${act ? '<div class="crf-act">' + act + '</div>' : ''}</div>
+  </div>`;
+}
+
+function crfOpenForm() {
+  crfEditingId = null;
+  CRF_FIELD_IDS.forEach(f => { const el = document.getElementById('crf-' + f); if (el) el.value = ''; });
+  document.getElementById('crfFormLabel').textContent = 'New Change Request';
+  document.getElementById('crfSubmitBtn').innerHTML = '✦ Submit CRF for Review';
+  crfFillReqList();
+  document.getElementById('crfFormCard').style.display = '';
+  document.getElementById('crf-module').focus();
+}
+
+function crfCloseForm() {
+  crfEditingId = null;
+  document.getElementById('crfFormCard').style.display = 'none';
+}
+
+function crfFillReqList() {
+  const dl = document.getElementById('crfReqList');
+  if (dl) dl.innerHTML = (requirements || []).slice(0, 300).map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.title || '')}</option>`).join('');
+}
+
+function crfEdit(id) {
+  const c = crfs.find(x => x['CRF ID'] === id);
+  if (!c) return;
+  crfEditingId = id;
+  CRF_FIELD_IDS.forEach(f => {
+    const el = document.getElementById('crf-' + f);
+    if (!el) return;
+    let v = c[CRF_FIELD_COLS[f]] || '';
+    if (f === 'plannedDate' && v) v = String(v).slice(0, 10);
+    el.value = v;
+  });
+  document.getElementById('crfFormLabel').textContent = 'Edit ' + id;
+  document.getElementById('crfSubmitBtn').innerHTML = c.Status === 'Returned' ? '✦ Resubmit CRF' : '✦ Save Changes';
+  crfFillReqList();
+  document.getElementById('crfFormCard').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function crfSubmit() {
+  const params = { action:'crfSubmit' };
+  for (const f of CRF_FIELD_IDS) params[f] = (document.getElementById('crf-' + f).value || '').trim();
+  const missing = CRF_REQUIRED_IDS.filter(f => !params[f]);
+  if (missing.length) { showToast('Complete: ' + missing.map(f => CRF_FIELD_COLS[f]).join(', '), 'error'); return; }
+  if (crfEditingId) params.crfId = crfEditingId;
+
+  const btn = document.getElementById('crfSubmitBtn');
+  btn.disabled = true; const label = btn.innerHTML; btn.innerHTML = 'Submitting…';
+  try {
+    const json = await crfCall(params, true);
+    showToast(`✓ ${json.id} ${crfEditingId ? 'updated' : 'submitted for review'}`, 'success');
+    crfCloseForm();
+    crfOpen.add(json.id);
+    await loadCRF();
+  } catch (e) {
+    showToast('CRF not saved — ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = label;
+  }
+}
+
+async function crfAction(action, id) {
+  const params = { action, id };
+  const noteEl = document.getElementById('crfNote-' + id);
+  const refEl = document.getElementById('crfRef-' + id);
+  if (noteEl) params.note = noteEl.value.trim();
+  if (refEl) params.transportRef = refEl.value.trim();
+
+  if (action === 'crfReturn' && !params.note) { showToast('Write the reason for returning it in the note box.', 'error'); return; }
+  if (action === 'crfImplement' && !params.transportRef) { showToast('Enter the transport request / reference.', 'error'); return; }
+  const confirmText = {
+    crfSend: `Send ${id} to Saad Sb for approval?`,
+    crfReturn: `Return ${id} to the raiser?`,
+    crfRemind: `Send Saad Sb a reminder for ${id}?`,
+    crfImplement: `Mark ${id} as implemented?`
+  }[action];
+  if (confirmText && !confirm(confirmText)) return;
+
+  const btns = document.querySelectorAll('.crf-act .crf-btn');
+  btns.forEach(b => b.disabled = true);
+  try {
+    await crfCall(params, true);
+    const done = { crfSend:'sent to Saad Sb', crfReturn:'returned to raiser', crfRemind:'reminder sent', crfImplement:'marked implemented' }[action];
+    showToast(`✓ ${id} ${done}`, 'success');
+    await loadCRF();
+  } catch (e) {
+    showToast(e.message, 'error');
+    btns.forEach(b => b.disabled = false);
+  }
 }
 
 function showToast(msg, type='success') {
